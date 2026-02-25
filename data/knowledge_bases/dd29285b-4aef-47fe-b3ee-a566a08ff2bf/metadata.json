@@ -1,0 +1,21 @@
+{
+  "id": "dd29285b-4aef-47fe-b3ee-a566a08ff2bf",
+  "name": "test",
+  "description": "",
+  "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+  "collection_name": "kb_dd29285b_4aef_47fe_b3ee_a566a08ff2bf",
+  "created_at": "2026-02-07T13:16:05.386462",
+  "updated_at": "2026-02-07T14:06:00.043120",
+  "files": [
+    {
+      "id": "7ffb5b52-3fdf-4ad2-b51e-c19ca4012681",
+      "name": "2512.01763v1.pdf",
+      "path": "/Users/qwer/Documents/Project/Agent/writingbot/data/knowledge_bases/dd29285b-4aef-47fe-b3ee-a566a08ff2bf/raw/7ffb5b52-3fdf-4ad2-b51e-c19ca4012681_2512.01763v1.pdf",
+      "size": 16201394,
+      "uploaded_at": "2026-02-07T14:06:00.042750",
+      "blocks": 325,
+      "chunks": 95
+    }
+  ],
+  "status": "ready"
+}

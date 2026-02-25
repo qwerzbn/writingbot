@@ -1,0 +1,15 @@
+# WritingBot Dependencies
+# PDF Parsing
+pymupdf>=1.24.0
+
+# Embeddings
+sentence-transformers>=2.2.0
+
+# Vector Database
+chromadb>=0.4.0
+
+# LLM Integration (optional, for answer generation)
+openai>=1.0.0
+
+# Environment
+python-dotenv>=1.0.0

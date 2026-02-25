@@ -1,0 +1,24 @@
+{
+  "knowledge_bases": {
+    "dd29285b-4aef-47fe-b3ee-a566a08ff2bf": {
+      "name": "test",
+      "path": "dd29285b-4aef-47fe-b3ee-a566a08ff2bf",
+      "created_at": "2026-02-07T13:16:05.386462"
+    },
+    "140e5985-5e9c-4b46-9db7-e19fe04ca995": {
+      "name": "Ollama Test KB",
+      "path": "140e5985-5e9c-4b46-9db7-e19fe04ca995",
+      "created_at": "2026-02-07T14:56:27.804579"
+    },
+    "211f5497-8af1-4510-85e2-0e22cb55a375": {
+      "name": "Ollama Verification KB",
+      "path": "211f5497-8af1-4510-85e2-0e22cb55a375",
+      "created_at": "2026-02-07T15:06:56.967355"
+    },
+    "a27dcc7c-4b10-4151-af00-9f1f4d76c8a5": {
+      "name": "01",
+      "path": "a27dcc7c-4b10-4151-af00-9f1f4d76c8a5",
+      "created_at": "2026-02-07T15:16:05.104171"
+    }
+  }
+}

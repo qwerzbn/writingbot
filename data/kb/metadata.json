@@ -1,0 +1,22 @@
+{
+  "4a33dd1a-eb5c-4ffb-a492-e2b4a30ef719": {
+    "id": "4a33dd1a-eb5c-4ffb-a492-e2b4a30ef719",
+    "name": "test",
+    "description": "",
+    "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+    "collection_name": "kb_4a33dd1a_eb5c_4ffb_a492_e2b4a30ef719",
+    "created_at": "2026-02-07T10:55:21.207311",
+    "updated_at": "2026-02-07T10:56:22.585051",
+    "files": [
+      {
+        "id": "e1bb585e-9daf-4708-9487-4a36a5586e27",
+        "name": "Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+        "path": "/Users/qwer/Documents/Project/DeepTutor/writingbot/data/uploads/e1bb585e-9daf-4708-9487-4a36a5586e27_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+        "size": 5975251,
+        "uploaded_at": "2026-02-07T10:56:22.584947",
+        "blocks": 310,
+        "chunks": 58
+      }
+    ]
+  }
+}

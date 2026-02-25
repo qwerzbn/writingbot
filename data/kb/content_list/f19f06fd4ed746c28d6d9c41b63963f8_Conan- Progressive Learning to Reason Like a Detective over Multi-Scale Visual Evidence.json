@@ -1,0 +1,4652 @@
+[
+  {
+    "type": "text",
+    "content": "arXiv:2510.20470v1  [cs.CV]  23 Oct 2025",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 113,
+      "bbox": [
+        10.940000534057617,
+        222.1300048828125,
+        37.619998931884766,
+        569.8699951171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "kunouyang10@gmail.com,\nxusun@pku.edu.cn",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 4,
+      "bbox": [
+        196.31100463867188,
+        276.3058166503906,
+        412.6974182128906,
+        285.272216796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "A. The Black Sabbath figure sits down...\nB. The Black Sabbath figure holds a weapon...\nC. The Black Sabbath figure holds a small glass while \nfacing the costumed figure. \nD. The Black Sabbath figure is tying the green cape...\nE. The Black Sabbath figure kneels down...\n What distinguishes the interaction between the figure in the Black Sabbath shirt and the \nelaborately costumed figure?",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 9,
+      "bbox": [
+        126.69789123535156,
+        296.7297058105469,
+        473.264404296875,
+        338.3313293457031
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 7,
+      "bbox": [
+        188.58599853515625,
+        344.53411865234375,
+        203.47201538085938,
+        351.5952453613281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "identification",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 8,
+      "bbox": [
+        181.891357421875,
+        354.09246826171875,
+        208.4762725830078,
+        361.15362548828125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 10,
+      "bbox": [
+        186.7274169921875,
+        366.02337646484375,
+        206.3546905517578,
+        373.0845031738281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 11,
+      "bbox": [
+        185.24815368652344,
+        375.58172607421875,
+        206.14657592773438,
+        382.6428527832031
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Random Frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 5,
+      "bbox": [
+        264.90948486328125,
+        388.24822998046875,
+        301.1943054199219,
+        395.2401123046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Action",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 18,
+      "bbox": [
+        187.29637145996094,
+        388.707763671875,
+        202.18238830566406,
+        395.7688903808594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Action",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 28,
+      "bbox": [
+        220.33682250976562,
+        389.08270263671875,
+        236.1204376220703,
+        396.0745849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Sampling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 6,
+      "bbox": [
+        272.2110290527344,
+        397.80657958984375,
+        293.9117431640625,
+        404.7984619140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Candidates",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 29,
+      "bbox": [
+        215.76626586914062,
+        398.64105224609375,
+        239.3645782470703,
+        405.6329345703125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 20,
+      "bbox": [
+        188.4532470703125,
+        411.9801025390625,
+        203.33924865722656,
+        419.0412292480469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "identification",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 21,
+      "bbox": [
+        181.75860595703125,
+        421.5384521484375,
+        208.34352111816406,
+        428.5995788574219
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 22,
+      "bbox": [
+        186.93603515625,
+        436.1058349609375,
+        206.5633087158203,
+        443.1669921875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "...The only action that persists and is explicitly shown is the figure holding \na small glass while facing the elaborately costumed figure. Answer the \nquestion with C.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 24,
+      "bbox": [
+        212.12460327148438,
+        436.31512451171875,
+        349.3174133300781,
+        453.2106628417969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 23,
+      "bbox": [
+        185.45677185058594,
+        445.66424560546875,
+        206.35519409179688,
+        452.7253723144531
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 31,
+      "bbox": [
+        182.3032684326172,
+        457.1856994628906,
+        200.13037109375,
+        466.14324951171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "44.6",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 43,
+      "bbox": [
+        194.58309936523438,
+        468.28326416015625,
+        202.5484161376953,
+        474.3414611816406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "50",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 41,
+      "bbox": [
+        126.88754272460938,
+        471.560546875,
+        130.6710662841797,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "45",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 57,
+      "bbox": [
+        187.57554626464844,
+        471.560546875,
+        191.35906982421875,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "85",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 69,
+      "bbox": [
+        248.28250122070312,
+        471.560546875,
+        252.0660400390625,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "81.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 59,
+      "bbox": [
+        255.2900848388672,
+        474.2735595703125,
+        263.25537109375,
+        480.3317565917969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "44.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 45,
+      "bbox": [
+        214.1739501953125,
+        477.89825439453125,
+        220.80223083496094,
+        482.84979248046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "43",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 56,
+      "bbox": [
+        187.57554626464844,
+        478.69140625,
+        191.35906982421875,
+        483.6429443359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "80",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 68,
+      "bbox": [
+        248.28250122070312,
+        481.7447509765625,
+        252.0660400390625,
+        486.6962890625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "44.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 34,
+      "bbox": [
+        153.4859619140625,
+        484.31793212890625,
+        160.11422729492188,
+        489.26947021484375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "45",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 40,
+      "bbox": [
+        126.88754272460938,
+        485.8222351074219,
+        130.6710662841797,
+        490.7737731933594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "41",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 55,
+      "bbox": [
+        187.57554626464844,
+        485.8222351074219,
+        191.35906982421875,
+        490.7737731933594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "42.7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 32,
+      "bbox": [
+        133.89511108398438,
+        487.80322265625,
+        141.86041259765625,
+        493.8614196777344
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "75",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 67,
+      "bbox": [
+        248.28250122070312,
+        491.928955078125,
+        252.0660400390625,
+        496.8804931640625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "39",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 54,
+      "bbox": [
+        187.57554626464844,
+        492.95306396484375,
+        191.35906982421875,
+        497.90460205078125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "36.5 35.7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 46,
+      "bbox": [
+        223.63748168945312,
+        497.5145263671875,
+        239.72930908203125,
+        505.31915283203125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "44.0 69.5 69.7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 61,
+      "bbox": [
+        274.88092041015625,
+        498.3804931640625,
+        300.436279296875,
+        505.3699951171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "40",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 39,
+      "bbox": [
+        126.88754272460938,
+        500.08392333984375,
+        130.6710662841797,
+        505.03546142578125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "37",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 53,
+      "bbox": [
+        187.57554626464844,
+        500.08392333984375,
+        191.35906982421875,
+        505.03546142578125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "70",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 66,
+      "bbox": [
+        248.28250122070312,
+        502.1131591796875,
+        252.0660400390625,
+        507.064697265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "66.4",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 60,
+      "bbox": [
+        265.4173583984375,
+        505.1058349609375,
+        272.045654296875,
+        510.057373046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "36.3 36.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 35,
+      "bbox": [
+        162.94949340820312,
+        505.71728515625,
+        179.04129028320312,
+        511.2396545410156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "35",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 52,
+      "bbox": [
+        187.57554626464844,
+        507.2147216796875,
+        191.35906982421875,
+        512.166259765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "65",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 65,
+      "bbox": [
+        248.28250122070312,
+        512.3163452148438,
+        252.0660400390625,
+        517.2678833007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "35",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 38,
+      "bbox": [
+        126.88754272460938,
+        514.3455810546875,
+        130.6710662841797,
+        519.297119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "33",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 51,
+      "bbox": [
+        187.57554626464844,
+        514.3455810546875,
+        191.35906982421875,
+        519.297119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "31",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 50,
+      "bbox": [
+        187.57554626464844,
+        521.4764404296875,
+        191.35906982421875,
+        526.427978515625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "60",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 64,
+      "bbox": [
+        248.28250122070312,
+        522.5005493164062,
+        252.0660400390625,
+        527.4520874023438
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "30.1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 33,
+      "bbox": [
+        144.0224151611328,
+        523.9783325195312,
+        150.65069580078125,
+        528.9298706054688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "28.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 44,
+      "bbox": [
+        204.71041870117188,
+        526.046630859375,
+        211.33868408203125,
+        530.9981689453125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "30",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 37,
+      "bbox": [
+        126.88754272460938,
+        528.6072387695312,
+        130.6710662841797,
+        533.5587768554688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "29",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 49,
+      "bbox": [
+        187.57554626464844,
+        528.6072387695312,
+        191.35906982421875,
+        533.5587768554688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "55",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 63,
+      "bbox": [
+        248.28250122070312,
+        532.6847534179688,
+        252.0660400390625,
+        537.6362915039062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "27",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 48,
+      "bbox": [
+        187.57554626464844,
+        535.757080078125,
+        191.35906982421875,
+        540.7086181640625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "25",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 36,
+      "bbox": [
+        126.88754272460938,
+        542.887939453125,
+        130.6710662841797,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "25",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 47,
+      "bbox": [
+        187.57554626464844,
+        542.887939453125,
+        191.35906982421875,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "50",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 62,
+      "bbox": [
+        248.28250122070312,
+        542.887939453125,
+        252.0660400390625,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "MMR-V",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 42,
+      "bbox": [
+        148.45074462890625,
+        547.9590454101562,
+        165.145263671875,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Video-Holmes",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 58,
+      "bbox": [
+        203.69580078125,
+        547.9590454101562,
+        231.27774047851562,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "VRBench",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 70,
+      "bbox": [
+        268.840576171875,
+        547.9590454101562,
+        287.54840087890625,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Figure 1. Top: The evidence reasoning processes of our proposed Conan. Bottom: Quantitative comparison with other\nmodels, such as the advanced GPT-4o [11], across six multi-step reasoning benchmarks",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 107,
+      "bbox": [
+        91.8010025024414,
+        565.2431030273438,
+        520.1975708007812,
+        585.2503662109375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Abstract",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 108,
+      "bbox": [
+        171.0330047607422,
+        599.1131591796875,
+        215.51829528808594,
+        611.068359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Video reasoning, which requires multi-step deduc-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 109,
+      "bbox": [
+        91.8010025024414,
+        624.4669799804688,
+        294.74908447265625,
+        634.4295654296875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "*Corresponding Author",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 110,
+      "bbox": [
+        102.66000366210938,
+        643.3945922851562,
+        178.09304809570312,
+        651.3646850585938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 112,
+      "bbox": [
+        303.5090026855469,
+        671.7704467773438,
+        308.49029541015625,
+        681.7330322265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan: Progressive Learning to Reason Like a Detective over",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 0,
+      "bbox": [
+        137.55299377441406,
+        141.46099853515625,
+        513.6100463867188,
+        155.80718994140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Multi-Scale Visual Evidence",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 1,
+      "bbox": [
+        219.78799438476562,
+        164.95697021484375,
+        392.215087890625,
+        179.30316162109375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Kun Ouyang1,\nYuanxin Liu1,\nLinli Yao1,\nYishuo Cai1,\nHao Zhou2,\nJie Zhou2,\nFandong Meng2,\nXu Sun1*",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 2,
+      "bbox": [
+        163.06298828125,
+        203.259033203125,
+        448.93780517578125,
+        230.6624298095703
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1State Key Laboratory for Multimedia Information Processing,\nSchool of Computer Science, Peking University\n2WeChat AI, Tencent Inc., China",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 3,
+      "bbox": [
+        155.61801147460938,
+        231.15399169921875,
+        456.38568115234375,
+        272.5054016113281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Irrelevant frames\nContextual frames\nEvidence frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 27,
+      "bbox": [
+        276.57373046875,
+        359.385498046875,
+        470.2669677734375,
+        365.3572082519531
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "The question asks for the distinctive interaction between the figure wearing a Black Sabbath T-shirt and the elaborately costumed figure (green \ncape, gold detail)...00:08:10: The Black T-shirt figure stands facing the costumed figure and is holding a small glass in the right hand. \n00:08:45: ...Motivation for extra frames...Retrieve the clip segment 00:08:15–00:08:55 to verify and solidify the observed interaction.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 12,
+      "bbox": [
+        211.1953125,
+        367.1050109863281,
+        473.3672790527344,
+        384.0005798339844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Confident Question",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 15,
+      "bbox": [
+        380.0384521484375,
+        388.24822998046875,
+        423.1127624511719,
+        395.2401123046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Specific Frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 13,
+      "bbox": [
+        322.7201232910156,
+        389.08270263671875,
+        358.3981018066406,
+        396.0745849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Answering",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 16,
+      "bbox": [
+        389.27435302734375,
+        397.80657958984375,
+        412.5729064941406,
+        404.7984619140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Decision\n00:08:15–00:08:55",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 19,
+      "bbox": [
+        185.41883850097656,
+        398.26611328125,
+        480.1610412597656,
+        405.5668029785156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Retrieval",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 14,
+      "bbox": [
+        330.1733703613281,
+        398.64105224609375,
+        349.6283874511719,
+        405.6329345703125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence frames\nContextual frames\nContextual frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 30,
+      "bbox": [
+        212.8452606201172,
+        426.224609375,
+        424.802978515625,
+        432.4428405761719
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Action",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 25,
+      "bbox": [
+        378.6532287597656,
+        434.30419921875,
+        393.53924560546875,
+        441.3653259277344
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "C",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 17,
+      "bbox": [
+        442.5906982421875,
+        439.1465759277344,
+        447.13775634765625,
+        448.1041259765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Decision",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 26,
+      "bbox": [
+        376.77569580078125,
+        443.862548828125,
+        393.7264404296875,
+        450.9236755371094
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Qwen2.5-VL-7B-Instruct\nGPT-4o\nVideo-R1\nVideo-MTR",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 106,
+      "bbox": [
+        227.4589385986328,
+        456.6926574707031,
+        452.587890625,
+        466.14324951171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "54",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 81,
+      "bbox": [
+        308.97052001953125,
+        471.560546875,
+        312.7540283203125,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "75",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 92,
+      "bbox": [
+        369.677490234375,
+        471.560546875,
+        373.46099853515625,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "55",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 104,
+      "bbox": [
+        430.365478515625,
+        471.560546875,
+        434.14898681640625,
+        476.5120849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "72.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 83,
+      "bbox": [
+        376.68505859375,
+        473.47930908203125,
+        384.6502990722656,
+        479.5375061035156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "51.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 71,
+      "bbox": [
+        315.97808837890625,
+        476.5516357421875,
+        323.943359375,
+        482.6098327636719
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "52.3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 94,
+      "bbox": [
+        437.25927734375,
+        480.12237548828125,
+        445.2245178222656,
+        486.1805725097656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "70.3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 85,
+      "bbox": [
+        405.7393798828125,
+        480.6087646484375,
+        412.36767578125,
+        485.560302734375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "52",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 80,
+      "bbox": [
+        308.97052001953125,
+        481.7447509765625,
+        312.7540283203125,
+        486.6962890625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "53",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 103,
+      "bbox": [
+        430.365478515625,
+        483.4326171875,
+        434.14898681640625,
+        488.3841552734375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "70",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 91,
+      "bbox": [
+        369.677490234375,
+        485.8222351074219,
+        373.46099853515625,
+        490.7737731933594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "50",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 79,
+      "bbox": [
+        308.97052001953125,
+        491.928955078125,
+        312.7540283203125,
+        496.8804931640625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "51",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 102,
+      "bbox": [
+        430.365478515625,
+        495.3236999511719,
+        434.14898681640625,
+        500.2752380371094
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "48.0 48.1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 73,
+      "bbox": [
+        345.0324401855469,
+        497.2596435546875,
+        361.124267578125,
+        502.7205810546875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "49.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 96,
+      "bbox": [
+        466.42742919921875,
+        498.10888671875,
+        473.0556640625,
+        503.0604248046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "65",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 90,
+      "bbox": [
+        369.677490234375,
+        500.08392333984375,
+        373.46099853515625,
+        505.03546142578125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "48",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 78,
+      "bbox": [
+        308.97052001953125,
+        502.1131591796875,
+        312.7540283203125,
+        507.064697265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "46.5 44.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 72,
+      "bbox": [
+        326.10540771484375,
+        503.37359619140625,
+        342.19720458984375,
+        510.36309814453125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "61.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 84,
+      "bbox": [
+        386.8123779296875,
+        504.861572265625,
+        393.44061279296875,
+        509.8131103515625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "48.2 44.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 95,
+      "bbox": [
+        447.5003662109375,
+        506.43072509765625,
+        463.5921630859375,
+        512.5709838867188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "49",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 101,
+      "bbox": [
+        430.365478515625,
+        507.2147216796875,
+        434.14898681640625,
+        512.166259765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "46",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 77,
+      "bbox": [
+        308.97052001953125,
+        512.3163452148438,
+        312.7540283203125,
+        517.2678833007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "47.2",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 97,
+      "bbox": [
+        475.89093017578125,
+        513.5638427734375,
+        482.51922607421875,
+        518.515380859375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "60",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 89,
+      "bbox": [
+        369.677490234375,
+        514.3455810546875,
+        373.46099853515625,
+        519.297119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "57.3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 86,
+      "bbox": [
+        415.20294189453125,
+        517.7008666992188,
+        421.83123779296875,
+        522.6524047851562
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "47",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 100,
+      "bbox": [
+        430.365478515625,
+        519.1057739257812,
+        434.14898681640625,
+        524.0573120117188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "44",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 76,
+      "bbox": [
+        308.97052001953125,
+        522.5005493164062,
+        312.7540283203125,
+        527.4520874023438
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "55",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 88,
+      "bbox": [
+        369.677490234375,
+        528.6072387695312,
+        373.46099853515625,
+        533.5587768554688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "45",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 99,
+      "bbox": [
+        430.365478515625,
+        530.9968872070312,
+        434.14898681640625,
+        535.9484252929688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "42",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 75,
+      "bbox": [
+        308.97052001953125,
+        532.6847534179688,
+        312.7540283203125,
+        537.6362915039062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "40",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 74,
+      "bbox": [
+        308.97052001953125,
+        542.887939453125,
+        312.7540283203125,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "50",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 87,
+      "bbox": [
+        369.677490234375,
+        542.887939453125,
+        373.46099853515625,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "43",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 98,
+      "bbox": [
+        430.365478515625,
+        542.887939453125,
+        434.14898681640625,
+        547.8394775390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "VCRBench",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 82,
+      "bbox": [
+        327.8975830078125,
+        547.9590454101562,
+        349.8863830566406,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "LongVideoReason",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 93,
+      "bbox": [
+        381.77716064453125,
+        547.9590454101562,
+        417.42071533203125,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Human-P&C",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 105,
+      "bbox": [
+        447.2633056640625,
+        547.9590454101562,
+        473.30755615234375,
+        554.0172119140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "tion across frames, remains a major challenge\nfor multimodal large language models (MLLMs).\nWhile reinforcement learning (RL)-based methods\nenhance reasoning capabilities, they often rely on",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 1,
+      "block_idx": 111,
+      "bbox": [
+        317.25,
+        600.5570068359375,
+        520.1981201171875,
+        646.3856201171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "text-only chains that yield ungrounded or halluci-\nnated conclusions. Conversely, frame-retrieval ap-\nproaches introduce visual grounding but still strug-\ngle with inaccurate evidence localization. To ad-\ndress these challenges, we present Conan, a frame-\nwork for evidence-grounded multi-step video rea-\nsoning. Conan identifies contextual and evidence\nframes, reasons over cross-frame clues, and adap-\ntively decides when to conclude or explore further.\nTo achieve this, we (1) construct Conan-91K, a\nlarge-scale dataset of automatically generated rea-\nsoning traces that includes frame identification, ev-\nidence reasoning, and action decision, and (2) de-\nsign a multi-stage progressive cold-start strategy\ncombined with an Identification–Reasoning–Action\n(AIR) RLVR training framework to jointly enhance\nmulti-step visual reasoning. Extensive experiments\non six multi-step reasoning benchmarks demon-\nstrate that Conan surpasses the baseline Qwen2.5-\nVL-7B-Instruct by an average of over 10% in accu-\nracy, achieving state-of-the-art performance. Fur-\nthermore, Conan generalizes effectively to long-\nvideo understanding tasks, validating its strong\nscalability and robustness.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        97.27203369140625,
+        294.7491760253906,
+        382.2037048339844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Model:\nhuggingface.co/RUBBISHLIKE/Conan-7B\nCode:\ngithub.com/OuyangKun10/Conan",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 1,
+      "bbox": [
+        113.87840270996094,
+        394.0272521972656,
+        288.7463684082031,
+        411.2529296875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1. Introduction",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 2,
+      "bbox": [
+        91.8010025024414,
+        442.22515869140625,
+        168.6370849609375,
+        454.18035888671875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "There is only one truth!\n– Edogawa Conan",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 3,
+      "bbox": [
+        111.72599792480469,
+        462.5980224609375,
+        274.8248596191406,
+        484.69207763671875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frontier multimodal large language models\n(MLLMs) [2, 11, 22, 26] have demonstrated re-\nmarkable progress on standard video understand-\ning tasks such as question answering [1], tempo-\nral grounding [8], and captioning [23]. However,\nvideo reasoning [5, 18] remains a substantial chal-\nlenge.\nUnlike conventional tasks, video reason-\ning demands active visual information accumula-\ntion across temporal spans and multi-step logical\ninference to reach well-grounded conclusions.\nInspired by the success of reinforcement learn-\ning with verifiable rewards [9] (RLVR) in incen-\ntivizing reasoning ability of LLMs, recent works [6,",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 4,
+      "bbox": [
+        91.8010025024414,
+        498.42144775390625,
+        294.7491149902344,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 8,
+      "bbox": [
+        303.5090026855469,
+        671.7713623046875,
+        308.49029541015625,
+        681.7339477539062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "14, 19] have begun extending this paradigm to\nvideo reasoning, achieving promising gains. Nev-\nertheless, these approaches primarily rely on pure-\ntext reasoning without explicit grounding in visual\nevidence, often leading to superficial or halluci-\nnated reasoning chains that fail to reflect the actual\nvideo content. To integrate visual evidence into the\nreasoning process, concurrent works [10, 27, 30]\nintroduce the frame retrieval mechanism to en-\nable video chain-of-thought (Video-CoT) reason-\ning, boosting performance of long-video under-\nstanding [25, 31]. However, these approaches usu-\nally suffer from inaccurate or implicit evidence lo-\ncalization, yielding unreliable reasoning paths. Ad-\nditionally, some methods [10, 30] partially rely\non benchmark-specific training data (e.g. Video-\nHolmes [5] and LongVideoReason [3]), making\nit difficult to disentangle solid reasoning improve-\nments from in-domain overfitting.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 5,
+      "bbox": [
+        317.25,
+        97.44844055175781,
+        520.1981201171875,
+        322.60418701171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Motivated by these challenges, we aim to equip\nMLLMs with multi-step, evidence-grounded video\nreasoning skills, analogous to how Conan as a\ndetective (Figure 1): Specifically, our framework\nidentifies relevant frames at multiple scales (in-\ncluding both contextual and evidence frames) rea-\nsons over cross-frame clues to form coherent chains\nof deduction, and decides whether to draw the fi-\nnal conclusion or continue exploring the video.\nAchieving this goal raises two core challenges: 1)\nHow to automatically construct a high-quality\nevidence-based reasoning dataset that explicitly\ncaptures evidence localization, multi-step deduc-\ntive reasoning, and confident action decision, and\n2) How to design effective training procedure\nand objectives.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 6,
+      "bbox": [
+        317.25,
+        327.82257080078125,
+        520.1981201171875,
+        517.1129760742188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To tackle the first challenge, we introduce\nConan-91k, a large-scale dataset for Conan-style\nevidence reasoning. Built upon the key-frame iden-\ntification dataset GenS-Video-150K [28], we de-\nvelop an automated pipeline to generate interleaved\nvideo-text reasoning traces using the advanced rea-\nsoning LLM Kimi K2, as illustrated in Figure 2.\nEach reasoning trace contains three key compo-\nnents: 1) Frame Identification distinguishes be-\ntween evidence, contextual and irrelevant frames\n2) Evidence Reasoning conducts textual reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 2,
+      "block_idx": 7,
+      "bbox": [
+        317.25,
+        522.3314208984375,
+        520.1981201171875,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "over the question and accumulated visual clues 3)\nAction Decision decides whether to sample addi-\ntional frames or reach the final conclusion.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        97.44850158691406,
+        294.7491455078125,
+        131.32113647460938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To address the second challenge, we propose a\ntraining procedure that combines a multi-stage pro-\ngressive cold-start strategy for SFT with a joint\nIdentification–Reasoning–Action (AIR) optimiza-\ntion framework for RLVR. Specifically, the pro-\ngressive cold-start strategy incrementally enhances\nthe model’s multi-step reasoning—starting from\ntextual reasoning, advancing to multimodal align-\nment, and culminating in vision-centric deduction.\nBuilding upon this foundation, the joint AIR RLVR\nframework further guides the model to perform\nmulti-step reasoning over multi-scale visual evi-\ndence. Together, these components empower Co-\nnan to “seek, deduce, and act” across visual clues,\nachieving reliable and verifiable multi-step reason-\ning.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 1,
+      "bbox": [
+        91.8010025024414,
+        147.4195098876953,
+        294.7491760253906,
+        336.7101745605469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Extensive\nexperiments\non\nsix\nchallenging\nmulti-step reasoning benchmarks (e.g. MMR-\nV\n[32],\nVideo-Holmes\n[5],\nVRBench\n[29],\nVCRBench\n[20],\nLongVideoReason\n[3],\nand\nHuman-P&C [13]) demonstrate that Conan consis-\ntently surpasses state-of-the-art MLLMs, achiev-\ning over 10% accuracy gains over the baseline\nQwen2.5-VL-7B-Instruct. Moreover, Conan gen-\neralizes effectively to long-video understanding\ntasks (e.g. LongVideoBench [25], MLVU [31],\nLVBench [24], and Video-MME [7]), validating\nstrong scalability and robustness.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 2,
+      "bbox": [
+        91.8010025024414,
+        352.8085632324219,
+        294.74920654296875,
+        494.2780456542969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "In summary, our contributions are threefold:\n1) We introduce Conan-91k, the first large-scale\ndataset for multi-scale evidence reasoning with\nevidence difficulty-aware sampling.\n2) We pro-\npose a multi-stage progressive cold-start strat-\negy and a joint Identification–Reasoning–Action\nRLVR framework to foster gradual acquisition of\nevidence-based reasoning skills. 3) We conduct ex-\ntensive experiments, which demonstrate that Conan\nachieves state-of-the-art multi-step reasoning per-\nformance among frontier MLLMs and also gener-\nalizes well to standard long-video understanding.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 3,
+      "bbox": [
+        91.8010025024414,
+        510.37646484375,
+        294.74920654296875,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 9,
+      "bbox": [
+        303.5090026855469,
+        671.7713623046875,
+        308.49029541015625,
+        681.7339477539062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2. Related Work",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 4,
+      "bbox": [
+        317.25,
+        95.82811737060547,
+        400.362548828125,
+        107.78331756591797
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2.1. Video Reasoning Tasks",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 5,
+      "bbox": [
+        317.25,
+        116.4308090209961,
+        444.0115661621094,
+        127.38970947265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Recent advances in multimodal large language\nmodels (MLLMs) such as Qwen2.5-VL [2], Kimi-\nVL [22], MiMo-VL [26], and GPT-4o [11], have\nsubstantially improved video understanding includ-\ning captioning [23], question answering [1], and\ntemporal grounding [8]. However, these capabil-\nities mainly reflect perceptual understanding [17],\nwhereas video reasoning [15], which demands\nmulti-hop deduction and causal inference across\nframes, remains insufficiently explored and eval-\nuated.\nTo address this gap, several benchmarks\nhave been introduced to assess reasoning capabil-\nities of MLLMs, such as Video-Holmes [5], Vide-\noReasonBench [18], MMR-V [32], VRBench [29],\nand VCRBench [20]. Unlike conventional video\nunderstanding tasks focused on recognizing visual\ncontent, these benchmarks require models to ac-\ntively locate, connect, and reason over multiple rel-\nevant clues, demanding a deeper comprehension of\ntemporal dependencies and causal structures in dy-\nnamic visual narratives.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 6,
+      "bbox": [
+        317.25,
+        135.13246154785156,
+        520.1981201171875,
+        384.1990966796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2.2. Video Reasoning Models",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 7,
+      "bbox": [
+        317.25,
+        396.0338439941406,
+        451.7047119140625,
+        406.99273681640625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Inspired by the reasoning advancements of the\nDeepSeek-R1 [9], several studies [6, 14] adopt re-\ninforcement learning with verifiable rewards [9]\n(RLVR) to promote video reasoning in MLLMs.\nWhile these approaches [6, 14, 19] encourage\nstep-by-step reasoning, most are limited to text-\nonly chain of thought, lacking explicit ground-\ning in visual evidence, which often leads to un-\nverified or hallucinated reasoning. To bridge this\ngap, concurrent works like Video-MTR [27], and\nFrameThinker [10] incorporate frame retrieval ac-\ntions into the reasoning process, enabling dynamic\nevidence gathering and long-form understanding.\nDespite great improvement of long video under-\nstanding [24, 25, 31], they partially depend on\nbenchmark-specific training set and still lack a re-\nliable evidence identification mechanism, render-\ning the retrieval actions less reliable. Motivated by\nthis, we aim to develop a framework named Conan\nthat incentivizes deductive-like reasoning abilities",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 3,
+      "block_idx": 8,
+      "bbox": [
+        317.25,
+        414.7354736328125,
+        520.1981811523438,
+        651.845947265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "in MLLMs, combining precise evidence identifica-\ntion, logical multi-step reasoning, and confident ac-\ntion decision towards robust video reasoning.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        97.44850158691406,
+        294.7491149902344,
+        131.32113647460938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3. Dataset Construction",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 1,
+      "bbox": [
+        91.8010025024414,
+        142.81024169921875,
+        212.33331298828125,
+        154.76544189453125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "In this section, we introduce the construction pro-\ncedure of Conan-91k dataset: (i) Data Collection &\nProcessing, (ii) Reasoning Trace Construction, (iii)\nEvidence Difficulty-Aware Sampling, (iv) Dataset\nStatistics.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 2,
+      "bbox": [
+        91.8010025024414,
+        163.3595733642578,
+        294.7491149902344,
+        221.14321899414062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3.1. Data Collection & Processing",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 3,
+      "bbox": [
+        91.8010025024414,
+        229.41195678710938,
+        248.05299377441406,
+        240.370849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "We collect source data from the GenS-Video-\n150K [28] dataset, which provides dense frame de-\nscriptions, multiple-choice and free-form QA pairs,\nas well as frame-level relevance scores.\nLever-\naging these relevance scores, we categorize video\nframes into three types: 1) Evidence frames, which\nare directly relevant to answering the question; 2)\nContextual frames, which offer auxiliary hints that\nmay support the reasoning process; and 3) Irrele-\nvant frames, which bear no relation to the ques-\ntion. This multi-scale frame categorization estab-\nlishes the foundation for subsequent stepwise rea-\nsoning trace simulation.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 4,
+      "bbox": [
+        91.8010025024414,
+        247.20460510253906,
+        294.74920654296875,
+        400.6291198730469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3.2. Reasoning Trace Construction",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 5,
+      "bbox": [
+        91.8010025024414,
+        408.89788818359375,
+        253.236572265625,
+        419.8567810058594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Starting from the processed data above, we apply\nan automatic pipeline that constructs Conan-style\nvideo–text interleaved reasoning traces with the as-\nsistance of a strong reasoning LLM, Kimi K2 [21].\nFigure 2 a) illustrates the pipeline. The core loop\nproceeds as follows:\n• We first sample 16 frames uniformly from the\nraw video and retain each frame’s type label (ev-\nidence, contextual, or irrelevant).\n• If all sampled frames are irrelevant, we select\nthe action Random Frame Sampling, which ran-\ndomly samples 8 new frames and continue the\nloop.\n• If some sampled frames are evidence or contex-\ntual but the evidence proportion does not exceed\na predefined retrieval threshold, we select the ac-\ntion Specific Frame Retrieval, which uniformly\nretrieves 8 frames within specific clips that con-\ntain evidence, and continue the loop.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 6,
+      "bbox": [
+        91.8010025024414,
+        426.6905212402344,
+        294.7491760253906,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "4",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 13,
+      "bbox": [
+        303.5090026855469,
+        671.7713012695312,
+        308.49029541015625,
+        681.73388671875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "• If the proportion of evidence frames exceeds the\nthreshold, we terminate the loop by selecting\nConfident Question Answering as the final action.\n• For every loop iteration, in addition to the sam-\npled frames and the chosen action, we prompt\nK2 with the frame types, the QA pair, dense\nframe descriptions, timestamps, and the action\ndecision. K2 generates a coherent textual reason-\ning trace that (a) analyzes the QA and sampled\nframes, and (b) reaches the chosen action.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 7,
+      "bbox": [
+        317.25,
+        97.44844055175781,
+        520.197998046875,
+        215.00717163085938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3.3. Evidence Difficulty-Aware Sampling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 8,
+      "bbox": [
+        317.25,
+        225.78695678710938,
+        506.3238830566406,
+        236.745849609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To facilitate a progressive training curriculum from\nsimple to complex reasoning cases, we adopt an\nEvidence Difficulty-Aware Sampling (EDAS) strat-\negy.\nIn particular, we define an Evidence Diffi-\nculty Index (EDI) to quantify each sample’s reason-\ning complexity based on the proportion and tem-\nporal dispersion of evidence frames. Let the evi-\ndence ratio be P = m/N, where m and N denote\nthe numbers of evidence and total frames, respec-\ntively. The temporal variance of evidence frames\nis computed as Var = 1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 9,
+      "bbox": [
+        317.25,
+        244.13661193847656,
+        520.2080688476562,
+        373.6511535644531
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "m\nPm\ni=1 (xi-¯x)2, where xi\nrepresents the temporal position of i-th evidence\nframe, and ¯x is the mean position of all evidence\nframes.\nThe overall difficulty is then defined as\nEDI = (1−P) Var, where higher EDI values indi-\ncating sparser evidences and more challenging rea-\nsoning scenarios. Utilizing this metric, we adopt\na curriculum-aligned sampling scheme: for SFT,\nwe select 60k samples with 70% having EDI<0.5,\nwhile for RLVR, we select 31k samples with 70%\nhaving EDI>0.5. This progressive sampling de-\nsign ensures a smooth transition from low-difficulty\ngrounding during SFT to high-difficulty multi-hop\nreasoning in RLVR, fostering gradual acquisition\nof robust evidence-based reasoning skills.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 10,
+      "bbox": [
+        317.25,
+        360.7837219238281,
+        520.2080688476562,
+        541.0228881835938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3.4. Dataset Statistics",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 11,
+      "bbox": [
+        317.25,
+        551.8026733398438,
+        416.4718933105469,
+        562.7615966796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "The final Conan-91k dataset comprises two sub-\nsets: 1) Conan-CoT-60k.\n60k in total, includ-\ning 25k one-round, 25k two-round, and 10k three-\nround reasoning samples for cold-start. 2) Conan-\nRLVR-31k.\n31k challenging reasoning samples\nfor RLVR to enhance model robustness and reason-\ning generalization in complex scenarios.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 4,
+      "block_idx": 12,
+      "bbox": [
+        317.25,
+        570.0613403320312,
+        520.1981201171875,
+        651.8458862304688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1. Frame Identification",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 28,
+      "bbox": [
+        224.32421875,
+        98.02460479736328,
+        286.80584716796875,
+        107.26639556884766
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "a) Reasoning Trace Construction",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 26,
+      "bbox": [
+        101.48665618896484,
+        99.8950424194336,
+        212.78298950195312,
+        110.37187194824219
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Identified \nframe types",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 24,
+      "bbox": [
+        243.89340209960938,
+        116.71110534667969,
+        276.73663330078125,
+        134.2583770751953
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Sampled frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 27,
+      "bbox": [
+        159.1446533203125,
+        132.366455078125,
+        206.1926727294922,
+        141.51756286621094
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Raw video",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 29,
+      "bbox": [
+        102.60176849365234,
+        132.366455078125,
+        132.69894409179688,
+        141.51756286621094
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3. Action Decision",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 23,
+      "bbox": [
+        213.06375122070312,
+        152.07489013671875,
+        264.4191589355469,
+        161.56776428222656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "b) Data Example",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 42,
+      "bbox": [
+        102.84228515625,
+        163.0630340576172,
+        159.67991638183594,
+        173.5398712158203
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame Identification: Irrelevant frames\nRound 1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 38,
+      "bbox": [
+        104.99510955810547,
+        200.15142822265625,
+        226.5575408935547,
+        208.29232788085938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence Reasoning: ...What must be seen: The question asks for what outside-the-cockpit visual \nelement we first notice shifting focus precisely while the pilot is interacting with the tablet... \nAction Decision: Random Frames Sampling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 39,
+      "bbox": [
+        99.89051055908203,
+        209.7404327392578,
+        303.03826904296875,
+        229.47665405273438
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Textual Reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 6,
+      "bbox": [
+        227.14480590820312,
+        235.42056274414062,
+        281.5395202636719,
+        244.57167053222656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "c) Multi-stage",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 0,
+      "bbox": [
+        101.28987121582031,
+        236.5294189453125,
+        149.83016967773438,
+        247.00625610351562
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan-CoT-60k",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 17,
+      "bbox": [
+        154.50140380859375,
+        237.8748779296875,
+        194.63462829589844,
+        245.93588256835938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Stage",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 7,
+      "bbox": [
+        245.70819091796875,
+        243.8167266845703,
+        261.2392883300781,
+        252.96783447265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Progressive",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 1,
+      "bbox": [
+        101.28987121582031,
+        250.6979217529297,
+        142.1774139404297,
+        261.1747741699219
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Cold-start",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 2,
+      "bbox": [
+        101.28987121582031,
+        264.866455078125,
+        135.8339385986328,
+        275.3432922363281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "d) Joint Identification-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 3,
+      "bbox": [
+        101.22427368164062,
+        283.42987060546875,
+        177.3118438720703,
+        293.9067077636719
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "GRPO \nOptimization",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 16,
+      "bbox": [
+        259.51373291015625,
+        294.6856689453125,
+        296.4328308105469,
+        312.2329406738281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Reasoning-Action",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 4,
+      "bbox": [
+        101.22427368164062,
+        297.598388671875,
+        163.1022186279297,
+        308.0752258300781
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "RLVR",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 5,
+      "bbox": [
+        101.22427368164062,
+        311.76690673828125,
+        123.52482604980469,
+        322.2437438964844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Figure 2. a) Reasoning Trace Construction. b) Data Example. c) Multi-stage Progressive Cold-start, including textual,\nmultimodal alignment, and vision-centric reasoning stages. d) The Joint Identification-Reasoning-Action RLVR.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 44,
+      "bbox": [
+        91.8010025024414,
+        341.9350891113281,
+        520.1973876953125,
+        361.9423828125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "4. Training Procedure",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 45,
+      "bbox": [
+        91.8010025024414,
+        383.7761535644531,
+        203.7255859375,
+        395.7313537597656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "This section details the training procedure of\nConan,\ncomprising two key phases:\nMulti-\nStage Progressive Cold-Start and joint Identifica-\ntion–Reasoning–Action (AIR) RLVR.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 46,
+      "bbox": [
+        91.8010025024414,
+        405.6694641113281,
+        294.7491455078125,
+        451.498046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "4.1. Multi-Stage Progressive Cold-Start",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 47,
+      "bbox": [
+        91.8010025024414,
+        464.6398010253906,
+        275.3297119140625,
+        475.59869384765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To progressively activate the multi-step reason-\ning abilities, we propose a multi-stage progressive\ncold-start training strategy, which consists of the\nfollowing three stages:\nTextual Reasoning Stage.\nIn the initial stage,\nthe model is trained on 10k single-round sam-\nples from Conan-CoT-60k, where frames are rep-\nresented solely by dense textual descriptions and\ntimestamps. This stage focuses on learning tem-\nporal and causal reasoning across ordered frame\ndescriptions, establishing a structured reasoning\nfoundation for subsequent multimodal learning.\nMultimodal Alignment Reasoning Stage.\nThe\nsecond stage incorporates 25k single-round and",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 48,
+      "bbox": [
+        91.8010025024414,
+        483.77642822265625,
+        294.7491760253906,
+        651.845947265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 50,
+      "bbox": [
+        303.5090026855469,
+        671.771240234375,
+        308.49029541015625,
+        681.7338256835938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2. Evidence Reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 36,
+      "bbox": [
+        425.2854309082031,
+        95.9255599975586,
+        486.3905334472656,
+        105.16735076904297
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "<think>...",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 43,
+      "bbox": [
+        489.93719482421875,
+        107.38249969482422,
+        510.57769775390625,
+        114.26734924316406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Kimi",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 21,
+      "bbox": [
+        466.0802917480469,
+        109.84025573730469,
+        482.2112121582031,
+        118.99137115478516
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "QA \npair",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 25,
+      "bbox": [
+        310.27423095703125,
+        116.68924713134766,
+        322.1195983886719,
+        134.23651123046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Dense frame \ndescriptions",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 19,
+      "bbox": [
+        347.2588806152344,
+        117.01721954345703,
+        384.576904296875,
+        134.56448364257812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Interleaved \ntimestamps",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 20,
+      "bbox": [
+        404.4918212890625,
+        117.36705780029297,
+        437.91790771484375,
+        134.91432189941406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "K2",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 22,
+      "bbox": [
+        468.9883117675781,
+        118.23641204833984,
+        477.5265808105469,
+        127.38752746582031
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "No evidence\nRandom Frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 34,
+      "bbox": [
+        294.1610412597656,
+        140.75648498535156,
+        324.06689453125,
+        151.71278381347656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Partial evidence\nSpecific Frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 30,
+      "bbox": [
+        350.8569641113281,
+        140.9095458984375,
+        380.3036193847656,
+        151.8658447265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Sufficient evidence\nConfident Question",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 32,
+      "bbox": [
+        403.2236328125,
+        141.3905792236328,
+        438.7269287109375,
+        152.34686279296875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Sampling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 35,
+      "bbox": [
+        300.1739196777344,
+        151.25169372558594,
+        318.05401611328125,
+        156.96038818359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Retrieval",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 31,
+      "bbox": [
+        357.00103759765625,
+        151.4047393798828,
+        373.0526428222656,
+        157.11343383789062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Answering",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 33,
+      "bbox": [
+        410.8326721191406,
+        151.88577270507812,
+        430.01922607421875,
+        157.59446716308594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Loop\nEnd",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 37,
+      "bbox": [
+        234.29466247558594,
+        157.0755157470703,
+        495.2088623046875,
+        174.04995727539062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Round 3\nFrame Identification: Evidence frames\n...",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 40,
+      "bbox": [
+        305.6620178222656,
+        187.04544067382812,
+        500.724853515625,
+        208.32424926757812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence Reasoning: ...A is the only description matching the visible external change: the \npeople and another plane appear in plain sight through the cockpit glass during the pilot’s \ntablet-based attention window.Answer: A. Action Decision: Confident Question Answering",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 41,
+      "bbox": [
+        314.97650146484375,
+        209.71856689453125,
+        504.98333740234375,
+        229.4547882080078
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Multimodal Alignment",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 8,
+      "bbox": [
+        309.956298828125,
+        234.96141052246094,
+        376.4423522949219,
+        244.11251831054688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Vision-Centric \nReasoning Stage",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 10,
+      "bbox": [
+        407.9202575683594,
+        234.96141052246094,
+        455.6460876464844,
+        252.5086669921875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Reasoning Stage",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 9,
+      "bbox": [
+        318.89910888671875,
+        243.35755920410156,
+        365.718994140625,
+        252.5086669921875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Reference",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 12,
+      "bbox": [
+        358.8774719238281,
+        281.23736572265625,
+        388.9800720214844,
+        290.38848876953125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "y1\ny2\ny3\n...\nyG",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 11,
+      "bbox": [
+        418.7014465332031,
+        281.29815673828125,
+        425.4992370605469,
+        324.6754150390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "r1\nr2\nr3\n...\nrG",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 15,
+      "bbox": [
+        322.332763671875,
+        281.29815673828125,
+        327.9716796875,
+        324.6754150390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Model",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 13,
+      "bbox": [
+        363.90643310546875,
+        289.633544921875,
+        382.1716613769531,
+        298.78466796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rewards \nComputation",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 14,
+      "bbox": [
+        354.78875732421875,
+        308.1339416503906,
+        391.3142395019531,
+        325.68121337890625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan-RLVR-31k",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 18,
+      "bbox": [
+        461.0364685058594,
+        316.071533203125,
+        506.614013671875,
+        324.132568359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "10k two-round samples combining raw visual\nframes with corresponding textual descriptions and\ntimestamps. This multimodal configuration bridges\nthe gap between text-only and vision-language rea-\nsoning, promoting effective alignment between vi-\nsual and linguistic cues.\nMoreover, the inclu-\nsion of two-round samples introduces the frame\nretrieval action, allowing the model to learn how\nto gather supplementary evidence for complex rea-\nsoning tasks.\nVision-Centric Reasoning Stage.\nIn the final\nstage, the model is trained on the complete Conan-\nCoT-60k, performing reasoning directly over visual\nframes with interleaved timestamps.\nThis stage\ncompels the model to execute multi-step reasoning\nacross multi-scale visual clues, thereby achieving a\nhigher level of perceptual understanding and visual\nreasoning competence.\nOverall, this progressive curriculum, from text-\nbased to multimodal and ultimately to vision-\ncentric reasoning, enables the model to incremen-\ntally acquire robust multi-scale evidence reasoning",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 5,
+      "block_idx": 49,
+      "bbox": [
+        317.25,
+        385.16583251953125,
+        520.1981201171875,
+        651.8458251953125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "skills, laying a solid foundation for the subsequent\nRLVR phase.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        97.44850158691406,
+        294.7491149902344,
+        119.36611938476562
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "4.2. AIR RLVR",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 1,
+      "bbox": [
+        91.8010025024414,
+        127.4438705444336,
+        163.8448028564453,
+        138.40277099609375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Building upon the model Conan-SFT obtained\nfrom the cold-start process, we further enhance\nits multi-step reasoning capabilities via the AIR\nRLVR framework. Given that the model has al-\nready learned to produce reasoning traces consist-\ning of: 1) frame identification, 2) evidence reason-\ning, and 3) action decision, AIR RLVR aims to op-\ntimize the exploration of effective reasoning trajec-\ntories through a set of carefully designed reward\nfunctions. We first introduce one format reward and\ntwo outcome rewards to ensure both structural con-\nsistency and answer accuracy.\nFormat Reward. To enforce structural consistency\nin model outputs y, we define a format reward Rfmt\nthat verifies whether specific tags are correctly ap-\nplied. And the model is restricted to perform only\none action (e.g. random frame sampling, specific\nframe retrieval, confident question answering) at a\ntime. The format reward Rfmt is defined as:",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 2,
+      "bbox": [
+        91.80099487304688,
+        145.2365264892578,
+        294.7491760253906,
+        371.88616943359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(\n0.5,\nif y matches format,\n0,\notherwise.\n(1)",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 4,
+      "bbox": [
+        154.27999877929688,
+        378.9974365234375,
+        294.7503662109375,
+        406.61517333984375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rfmt(y) =",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 3,
+      "bbox": [
+        105.19799041748047,
+        388.8700256347656,
+        151.5177459716797,
+        399.6746520996094
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Multi-choice Reward. For multi-choice QA, we\napply a binary outcome reward Rmc based on exact\nmatch between the predicted answer y and ground\ntruth ˆy:",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 5,
+      "bbox": [
+        91.80101013183594,
+        416.714599609375,
+        294.7491149902344,
+        462.63311767578125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(\n1,\nif y = ˆy,\n0,\notherwise.\n(2)",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 7,
+      "bbox": [
+        186.37701416015625,
+        470.3254089355469,
+        294.7503662109375,
+        497.9431457519531
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rmc(y, ˆy) =",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 6,
+      "bbox": [
+        131.74000549316406,
+        480.198974609375,
+        183.60848999023438,
+        491.0025939941406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Free-form Reward. For free-form QA, the out-\ncome reward Rfree is computed as the average of\nROUGE-1, ROUGE-2, and ROUGE-L scores [16]\nbetween the predicted answer y and the reference\nanswer ˆy:",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 8,
+      "bbox": [
+        91.80101013183594,
+        508.0426025390625,
+        294.7491149902344,
+        565.9171142578125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rfree(y, ˆy) = 1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 9,
+      "bbox": [
+        93.25200653076172,
+        572.468017578125,
+        154.27230834960938,
+        590.1729736328125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "3\n\u0000\nR1(y, ˆy) + R2(y, ˆy) + RL(y, ˆy)\n\u0001",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 10,
+      "bbox": [
+        149.29100036621094,
+        578.30029296875,
+        293.2948913574219,
+        596.0035400390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(3)\nTo evaluate the joint quality of the multi-scale\nframe identification, frames retrieval, we design\nan identification reward Ride and a retrieval re-\nward Rret:\n1) the identification reward Ride",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 11,
+      "bbox": [
+        91.80101776123047,
+        594.0625,
+        294.753173828125,
+        652.45654296875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "6",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 19,
+      "bbox": [
+        303.5089416503906,
+        671.7714233398438,
+        308.490234375,
+        681.7340087890625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "measures the average accuracy of identified evi-\ndence/contextual frames across steps, 2) the re-\ntrieval reward Rret evaluates the quality of re-\ntrieved frames by computing the average ratio\nof evidence/contextual frames among all retrieved\nframes. And the final joint identification-retrieval-\noutcome reward RIRO is formulated as:",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 12,
+      "bbox": [
+        317.25,
+        97.44850158691406,
+        520.1981811523438,
+        180.63619995117188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(\nRfmt + Ro + Ride + Rret,\nif Ro > 0,",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 14,
+      "bbox": [
+        354.9809875488281,
+        190.1474151611328,
+        526.2554321289062,
+        203.90557861328125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "RIRO =",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 13,
+      "bbox": [
+        317.25,
+        200.02000427246094,
+        352.2159118652344,
+        211.47662353515625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rfmt + Ro,\notherwise,\n(4)\nwhere Ro is the outcome reward and o\n∈\n{mc, free}. This reward shaping encourages the\nmodel to generate structurally valid, evidence-\ngrounded, and accurate reasoning traces while\nimproving\nretrieval\nefficiency.\nFinally,\nwe\nprompt the model generate a group of response\n{y1, y2, · · · , yG}, where G is the number of gener-\nated responses, and adopt the GRPO [9] algorithm\nfor reinforcement optimization to stabilize training\nand refine the reasoning policy.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 15,
+      "bbox": [
+        317.24993896484375,
+        207.3920135498047,
+        526.24951171875,
+        350.0091552734375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5. Experiment",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 16,
+      "bbox": [
+        317.24993896484375,
+        364.1112365722656,
+        389.638671875,
+        376.0664367675781
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5.1. Evaluation Setups",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 17,
+      "bbox": [
+        317.24993896484375,
+        384.3959045410156,
+        421.2718200683594,
+        395.35479736328125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Implementation Details 1) Training Settings. We\nadopt Qwen-2.5-VL-7B-Instruct [2] as the base\nmodel. During the multi-stage cold start, the model\nis trained for up to one epoch per stage with a\nglobal batch size of 32. The trained model is then\nused for the AIR RLVR phase, also trained for one\nepoch under the same batch configuration.\nThe\nmaximum completion length is set to 4, 000 tokens,\nwith a generation temperature of 1.0 and number\nof 8. Each input video contains 16 initial frames,\nand the model is allowed to retrieve up to 8 ad-\nditional frames per reasoning step. 2) Evaluation\nSettings. The generation temperature is fixed at 1.0\nand each sample is evaluated for three times. The\nmaximum new tokens is set to 4, 000 when reason-\ning traces are included, and 128 for direct answer-\ning.\nThe number of reasoning rounds is limited\nto three to maintain retrieval efficiency. videos are\nstandardized to 16 frames for multi-step reasoning\nbenchmarks, 32 frames for long-video understand-\ning benchmarks during evaluation at a resolution of",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 6,
+      "block_idx": 18,
+      "bbox": [
+        317.24993896484375,
+        402.6885986328125,
+        520.1980590820312,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Closed-source Models\nGPT-4o [11]\n-\n-\n44.0\n42.0\n68.7\n46.9\n-\n48.4\nGemini 1.5 Pro\n-\n-\n41.2\n44.0\n69.3\n52.6\nGemini 2.0 Flash\n-\n42.6\n30.6\n51.7\n56.1\nGemini 2.5 Flash\n-\n-\n51.2\n60.0\nGemini 2.5 Pro\n-\n-\n45.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 1,
+      "bbox": [
+        97.16925048828125,
+        108.46574401855469,
+        502.2865295410156,
+        152.78001403808594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Open-source Models\nLLaVA-OneVision-7B [12]\n7B\n-\n6.5\n-\n-\n30.7\n-\n48.5\nInternVL3-8B [4]\n8B\n-\n33.6\n32.3\n-\n-\n-\n54.2\nKimi-VL-A3B-Instruct [22]\n3B/16B\n44.4\n32.4\n32.4\n60.5\n34.3\n64.6\n42.0\nQwen2.5-VL-72B-Instruct [2]\n72B\n55.1\n39.1\n40.2\n72.7\n50.8\n72.3\n55.7\nQwen2.5-VL-7B-Instruct [2]\n7B\n46.9\n30.1\n28.5\n66.4\n46.5\n61.8\n48.2\nText CoT Models\nVideo-R1 [6]\n7B\n44.4\n36.3\n36.5\n69.5\n48.0\n70.3\n49.8\nVideoChat-R1 [14]\n7B\n49.8\n36.1\n33.0\n61.5\n48.2\n67.9\n51.8\nVideo CoT Models\nVideo-MTR [27]\n7B\n49.1\n36.5\n35.7\n69.7\n48.1\n57.3\n47.2\nRewatch-R1† [30]\n7B\n50.9\n45.3\n37.8\n79.1\n49.8\n70.5\n51.6",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 2,
+      "bbox": [
+        97.16925048828125,
+        157.10142517089844,
+        502.2865295410156,
+        246.88096618652344
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan SFT\n7B\n49.1\n35.4\n34.9\n64.4\n43.3\n66.0\n50.4\nConan\n7B\n57.4 (↑10.5 )\n42.7 (↑12.6 )\n44.6 (↑16.1 )\n81.0 (↑14.6 )\n51.0 (↑4.5 )\n72.8 (↑11.0 )\n52.3 (↑4.1 )",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 3,
+      "bbox": [
+        97.16927337646484,
+        251.31422424316406,
+        511.68548583984375,
+        265.2062683105469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Table 1. Evaluation results of base model Qwen2.5-VL-7B-Instruct , Conan , and other baselines on the six multi-\nstep reasoning benchmarks. † means the model is partly trained on LongVideoReason-QA [3], the training set of\nLongVideoReason. ∗denotes the multi-choice subset.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 4,
+      "bbox": [
+        91.80099487304688,
+        279.81298828125,
+        520.1976928710938,
+        310.6973876953125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "448 × 28 × 28.\nMulti-step Reasoning Benchmarks.\nWe con-\nduct comprehensive evaluation on six challenging\nmulti-step reasoning benchmarks: MMR-V [32],\nVideo-Holmes [5], VRBench [29], VCRBench [20]\n(multi-choice subset), LongVideoReason [3], and\nHuman-P&C [13]. Accuracy is used as the primary\nevaluation metric.\nCompared Methods.\nWe compare Conan with\na set of closed-source MLLMs, and open-source\nmodels, including non-reasoning models, text-CoT\nmodels, and video-CoT models.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 5,
+      "bbox": [
+        91.80099487304688,
+        333.79180908203125,
+        294.7491455078125,
+        477.8649597167969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5.2. Main Results",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 6,
+      "bbox": [
+        91.80099487304688,
+        490.3397216796875,
+        172.77630615234375,
+        501.2986145019531
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "The evaluation results on the six multi-step reason-\ning benchmarks are shown in Table 1. And we have\nthe following key observations and analyses.\nOverall Analysis. Conan substantially surpasses\nits base model Qwen2.5-VL-7B-Instruct across all\nbenchmarks, with average accuracy gains exceed-\ning 10%.\nRemarkably, Conan also outperforms\nthe advanced GPT-4o on most benchmarks, un-\nderscoring its superior capabilities of multi-step,\nevidence-grounded reasoning.\nFurthermore, two\nadvanced text-CoT models (e.g. Video-R1 and\nVideoChat-R1) perform notably worse than Co-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 7,
+      "bbox": [
+        91.80099487304688,
+        509.25335693359375,
+        294.7491455078125,
+        651.845947265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 16,
+      "bbox": [
+        303.5090026855469,
+        671.771484375,
+        308.49029541015625,
+        681.7340698242188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "#Params\nOverall\nMMR-V\nVideo-Holmes\nVRBench\nVCRBench∗\nLongVideoReason\nHuman-P&C",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 0,
+      "bbox": [
+        181.45663452148438,
+        97.60115051269531,
+        514.8277587890625,
+        104.14371490478516
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "nan, demonstrating the effectiveness of the identi-\nfication–reasoning–action mechanism in grounding\nreasoning on accurate visual evidence. In addition,\ncompared with concurrent Video-CoT approaches\n(e.g. Video-MTR and Rewatch-R1), Conan exhibits\nstronger multi-hop reasoning abilities, highlighting\nthe superiority of accurate evidence identification.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 8,
+      "bbox": [
+        317.25,
+        334.1513671875,
+        520.1981201171875,
+        415.84490966796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "LongVideoBench\nMLVU\nLVBench\nVideoMME",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 9,
+      "bbox": [
+        385.80145263671875,
+        428.9656982421875,
+        515.9443359375,
+        433.97021484375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Qwen2.5-VL-7B-Instruct [2]\n48.9\n52.8\n34.4\n55.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 10,
+      "bbox": [
+        321.50372314453125,
+        437.5298767089844,
+        507.7669677734375,
+        442.5343933105469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Video-R1 [6]\n55.6\n62.5\n38.3\n58.6\nVideoChat-R1 [14]\n54.3\n60.5\n38.0\n56.9",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 11,
+      "bbox": [
+        321.50372314453125,
+        446.0478820800781,
+        507.7669677734375,
+        457.0577697753906
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Rewatch-R1 [30]\n50.5\n55.2\n37.2\n58.9\nVideo-MTR [27]\n56.4\n59.7\n38.6\n59.3\nFrameThinker [10]\n52.9\n59.1\n36.6\n-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 12,
+      "bbox": [
+        321.50372314453125,
+        460.5712585449219,
+        507.7669677734375,
+        477.5864562988281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan\n56.6 (↑7.7 )\n63.4 (↑10.6 )\n39.2 (↑4.8 )\n60.5 (↑4.7 )",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 13,
+      "bbox": [
+        321.50372314453125,
+        481.0547790527344,
+        515.2154541015625,
+        486.10498046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Table 2. Evaluation results on long-video understanding.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 14,
+      "bbox": [
+        317.25,
+        498.7939758300781,
+        520.1954345703125,
+        507.7603759765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Long video understanding.\nBeyond multi-step\nreasoning, Conan exhibits strong generalization to\nlong-video understanding tasks. As presented in\nTable 2, Conan consistently outperforms Qwen2.5-\nVL-7B-Instruct\nacross\nLongVideoBench\n[25],\nMLVU [31], LVBench [24], and Video-MME [7],\nachieving state-of-the-art performance compared\nwith both text-CoT and video-CoT models. These\nresults indicate that the high-quality, multi-scale\nevidence reasoning data and progressive training\nstrategy not only enhance stepwise reasoning but",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 7,
+      "block_idx": 15,
+      "bbox": [
+        317.25,
+        522.240478515625,
+        520.1981811523438,
+        651.8460083007812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "w-binary scale\n53.8\n39.7\n39.1\n75.4\n46.9\n70.2\n51.3\nw/o-data sampling\n55.2\n40.0\n40.8\n78.9\n48.4\n72.3\n50.7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 1,
+      "bbox": [
+        97.76347351074219,
+        110.0772476196289,
+        500.3100280761719,
+        125.51063537597656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "w/o-textual reasoning\n57.0\n42.2\n43.9\n81.4\n49.8\n73.1\n51.7\nw/o-multimodal alignment reasoning\n56.4\n43.5\n44.2\n80.4\n48.2\n72.5\n49.3\nw/o-vision-centric reasoning\n53.0\n39.0\n36.5\n75.2\n50.1\n68.5\n48.7\nw-direct RLVR\n51.0\n39.1\n36.8\n73.3\n46.3\n62.3\n47.9",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 2,
+      "bbox": [
+        97.76347351074219,
+        130.37144470214844,
+        500.3100280761719,
+        162.70362854003906
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "w/o-evidence reward\n53.8\n39.9\n40.0\n74.8\n46.1\n71.7\n50.1\nw/o-retrieval reward\n54.0\n38.2\n42.4\n75.7\n47.8\n69.2\n50.5\nw-text CoT\n55.2\n41.1\n41.0\n76.8\n48.8\n70.5\n52.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 3,
+      "bbox": [
+        97.76347351074219,
+        167.6292266845703,
+        500.3100280761719,
+        191.47962951660156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Conan\n57.4\n42.7\n44.6\n81.0\n51.0\n72.8\n52.3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 4,
+      "bbox": [
+        97.76348114013672,
+        196.34043884277344,
+        500.3100280761719,
+        203.4193572998047
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(a) Stepwise Identification–Retrieval-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 6,
+      "bbox": [
+        114.2336654663086,
+        237.6122589111328,
+        229.54006958007812,
+        247.62379455566406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Outcome Reward (Free-Form)",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 7,
+      "bbox": [
+        125.25584411621094,
+        246.76913452148438,
+        218.5178985595703,
+        256.7806701660156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 16,
+      "bbox": [
+        238.44515991210938,
+        262.40625,
+        244.80410766601562,
+        269.0805969238281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.30",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 23,
+      "bbox": [
+        103.65660858154297,
+        262.40625,
+        112.55914306640625,
+        269.0805969238281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.28",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 22,
+      "bbox": [
+        103.65660858154297,
+        272.1778259277344,
+        112.55914306640625,
+        278.8521728515625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 15,
+      "bbox": [
+        238.44515991210938,
+        277.8584899902344,
+        244.80410766601562,
+        284.5328369140625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.26",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 21,
+      "bbox": [
+        103.65660858154297,
+        281.94940185546875,
+        112.55914306640625,
+        288.6237487792969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 14,
+      "bbox": [
+        238.44515991210938,
+        292.2720947265625,
+        244.80410766601562,
+        298.9464416503906
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.24",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 20,
+      "bbox": [
+        103.65660858154297,
+        292.2720947265625,
+        112.55914306640625,
+        298.9464416503906
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.22",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 19,
+      "bbox": [
+        103.65660858154297,
+        302.59478759765625,
+        112.55914306640625,
+        309.2691345214844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 13,
+      "bbox": [
+        238.44515991210938,
+        306.68572998046875,
+        244.80410766601562,
+        313.3600769042969
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.20",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 18,
+      "bbox": [
+        103.65660858154297,
+        311.8152770996094,
+        112.55914306640625,
+        318.4896240234375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.4",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 12,
+      "bbox": [
+        238.44515991210938,
+        321.6080627441406,
+        244.80410766601562,
+        328.28240966796875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.18",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 17,
+      "bbox": [
+        103.65660858154297,
+        322.1379699707031,
+        112.55914306640625,
+        328.81231689453125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.16",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 10,
+      "bbox": [
+        103.65660858154297,
+        331.35845947265625,
+        112.55914306640625,
+        338.0328063964844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "0.3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 11,
+      "bbox": [
+        238.44515991210938,
+        336.55157470703125,
+        244.80410766601562,
+        343.2259216308594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "also effectively boost long-video understanding.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 31,
+      "bbox": [
+        91.80099487304688,
+        389.5384521484375,
+        283.4613952636719,
+        399.5010681152344
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5.3. Ablation Study",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 32,
+      "bbox": [
+        91.80099487304688,
+        408.7528381347656,
+        181.92698669433594,
+        419.71173095703125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To investigate the contribution of each component\nin our framework, we conduct a comprehensive ab-\nlation study with multiple Conan variants.\nFor the Conan-91k dataset, we design two vari-\nants: 1) w-binary scale, which removes the con-\ntextual frame type in multi-scale frame identifica-\ntion by merging it into the irrelevant category, re-\nducing frame labels to only evidence and irrelevant\ntypes; and 2) w/o-data sampling, which omits the\nevidence difficulty-aware sampling process and ap-\nplies uniform random sampling instead.\nFor the multi-stage progressive cold-start strat-\negy, we develop four variants: 1) w/o-textual rea-\nsoning, which excludes the textual reasoning stage;\n2) w/o-multimodal alignment reasoning, which\nskips the multimodal alignment reasoning stage;\nand 3) w/o-vision-centric reasoning, which re-\nmoves the vision-centric reasoning stage.\n4) w-\ndirect RLVR, which bypasses the three cold-start",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 33,
+      "bbox": [
+        91.80099487304688,
+        426.59344482421875,
+        294.7491760253906,
+        651.845947265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "8",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 35,
+      "bbox": [
+        303.5090026855469,
+        671.771240234375,
+        308.49029541015625,
+        681.7338256835938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Overall\nMMR-V\nVideo-Holmes\nVRBench\nVCRBench⋆\nLongVideoReason\nHuman-P&C",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 0,
+      "bbox": [
+        210.5128173828125,
+        97.97518157958984,
+        514.2412719726562,
+        105.08834075927734
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Table 3. Ablation results of Conan, where the best results are in boldface.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 5,
+      "bbox": [
+        173.48300170898438,
+        216.77113342285156,
+        438.5207824707031,
+        225.81939697265625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "(b) Stepwise Identification–Retrieval-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 8,
+      "bbox": [
+        251.7989501953125,
+        237.6122589111328,
+        367.529296875,
+        247.62379455566406
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Outcome Reward (Multi-Choice)\n(c) Inference Round(s)",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 9,
+      "bbox": [
+        258.7937927246094,
+        241.38522338867188,
+        476.7972717285156,
+        256.7806701660156
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "StageⅠ\nStageⅡ\nStageⅠ\nStageⅡ\nStageⅠ\nStageⅡ",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 29,
+      "bbox": [
+        133.31051635742188,
+        271.99298095703125,
+        495.6434631347656,
+        285.69610595703125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 27,
+      "bbox": [
+        372.3010559082031,
+        273.66156005859375,
+        378.6600036621094,
+        280.3359069824219
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "2.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 26,
+      "bbox": [
+        372.5342102050781,
+        294.6249084472656,
+        378.8931579589844,
+        301.29925537109375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1.5",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 25,
+      "bbox": [
+        372.5342102050781,
+        315.5882568359375,
+        378.8931579589844,
+        322.2626037597656
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "1.0",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 24,
+      "bbox": [
+        372.5553894042969,
+        336.55157470703125,
+        378.9143371582031,
+        343.2259216308594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "500\n1k\n1.5k\n2.0k\n2.5k\n3.0k\n500\n1k\n1.5k\n2.0k\n2.5k\n3.0k\n500\n1k\n1.5k\n2.0k\n2.5k\n3.0k",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 28,
+      "bbox": [
+        127.26951599121094,
+        340.1973876953125,
+        501.28173828125,
+        347.04132080078125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Figure 3. Training dynamics in the AIR RLVR process of Conan.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 30,
+      "bbox": [
+        188.78799438476562,
+        357.1189880371094,
+        423.2146301269531,
+        366.08538818359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "stages and directly employs AIR RLVR to train the\nmodel on the Conan-RLVR-31k dataset.\nFor the AIR RLVR framework, we design three\nvariants:\nw/o-identification reward, which dis-\ncards the identification reward; w/o-retrieval re-\nward, which removes the retrieval reward; and w-\ntext CoT, which enforces single-round text-CoT\nparadigm performing pure textual reasoning and\nanswering without additional actions in training\nand evaluation procedures.\nThe ablation results in Table 3 reveal several\nkey findings: a) Dataset design. w-binary scale\nunderperforms Conan, confirming the benefits of\nmulti-scale frame identification in providing richer\ncontextual cues.\nMoreover, Conan outperforms\nw/o-data sampling, which validates that evidence\ndifficulty-aware sampling effectively guides the\nmodel to progressively acquire multi-step reason-\ning abilities.\nb) Progressive cold-start.\nConan\nconsistently surpasses w/o-textual reasoning, w/o-\nmultimodal alignment reasoning, and w/o-vision-\ncentric reasoning across most multi-step reason-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 8,
+      "block_idx": 34,
+      "bbox": [
+        317.25,
+        389.5383605957031,
+        520.1981201171875,
+        651.8458251953125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "The video shows characters in the Minecraft game choosing to wear different colored shirts, what \neffect might this have in the game?",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 2,
+      "bbox": [
+        104.76810455322266,
+        121.09558868408203,
+        305.0491638183594,
+        133.87423706054688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "A. Different colored shirts may unlock hidden crafting recipes or resource nodes.\nB. Different colored shirts may trigger different game events or interactions with other characters.\nC. Different colored shirts may change the time of day or weather conditions in the game.\nD. Different colored shirts may alter the player's movement speed and jumping ability.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 1,
+      "bbox": [
+        104.76810455322266,
+        134.7894744873047,
+        304.39208984375,
+        159.7770233154297
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Video-R1\nText CoT Reasoning: Let me think about this for a moment. The question is asking about the effects of characters wearing different colored shirts in the Minecraft game...",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 14,
+      "bbox": [
+        105.97627258300781,
+        160.6324920654297,
+        459.2616882324219,
+        178.50804138183594
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "After reviewing the options carefully, the most plausible explanation is that different colored shirts may unlock hidden crafting recipes or resource nodes. \nAnswer: A",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 15,
+      "bbox": [
+        132.8858642578125,
+        166.73692321777344,
+        447.2225646972656,
+        179.51559448242188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Round 1",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 11,
+      "bbox": [
+        247.96109008789062,
+        203.34188842773438,
+        268.11700439453125,
+        212.3009033203125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame Identification: Contextual frames\nIrrelevant frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 8,
+      "bbox": [
+        174.34524536132812,
+        267.3382568359375,
+        357.0411071777344,
+        274.26171875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Round 2",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 12,
+      "bbox": [
+        217.54183959960938,
+        276.0301513671875,
+        237.69775390625,
+        284.98919677734375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Contextual frames\nFrame Identification: Evidence frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 10,
+      "bbox": [
+        143.77171325683594,
+        308.76202392578125,
+        339.7876281738281,
+        316.10260009765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Figure 4. A qualitative example from VRBench showing the reasoning traces of Video-R1 (Text CoT), Video-MTR\n(Video CoT), and Conan for comparison.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 19,
+      "bbox": [
+        91.8010025024414,
+        334.7909851074219,
+        520.1976928710938,
+        354.71636962890625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "ing benchmarks, and shows substantial gains over\nw-direct RLVR. These results demonstrate that the\nmulti-stage progressive cold-start strategy is crucial\nfor gradually activating the model’s multi-hop rea-\nsoning capabilities. c) AIR RLVR. Conan outper-\nforms w/o-evidence reward and w/o-retrieval re-\nward, proving the effectiveness of the two rewards\nin enhancing accurate evidence localization, and ef-\nficient frame retrieval, respectively.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 20,
+      "bbox": [
+        91.8010025024414,
+        378.16943359375,
+        294.7491760253906,
+        483.7739562988281
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5.4. Training Dynamics",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 21,
+      "bbox": [
+        91.8010025024414,
+        492.5837097167969,
+        200.5900115966797,
+        503.5426025390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "To gain a deeper understanding of how the model’s\nbehavior evolves during end-to-end reinforcement\nlearning, we perform a fine-grained analysis of its\ntraining dynamics. As shown in Figure 3, the train-\ning process can be divided into two stages:\nStage I: Accuracy-Oriented Evidence Explo-\nration. Building upon the solid foundation estab-\nlished through multi-stage cold-start training, the\nmodel initially enters a phase characterized by fre-\nquent yet progressively more accurate frame re-\ntrieval. During this stage, it actively queries ad-\nditional clips to maximize the stepwise identifica-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 22,
+      "bbox": [
+        91.8010025024414,
+        510.3763427734375,
+        294.74920654296875,
+        651.8458862304688
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "9",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 26,
+      "bbox": [
+        303.5090026855469,
+        671.7711791992188,
+        308.49029541015625,
+        681.7337646484375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "8 frames\nIrrelevant",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 16,
+      "bbox": [
+        393.6602478027344,
+        125.52669525146484,
+        508.357177734375,
+        135.7998046875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 5,
+      "bbox": [
+        364.71966552734375,
+        128.3186492919922,
+        381.36383056640625,
+        136.1330108642578
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Retrieval\nReasoning\nVideo CoT",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 6,
+      "bbox": [
+        321.58197021484375,
+        134.31753540039062,
+        461.1390075683594,
+        146.81578063964844
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 17,
+      "bbox": [
+        487.2829895019531,
+        135.1072998046875,
+        503.4197692871094,
+        142.92166137695312
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Video-MTR",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 0,
+      "bbox": [
+        321.2640380859375,
+        145.36192321777344,
+        350.6024169921875,
+        153.17628479003906
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "A",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 3,
+      "bbox": [
+        472.1117248535156,
+        146.68763732910156,
+        477.6210021972656,
+        156.6989288330078
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Inacurate\nperception",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 18,
+      "bbox": [
+        482.83184814453125,
+        161.96263122558594,
+        507.87493896484375,
+        176.8988494873047
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Frame Identification: Irrelevant frames",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 4,
+      "bbox": [
+        286.1541442871094,
+        204.02578735351562,
+        363.6542663574219,
+        210.94924926757812
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence Reasoning: ...We need to identify how wearing differently colored shirts affects gameplay, specifically in the context of the Minecraft mod “Friendycraft.” The key is \nto find evidence that the shirt color triggers any in-game effect...Since the frames do not contain the required evidence, we must randomly retrieve more frames to verify the \nshirt-color-triggered events.\nAction Decision: Random Frames Sampling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 7,
+      "bbox": [
+        150.53492736816406,
+        212.6551055908203,
+        507.3907470703125,
+        237.89190673828125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence Reasoning: In the previous round we lacked direct evidence \nof shirt-color effects...B: The only plausible effect is that different \nshirt colors trigger different game events or interactions with other \ncharacters...Since the evidence is not sufficient, we must retrieve the \nsurrounding clips...verify the shirt-color-triggered events.\nAction Decision: Specific Frames Retrieval 00:15:46-00:16:00...",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 9,
+      "bbox": [
+        361.3363342285156,
+        240.58889770507812,
+        502.26849365234375,
+        278.03460693359375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Evidence Reasoning: ...The frames describe various game events and \ninteractions (flag capture, team lists, etc.) that are directly tied to the \nplayer’s shirt color...Conclusion: The evidence consistently shows \nthat different colored shirts trigger different game events and \ninteractions with other characters. Therefore, the correct answer is B. \nAction Decision: Confident Question Answering B\nRound 3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 13,
+      "bbox": [
+        217.54183959960938,
+        281.8786926269531,
+        503.5191345214844,
+        323.42138671875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "tion–retrieval–outcome reward across tasks.\nThe\nincreasing retrieval precision reflects an early learn-\ning strategy where the model compensates for in-\ncomplete internal reasoning by broadly exploring\nthe visual context to identify useful evidence. This\nstage marks a transitional period in which the\nmodel learns to recognize the importance of ac-\ncurate evidence localization before optimizing re-\ntrieval efficiency.\nStage II: Efficient Evidence Retrieval. As train-\ning progresses, the model transitions to a more re-\nfined and selective retrieval policy. It significantly\nreduces retrieval frequency while maintaining high\nreward accuracy, indicating that Conan has inter-\nnalized a compact and efficient multi-step reason-\ning strategy, retrieving evidence only when neces-\nsary, much like a detective who strategically gath-\ners key clues rather than exhaustively examining all\ninformation.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 23,
+      "bbox": [
+        317.25,
+        378.1703186035156,
+        520.1981201171875,
+        603.3257446289062
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "5.5. Qualitative Evaluation",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 24,
+      "bbox": [
+        317.25,
+        612.1355590820312,
+        442.35687255859375,
+        623.094482421875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "Figure 4 illustrates a qualitative comparison on VR-\nBench [29] between Text CoT (Video-R1), Video",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 9,
+      "block_idx": 25,
+      "bbox": [
+        317.25,
+        629.9281616210938,
+        520.1980590820312,
+        651.8457641601562
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "CoT (Video-MTR), and Conan.\nThe text CoT\nmodel Video-R1 performs single-round textual rea-\nsoning without visual grounding, leading to a hal-\nlucinated answer based solely on linguistic pri-\nors.\nThe video CoT model Video-MTR incor-\nporates frame retrieval but fails to localize rele-\nvant evidence, resulting in weak reasoning align-\nment between retrieved frames and the question.\nIn contrast, Conan performs multi-round, evidence-\ngrounded reasoning.\nIn Round 1, it detects the\nabsence of causal evidence and performs random\nframe sampling to broaden the search scope. In\nRound 2, guided by contextual cues, it executes\nspecific frame retrieval around key timestamps\nwhere player interactions occur.\nIn Round 3,\nConan identifies frames depicting color-triggered\ngame events, such as team-based activities and flag\ncaptures, and integrates these observations to in-\nfer that “different colored shirts trigger different\ngame events or interactions.” This progressive pro-\ncess, from exploration to targeted verification to\nconfident deduction, demonstrates Conan’s supe-\nrior ability to accurately locate, reason over, and act\nupon relevant visual evidence compared with both\nText CoT and Video CoT models.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        97.44850158691406,
+        294.74920654296875,
+        394.3351745605469
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "6. Conclusion and Future work",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 1,
+      "bbox": [
+        91.8010025024414,
+        412.249267578125,
+        250.5541229248047,
+        424.2044677734375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "In this work, we present Conan, a unified frame-\nwork that empowers multimodal large language\nmodels to perform Conan-like visual reasoning\nthrough multi-scale frame identification, evidence-\nbased reasoning, and confident action decision.\nEmploying the Conan-91k dataset, constructed via\nmulti-scale evidence categorization, Conan simu-\nlation, and evidence difficulty-aware sampling, we\ndevise a multi-stage progressive cold-start strategy\nalongside\na\njoint\nEvidence–Reasoning–Action\nRLVR framework to progressively cultivate ro-\nbust multi-step reasoning abilities.\nExtensive\nexperiments\nacross\nsix\nmulti-step\nreasoning\nand four long-video understanding benchmarks\ndemonstrate\nthat\nConan\nconsistently\noutper-\nforms the base model Qwen2.5-VL-7B-Instruct,\nachieving state-of-the-art accuracy and strong\ngeneralization over both text-CoT and video-CoT\nmodels.\nIn future work, we plan to extend Co-\nnan toward chain-of-frame reasoning, enabling",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 2,
+      "bbox": [
+        91.8010025024414,
+        433.6645812988281,
+        294.7491760253906,
+        651.8461303710938
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "dynamic\nframe\ngeneration\nduring\nreasoning\nto provide visual evidence beyond the video\nfor solving more complex video reasoning tasks.",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 3,
+      "bbox": [
+        317.25,
+        97.44850158691406,
+        520.197998046875,
+        129.32907104492188
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "References",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 4,
+      "bbox": [
+        317.25,
+        153.35516357421875,
+        372.7938537597656,
+        165.31036376953125
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "[1] Stanislaw Antol, Aishwarya Agrawal, Jiasen Lu,\nMargaret Mitchell, Dhruv Batra, C Lawrence Zit-\nnick, and Devi Parikh. Vqa: Visual question an-\nswering. In Proceedings of the IEEE international\nconference on computer vision, pages 2425–2433,\n2015. 2, 3\n[2] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang,\nWenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shi-\njie Wang, Jun Tang, et al. Qwen2. 5-vl technical\nreport. arXiv preprint arXiv:2502.13923, 2025. 2,\n3, 6, 7\n[3] Yukang Chen, Wei Huang, Baifeng Shi, Qinghao\nHu, Hanrong Ye, Ligeng Zhu, Zhijian Liu, Pavlo\nMolchanov, Jan Kautz, Xiaojuan Qi, Sifei Liu,\nHongxu Yin, Yao Lu, and Song Han. Scaling rl\nto long videos. In Advances in Neural Information\nProcessing Systems, 2025. 2, 3, 7\n[4] Zhe Chen, Weiyun Wang, Yue Cao, Yangzhou Liu,\nZhangwei Gao, Erfei Cui, Jinguo Zhu, Shenglong\nYe, Hao Tian, Zhaoyang Liu, et al. Expanding per-\nformance boundaries of open-source multimodal\nmodels with model, data, and test-time scaling.\narXiv preprint arXiv:2412.05271, 2024. 7\n[5] Junhao Cheng, Yuying Ge, Teng Wang, Yixiao Ge,\nJing Liao, and Ying Shan.\nVideo-holmes: Can\nmllm think like holmes for complex video reason-\ning? arXiv preprint arXiv:2505.21374, 2025. 2, 3,\n7\n[6] Kaituo Feng, Kaixiong Gong, Bohao Li, Zonghao\nGuo, Yibing Wang, Tianshuo Peng, Benyou Wang,\nand Xiangyu Yue. Video-r1: Reinforcing video rea-\nsoning in mllms. arXiv preprint arXiv:2503.21776,\n2025. 2, 3, 7\n[7] Chaoyou Fu, Yuhan Dai, Yongdong Luo, Lei Li,\nShuhuai Ren, Renrui Zhang, Zihan Wang, Chenyu\nZhou, Yunhang Shen, Mengdan Zhang, et al.\nVideo-mme: The first-ever comprehensive evalua-\ntion benchmark of multi-modal llms in video anal-\nysis. arXiv preprint arXiv:2405.21075, 2024. 3,\n7\n[8] Jiyang Gao, Chen Sun, Zhenheng Yang, and Ram\nNevatia.\nTall: Temporal activity localization via\nlanguage query.\nIn Proceedings of the IEEE in-",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 5,
+      "bbox": [
+        321.7330017089844,
+        173.66397094726562,
+        520.2003173828125,
+        651.6051025390625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "10",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 10,
+      "block_idx": 6,
+      "bbox": [
+        301.0190124511719,
+        671.7702026367188,
+        310.9815979003906,
+        681.7327880859375
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "ternational conference on computer vision, pages\n5267–5275, 2017. 2, 3\n[9] Daya Guo, Dejian Yang, Haowei Zhang, Junx-\niao Song,\nRuoyu Zhang,\nRunxin Xu,\nQihao\nZhu, Shirong Ma, Peiyi Wang, Xiao Bi, et al.\nDeepseek-r1: Incentivizing reasoning capability in\nllms via reinforcement learning.\narXiv preprint\narXiv:2501.12948, 2025. 2, 3, 6\n[10] Zefeng He, Xiaoye Qu, Yafu Li, Siyuan Huang,\nDaizong Liu, and Yu Cheng. Framethinker: Learn-\ning to think with long videos via multi-turn frame\nspotlighting.\narXiv preprint arXiv:2509.24304,\n2025. 2, 3, 7\n[11] Aaron Hurst, Adam Lerer, Adam P Goucher, Adam\nPerelman, Aditya Ramesh, Aidan Clark, AJ Os-\ntrow, Akila Welihinda, Alan Hayes, Alec Rad-\nford, et al.\nGpt-4o system card.\narXiv preprint\narXiv:2410.21276, 2024. 1, 2, 3, 7\n[12] Bo Li, Yuanhan Zhang, Dong Guo, Renrui Zhang,\nFeng Li, Hao Zhang, Kaichen Zhang, Peiyuan\nZhang, Yanwei Li, Ziwei Liu, et al.\nLlava-\nonevision: Easy visual task transfer. arXiv preprint\narXiv:2408.03326, 2024. 7\n[13] Keliang Li, Hongze Shen, Hao Shi, Ruibing Hou,\nHong Chang, Jie Huang, Chenghao Jia, Wen Wang,\nYiling Wu, Dongmei Jiang, Shiguang Shan, and\nXilin Chen.\nHumanpcr: Probing mllm capabili-\nties in diverse human-centric scenes. arXiv preprint\narXiv:2508.13692, 2025. 3, 7\n[14] Xinhao Li, Ziang Yan, Desen Meng, Lu Dong, Xi-\nangyu Zeng, Yinan He, Yali Wang, Yu Qiao, Yi\nWang, and Limin Wang. Videochat-r1: Enhancing\nspatio-temporal perception via reinforcement fine-\ntuning. arXiv preprint arXiv:2504.06958, 2025. 2,\n3, 7\n[15] Yunxin Li, Xinyu Chen, Baotian Hu, Longyue\nWang, Haoyuan Shi, and Min Zhang. Videovista:\nA versatile benchmark for video understanding and\nreasoning. arXiv preprint arXiv:2406.11303, 2024.\n3\n[16] Chin-Yew Lin. Rouge: A package for automatic\nevaluation of summaries.\nIn Text summarization\nbranches out, pages 74–81, 2004. 6\n[17] Yuanxin Liu, Shicheng Li, Yi Liu, Yuxiang Wang,\nShuhuai Ren, Lei Li, Sishuo Chen, Xu Sun, and\nLu Hou. Tempcompass: Do video llms really un-\nderstand videos?\nIn Findings of the Association\nfor Computational Linguistics, pages 8731–8772,\n2024. 3",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 11,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        98.0451889038086,
+        294.7512512207031,
+        651.6041259765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "[18] Yuanxin Liu, Kun Ouyang, Haoning Wu, Yi Liu,\nLin Sui, Xinhao Li, Yan Zhong, Y Charles, Xinyu\nZhou, and Xu Sun. Videoreasonbench: Can mllms\nperform vision-centric complex video reasoning?\narXiv preprint arXiv:2505.23359, 2025. 2, 3\n[19] Kun Ouyang, Yuanxin Liu, Haoning Wu, Yi Liu,\nHao Zhou, Jie Zhou, Fandong Meng, and Xu Sun.\nSpacer: Reinforcing mllms in video spatial reason-\ning. arXiv preprint arXiv:2504.01805, 2025. 2, 3\n[20] Yukun Qi, Yiming Zhao, Yu Zeng, Xikun Bao,\nWenxuan Huang, Lin Chen, Zehui Chen, Jie\nZhao, Zhongang Qi, and Feng Zhao.\nVcr-\nbench: A comprehensive evaluation framework for\nvideo chain-of-thought reasoning. arXiv preprint\narXiv:2504.07956, 2025. 3, 7\n[21] Kimi Team, Yifan Bai, Yiping Bao, Guanduo Chen,\nJiahao Chen, Ningxin Chen, Ruijue Chen, Yanru\nChen, Yuankun Chen, Yutian Chen, et al.\nKimi\nk2:\nOpen agentic intelligence.\narXiv preprint\narXiv:2507.20534, 2025. 4\n[22] Kimi Team, Angang Du, Bohong Yin, Bowei Xing,\nBowen Qu, Bowen Wang, Cheng Chen, Chenlin\nZhang, Chenzhuang Du, Chu Wei, et al. Kimi-vl\ntechnical report. arXiv preprint arXiv:2504.07491,\n2025. 2, 3, 7\n[23] Subhashini Venugopalan, Huijuan Xu, Jeff Don-\nahue, Marcus Rohrbach, Raymond Mooney, and\nKate Saenko.\nTranslating videos to natural lan-\nguage using deep recurrent neural networks.\nIn\nProceedings of the 2015 Conference of the North\nAmerican Chapter of the Association for Computa-\ntional Linguistics: Human Language Technologies,\npages 1494–1504, 2015. 2, 3\n[24] Weihan Wang, Zehai He, Wenyi Hong, Yean\nCheng, Xiaohan Zhang, Ji Qi, Xiaotao Gu, Shiyu\nHuang, Bin Xu, Yuxiao Dong, et al.\nLvbench:\nAn extreme long video understanding benchmark.\narXiv preprint arXiv:2406.08035, 2024. 3, 7\n[25] Haoning Wu, Dongxu Li, Bei Chen, and Junnan\nLi.\nLongvideobench:\nA benchmark for long-\ncontext interleaved video-language understanding.\nAdvances in Neural Information Processing Sys-\ntems, 37:28828–28857, 2024. 2, 3, 7\n[26] LLM-Core-Team Xiaomi. Mimo-vl technical re-\nport. arXiv preprint arXiv:2506.03569, 2025. 2,\n3\n[27] Yuan Xie, Tianshui Chen, Zheng Ge, and Lionel\nNi.\nVideo-mtr:\nReinforced multi-turn reason-\ning for long video understanding. arXiv preprint\narXiv:2508.20478, 2025. 2, 3, 7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 11,
+      "block_idx": 1,
+      "bbox": [
+        317.25,
+        98.20376586914062,
+        520.200439453125,
+        651.603759765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "11",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 11,
+      "block_idx": 2,
+      "bbox": [
+        301.0190124511719,
+        671.7698364257812,
+        310.9815979003906,
+        681.732421875
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "[28] Linli Yao, Haoning Wu, Kun Ouyang, Yuanxing\nZhang, Caiming Xiong, Bei Chen, Xu Sun, and\nJunnan Li.\nGenerative frame sampler for long\nvideo understanding. In Findings of the Associa-\ntion for Computational Linguistics, pages 17900–\n17917, 2025. 2, 4\n[29] Jiashuo Yu, Yue Wu, Meng Chu, Zhifei Ren,\nZizheng Huang, Pei Chu, Ruijie Zhang, Yinan He,\nQirui Li, Songze Li, et al. Vrbench: A benchmark\nfor multi-step reasoning in long narrative videos.\narXiv preprint arXiv:2506.10857, 2025. 3, 7, 9\n[30] Congzhi Zhang, Zhibin Wang, Yinchao Ma, Ji-\nawei Peng, Yihan Wang, Qiang Zhou, Jun Song,\nand Bo Zheng.\nRewatch-r1: Boosting complex\nvideo reasoning in large vision-language models\nthrough agentic data synthesis.\narXiv preprint\narXiv:2509.23652, 2025. 2, 7\n[31] Junjie Zhou, Yan Shu, Bo Zhao, Boya Wu,\nZhengyang Liang, Shitao Xiao, Minghao Qin, Xi\nYang, Yongping Xiong, Bo Zhang, et al.\nMlvu:\nBenchmarking multi-task long video understand-\ning.\nIn Proceedings of the Computer Vision\nand Pattern Recognition Conference, pages 13691–\n13701, 2025. 2, 3, 7\n[32] Kejian Zhu, Zhuoran Jin, Hongbang Yuan, Jiachun\nLi, Shangqing Tu, Pengfei Cao, Yubo Chen, Kang\nLiu, and Jun Zhao. Mmr-v: What’s left unsaid?\na benchmark for multimodal deep reasoning in\nvideos. arXiv preprint arXiv:2506.04141, 2025. 3,\n7",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 12,
+      "block_idx": 0,
+      "bbox": [
+        91.8010025024414,
+        98.20401000976562,
+        294.751220703125,
+        428.963134765625
+      ]
+    }
+  },
+  {
+    "type": "text",
+    "content": "12",
+    "metadata": {
+      "source": "f19f06fd4ed746c28d6d9c41b63963f8_Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence.pdf",
+      "page": 12,
+      "block_idx": 1,
+      "bbox": [
+        301.01898193359375,
+        671.7702026367188,
+        310.9815673828125,
+        681.7327880859375
+      ]
+    }
+  }
+]
