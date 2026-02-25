@@ -1,0 +1,20 @@
+# =============================================================================
+# WritingBot Main Configuration
+# =============================================================================
+
+system:
+  language: zh
+
+paths:
+  data_dir: ./data
+  knowledge_bases_dir: ./data/knowledge_bases
+  sessions_dir: ./data/sessions
+
+server:
+  host: 0.0.0.0
+  port: 5001
+  debug: true
+
+logging:
+  level: INFO
+  console_output: true

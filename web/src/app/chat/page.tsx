@@ -19,7 +19,7 @@ interface Conversation {
 }
 
 // 直接调用后端地址（绕过 Next.js 代理以支持 SSE 流式传输）
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'http://localhost:5001';
 
 export default function ChatPage() {
     const { kbs, refreshKbs, selectedKbId, setSelectedKbId, currentConversationId, setCurrentConversationId, conversations, refreshConversations } = useAppContext();

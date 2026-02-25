@@ -1,0 +1,26 @@
+# =============================================================================
+# Unified Agent Parameters Configuration
+# =============================================================================
+# This file serves as the SINGLE source of truth for temperature and max_tokens
+# settings across all agent modules.
+
+# Chat Module - General chat agent
+chat:
+  temperature: 0.7
+  max_tokens: 2000
+
+# RAG Module - Retrieval-augmented generation
+rag:
+  temperature: 0.7
+  max_tokens: 2000
+  top_k: 5
+
+# Solve Module - Problem solving agents (Phase 2)
+solve:
+  temperature: 0.3
+  max_tokens: 8192
+
+# Research Module - Deep research agents (Phase 4)
+research:
+  temperature: 0.5
+  max_tokens: 12000

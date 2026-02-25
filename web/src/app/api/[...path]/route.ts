@@ -7,7 +7,7 @@ export const maxDuration = 300; // 5 minutes adjustment
 
 async function handler(req: NextRequest, { params }: { params: { path: string[] } }) {
     const path = (await params).path.join('/');
-    const url = `http://127.0.0.1:5000/api/${path}${req.nextUrl.search}`;
+    const url = `http://127.0.0.1:5001/api/${path}${req.nextUrl.search}`;
 
     console.log(`[Proxy] ${req.method} ${url}`);
 
