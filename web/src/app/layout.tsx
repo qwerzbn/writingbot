@@ -20,10 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <AppProvider>
-          <div className="flex h-screen bg-slate-100 overflow-hidden">
+          <div className="flex h-screen bg-slate-100 dark:bg-slate-900 overflow-hidden transition-colors">
             <Sidebar />
             <main className="flex-1 overflow-y-auto">
               {children}
