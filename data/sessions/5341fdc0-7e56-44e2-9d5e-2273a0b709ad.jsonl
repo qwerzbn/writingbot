@@ -1,5 +1,0 @@
-{"_type": "metadata", "created_at": "2026-02-07T16:01:56.895329", "updated_at": "2026-02-07T16:11:21.247737", "metadata": {"title": "你好", "kb_id": "a27dcc7c-4b10-4151-af00-9f1f4d76c8a5"}}
-{"role": "user", "content": "你好", "timestamp": "2026-02-07T16:01:56.895351"}
-{"role": "assistant", "content": "您好！有什么可以帮助您的吗？ 😊", "timestamp": "2026-02-07T16:02:03.582530", "sources": []}
-{"role": "user", "content": "你是谁", "timestamp": "2026-02-07T16:11:06.310968"}
-{"role": "assistant", "content": "我无法提供相关信息，目前知识库中没有关于我的内容。如果您有任何问题或需要帮助，请随时告诉我！", "timestamp": "2026-02-07T16:11:21.247709", "sources": []}

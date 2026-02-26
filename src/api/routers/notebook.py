@@ -45,12 +45,31 @@ async def list_notebooks():
     return {"success": True, "data": get_notebook_manager().list_notebooks()}
 
 
+@router.get("/notebooks/stats/overview")
+async def get_statistics():
+    return {"success": True, "data": get_notebook_manager().get_statistics()}
+
+
 @router.post("/notebooks")
 async def create_notebook(req: CreateNotebookRequest):
     nb = get_notebook_manager().create_notebook(
         name=req.name, description=req.description, color=req.color, icon=req.icon
     )
     return {"success": True, "data": nb}
+
+
+@router.post("/notebooks/records")
+async def add_record(req: AddRecordRequest):
+    result = get_notebook_manager().add_record(
+        notebook_ids=req.notebook_ids,
+        record_type=req.record_type,
+        title=req.title,
+        user_query=req.user_query,
+        output=req.output,
+        metadata=req.metadata,
+        kb_name=req.kb_name,
+    )
+    return {"success": True, "data": result}
 
 
 @router.get("/notebooks/{notebook_id}")
@@ -78,27 +97,9 @@ async def delete_notebook(notebook_id: str):
     return {"success": True}
 
 
-@router.post("/notebooks/records")
-async def add_record(req: AddRecordRequest):
-    result = get_notebook_manager().add_record(
-        notebook_ids=req.notebook_ids,
-        record_type=req.record_type,
-        title=req.title,
-        user_query=req.user_query,
-        output=req.output,
-        metadata=req.metadata,
-        kb_name=req.kb_name,
-    )
-    return {"success": True, "data": result}
-
-
 @router.delete("/notebooks/{notebook_id}/records/{record_id}")
 async def remove_record(notebook_id: str, record_id: str):
     if not get_notebook_manager().remove_record(notebook_id, record_id):
         raise HTTPException(status_code=404, detail="Record not found")
     return {"success": True}
 
-
-@router.get("/notebooks/stats/overview")
-async def get_statistics():
-    return {"success": True, "data": get_notebook_manager().get_statistics()}
