@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Search, Loader2, Send, FileText } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
-const API_BASE = 'http://localhost:5001';
+const API_BASE = '';
 
 export default function ResearchPage() {
     const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
@@ -129,9 +130,7 @@ export default function ResearchPage() {
                         <h3 className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
                             📋 研究计划
                         </h3>
-                        <pre className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-sans">
-                            {plan}
-                        </pre>
+                        <MarkdownRenderer content={plan} />
                     </div>
                 )}
 
@@ -141,11 +140,7 @@ export default function ResearchPage() {
                         <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4 flex items-center gap-2">
                             <FileText size={16} /> 研究报告
                         </h3>
-                        <div className="prose prose-slate dark:prose-invert max-w-none text-sm">
-                            <pre className="whitespace-pre-wrap font-sans leading-relaxed text-slate-700 dark:text-slate-300">
-                                {report}
-                            </pre>
-                        </div>
+                        <MarkdownRenderer content={report} />
                     </div>
                 )}
 

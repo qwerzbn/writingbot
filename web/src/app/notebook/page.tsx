@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, BookOpen, Edit3, Check, X } from 'lucide-react';
 
-const API_BASE = 'http://localhost:5001';
+const API_BASE = '';
 
 interface NotebookData {
     id: string;
@@ -208,8 +208,8 @@ export default function NotebookPage() {
                                 key={nb.id}
                                 onClick={() => fetchNotebook(nb.id)}
                                 className={`px-4 py-3 cursor-pointer border-b border-slate-100 dark:border-slate-700 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${selected?.id === nb.id
-                                        ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-l-blue-500'
-                                        : ''
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-l-blue-500'
+                                    : ''
                                     }`}
                             >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">

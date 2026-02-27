@@ -65,8 +65,8 @@ export default function Sidebar() {
                             href={href}
                             title={label}
                             className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isActive
-                                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
-                                    : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
                                 }`}
                         >
                             <Icon size={20} />
@@ -84,12 +84,16 @@ export default function Sidebar() {
                 >
                     {dark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
-                <button
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-700 hover:text-white transition-all"
+                <Link
+                    href="/settings"
                     title="设置"
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${pathname === '/settings'
+                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                            : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                        }`}
                 >
                     <Settings size={20} />
-                </button>
+                </Link>
             </div>
         </aside>
     );

@@ -3,12 +3,20 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Plus, Send, Loader2, Trash2, MessageSquare } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
+import AgentAvatar from '@/components/agents/AgentAvatar';
+import AgentWorkflow, { type WorkflowStep } from '@/components/agents/AgentWorkflow';
+import { AGENTS } from '@/components/agents/AgentRegistry';
+
+// --- Types ---
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
     sources?: { source: string; page: number }[];
     isStreaming?: boolean;
+    agent?: string;          // Which agent produced this message
+    workflow?: WorkflowStep[]; // Collaboration steps for this message
 }
 
 interface Conversation {
@@ -18,32 +26,74 @@ interface Conversation {
     messages: Message[];
 }
 
-// 直接调用后端地址（绕过 Next.js 代理以支持 SSE 流式传输）
-const API_BASE = 'http://localhost:5001';
+const API_BASE = '';
+
+// --- @mention popup ---
+
+interface MentionOption {
+    id: string;
+    name: string;
+    emoji: string;
+    description: string;
+}
+
+const MENTION_OPTIONS: MentionOption[] = Object.values(AGENTS).map((a) => ({
+    id: a.id,
+    name: a.name,
+    emoji: a.emoji,
+    description: a.description,
+}));
+
+// --- Slash commands ---
+
+interface SlashCommand {
+    command: string;
+    label: string;
+    description: string;
+    prompt: string;
+    agent?: string;
+}
+
+const SLASH_COMMANDS: SlashCommand[] = [
+    { command: '/总结创新点', label: '总结创新点', description: '总结论文的核心创新和贡献', prompt: '@研究智能体 请总结当前知识库论文的核心创新点和主要贡献', agent: 'researcher' },
+    { command: '/文献综述', label: '文献综述', description: '生成涵盖所有论文的文献综述', prompt: '@研究智能体 请基于知识库中的论文，生成一篇结构化的文献综述', agent: 'researcher' },
+    { command: '/对比分析', label: '对比分析', description: '对比多篇论文的方法和结果', prompt: '@研究智能体 请对比分析知识库中论文的研究方法和实验结果', agent: 'researcher' },
+    { command: '/分析实验', label: '分析实验设计', description: '分析论文实验设计的优缺点', prompt: '请分析知识库中论文的实验设计，指出其优势和局限性' },
+    { command: '/提取公式', label: '提取核心公式', description: '提取并解释论文中的关键公式', prompt: '请提取知识库论文中的核心数学公式并逐一解释' },
+    { command: '/研究空白', label: '发现研究空白', description: '识别可能的研究方向和不足', prompt: '基于知识库论文，请识别当前研究的空白和未来可能的研究方向' },
+];
+
 
 export default function ChatPage() {
     const {
-        kbs,
-        refreshKbs,
-        selectedKbId,
-        setSelectedKbId,
-        currentConversationId,
-        setCurrentConversationId,
-        conversations,
-        refreshConversations,
+        kbs, refreshKbs,
+        selectedKbId, setSelectedKbId,
+        currentConversationId, setCurrentConversationId,
+        conversations, refreshConversations,
     } = useAppContext();
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('正在思考...');
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    // 使用 ref 来追踪流式内容，避免 React 闭包问题
+    const inputRef = useRef<HTMLInputElement>(null);
     const streamingContentRef = useRef('');
 
-    useEffect(() => {
-        refreshKbs();
-        refreshConversations();
-    }, []);
+    // @mention state
+    const [showMentionMenu, setShowMentionMenu] = useState(false);
+    const [mentionFilter, setMentionFilter] = useState('');
+
+    // Slash command state
+    const [showSlashMenu, setShowSlashMenu] = useState(false);
+    const [slashFilter, setSlashFilter] = useState('');
+
+    // Workflow steps for current streaming message
+    const workflowRef = useRef<WorkflowStep[]>([]);
+    const [currentWorkflow, setCurrentWorkflow] = useState<WorkflowStep[]>([]);
+    const [currentAgent, setCurrentAgent] = useState<string>('reasoner');
+
+    useEffect(() => { refreshKbs(); refreshConversations(); }, []);
 
     useEffect(() => {
         if (currentConversationId) {
@@ -53,10 +103,9 @@ export default function ChatPage() {
         }
     }, [currentConversationId]);
 
-    // Auto-scroll
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    }, [messages, currentWorkflow]);
 
     const loadConversation = async (id: string) => {
         try {
@@ -68,9 +117,7 @@ export default function ChatPage() {
                     setSelectedKbId(data.data.kb_id);
                 }
             }
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     };
 
     const handleNewChat = () => {
@@ -83,10 +130,7 @@ export default function ChatPage() {
         if (conv.kb_id) setSelectedKbId(conv.kb_id);
     };
 
-    const handleDeleteConversation = async (
-        e: React.MouseEvent,
-        convId: string
-    ) => {
+    const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
         e.stopPropagation();
         if (!confirm('确定删除此对话？')) return;
         try {
@@ -96,61 +140,99 @@ export default function ChatPage() {
                 setMessages([]);
             }
             refreshConversations();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     };
 
-    // 更新最后一条消息的内容
     const updateLastMessage = useCallback(
-        (
-            content: string,
-            isStreaming: boolean,
-            sources?: { source: string; page: number }[]
-        ) => {
+        (content: string, isStreaming: boolean, extras?: Partial<Message>) => {
             setMessages((prev) => {
-                const newMessages = prev.slice(0, -1);
-                const lastMsg = prev[prev.length - 1];
-                if (lastMsg && lastMsg.role === 'assistant') {
-                    newMessages.push({
-                        ...lastMsg,
+                const newMsgs = prev.slice(0, -1);
+                const last = prev[prev.length - 1];
+                if (last && last.role === 'assistant') {
+                    newMsgs.push({
+                        ...last,
                         content,
                         isStreaming,
-                        sources: sources ?? lastMsg.sources,
+                        ...extras,
                     });
                 }
-                return newMessages;
+                return newMsgs;
             });
         },
         []
     );
 
-    /**
-     * Streaming send handler using SSE
-     */
+    // --- Input handlers ---
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setInput(val);
+
+        // @mention detection
+        const atMatch = val.match(/@(\S*)$/);
+        if (atMatch) {
+            setMentionFilter(atMatch[1]);
+            setShowMentionMenu(true);
+            setShowSlashMenu(false);
+        } else {
+            setShowMentionMenu(false);
+        }
+
+        // Slash command detection
+        if (val === '/' || val.match(/^\/\S*$/)) {
+            setSlashFilter(val.slice(1));
+            setShowSlashMenu(true);
+            setShowMentionMenu(false);
+        } else if (!val.startsWith('/')) {
+            setShowSlashMenu(false);
+        }
+    };
+
+    const selectMention = (agent: MentionOption) => {
+        const beforeAt = input.replace(/@\S*$/, '');
+        setInput(`@${agent.name} ${beforeAt}`);
+        setShowMentionMenu(false);
+        inputRef.current?.focus();
+    };
+
+    const selectSlashCommand = (cmd: SlashCommand) => {
+        setInput(cmd.prompt);
+        setShowSlashMenu(false);
+        inputRef.current?.focus();
+    };
+
+    const filteredMentions = MENTION_OPTIONS.filter(
+        (a) => !mentionFilter || a.name.includes(mentionFilter) || a.id.includes(mentionFilter)
+    );
+
+    const filteredSlashCommands = SLASH_COMMANDS.filter(
+        (c) => !slashFilter || c.command.includes(slashFilter) || c.label.includes(slashFilter)
+    );
+
+    // --- Streaming send ---
+
     const handleSend = async () => {
         if (!input.trim() || !selectedKbId) return;
         const userMessage = input.trim();
         setInput('');
+        setShowMentionMenu(false);
+        setShowSlashMenu(false);
 
-        // 重置流式内容追踪
         streamingContentRef.current = '';
+        workflowRef.current = [];
+        setCurrentWorkflow([]);
+        setCurrentAgent('reasoner');
 
-        // 1. 添加用户消息
+        // Add user + empty assistant message
         setMessages((prev) => [
             ...prev,
             { role: 'user', content: userMessage },
-        ]);
-
-        // 2. 添加空的助手消息（显示加载指示器）
-        setMessages((prev) => [
-            ...prev,
-            { role: 'assistant', content: '', isStreaming: true },
+            { role: 'assistant', content: '', isStreaming: true, workflow: [] },
         ]);
         setSending(true);
+        setStatusMessage('正在思考...');
 
         try {
-            // 3. 调用流式端点
             const res = await fetch(`${API_BASE}/api/chat/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -161,77 +243,93 @@ export default function ChatPage() {
                 }),
             });
 
-            if (!res.ok) {
-                throw new Error(`HTTP error: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const reader = res.body?.getReader();
-            if (!reader) {
-                throw new Error('No response body');
-            }
+            if (!reader) throw new Error('No response body');
 
             const decoder = new TextDecoder();
             let buffer = '';
             let receivedSources: { source: string; page: number }[] = [];
             let receivedConvId: string | null = null;
 
-            // SSE 读取循环
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 buffer += decoder.decode(value, { stream: true });
+                const events = buffer.split('\n\n');
+                buffer = events.pop() || '';
 
-                // 解析 SSE 事件
-                const lines = buffer.split('\n\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (!line.startsWith('data: ')) continue;
-
+                for (const event of events) {
+                    if (!event.startsWith('data: ')) continue;
                     try {
-                        const event = JSON.parse(line.slice(6));
+                        const ev = JSON.parse(event.slice(6));
 
-                        switch (event.type) {
-                            case 'chunk':
-                                // 使用 ref 累积内容，避免闭包问题
-                                streamingContentRef.current += event.content;
-                                // 更新显示
-                                updateLastMessage(
-                                    streamingContentRef.current,
-                                    true
+                        switch (ev.type) {
+                            case 'agent_step': {
+                                // Update or add workflow step
+                                const steps = [...workflowRef.current];
+                                const existing = steps.findIndex(
+                                    (s) => s.agent === ev.agent && s.status === 'working'
                                 );
+                                if (existing >= 0) {
+                                    steps[existing] = {
+                                        agent: ev.agent,
+                                        status: ev.status,
+                                        message: ev.message,
+                                        duration: ev.duration,
+                                    };
+                                } else {
+                                    steps.push({
+                                        agent: ev.agent,
+                                        status: ev.status,
+                                        message: ev.message,
+                                        duration: ev.duration,
+                                    });
+                                }
+                                workflowRef.current = steps;
+                                setCurrentWorkflow([...steps]);
+
+                                // Update status message
+                                if (ev.status === 'working') {
+                                    setStatusMessage(ev.message);
+                                }
+                                break;
+                            }
+
+                            case 'chunk':
+                                streamingContentRef.current += ev.content;
+                                if (ev.agent) setCurrentAgent(ev.agent);
+                                updateLastMessage(streamingContentRef.current, true, {
+                                    agent: ev.agent || currentAgent,
+                                    workflow: workflowRef.current,
+                                });
                                 break;
 
                             case 'sources':
-                                receivedSources = event.data;
+                                receivedSources = ev.data;
                                 break;
 
                             case 'done':
-                                receivedConvId = event.conversation_id;
+                                receivedConvId = ev.conversation_id;
                                 break;
 
                             case 'error':
-                                updateLastMessage(
-                                    `错误: ${event.error}`,
-                                    false
-                                );
+                                updateLastMessage(`错误: ${ev.error}`, false);
                                 break;
                         }
-                    } catch (e) {
-                        console.error('Parse SSE error:', e);
-                    }
+                    } catch (e) { console.error('Parse SSE:', e); }
                 }
             }
 
-            // 5. 完成：更新来源并移除流式标志
-            updateLastMessage(
-                streamingContentRef.current,
-                false,
-                receivedSources
-            );
+            // Finalize
+            updateLastMessage(streamingContentRef.current, false, {
+                sources: receivedSources,
+                agent: currentAgent,
+                workflow: workflowRef.current,
+            });
 
-            // 更新会话 ID
             if (receivedConvId && !currentConversationId) {
                 setCurrentConversationId(receivedConvId);
                 refreshConversations();
@@ -251,55 +349,38 @@ export default function ChatPage() {
         }
     };
 
+    // --- Render ---
+
     return (
         <div className="h-full flex">
-            {/* Conversation Sidebar */}
+            {/* === Conversation Sidebar === */}
             <div className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0">
                 <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
-                    <span className="font-semibold text-slate-800 dark:text-white text-sm">
-                        对话列表
-                    </span>
-                    <button
-                        onClick={handleNewChat}
-                        className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-                        title="新建对话"
-                    >
+                    <span className="font-semibold text-slate-800 dark:text-white text-sm">对话列表</span>
+                    <button onClick={handleNewChat} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" title="新建对话">
                         <Plus size={18} />
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2">
                     {conversations.length === 0 ? (
                         <div className="text-center py-8 text-slate-400 text-sm">
-                            <MessageSquare
-                                size={24}
-                                className="mx-auto mb-2 opacity-30"
-                            />
+                            <MessageSquare size={24} className="mx-auto mb-2 opacity-30" />
                             <p>暂无对话</p>
-                            <p className="text-xs mt-1">
-                                选择知识库后开始提问
-                            </p>
+                            <p className="text-xs mt-1">选择知识库后开始提问</p>
                         </div>
                     ) : (
                         conversations.map((conv) => (
                             <div
                                 key={conv.id}
-                                onClick={() =>
-                                    handleSelectConversation(
-                                        conv as Conversation
-                                    )
-                                }
+                                onClick={() => handleSelectConversation(conv as Conversation)}
                                 className={`group px-3 py-2 rounded-lg cursor-pointer text-sm mb-1 transition-colors flex items-center justify-between ${conv.id === currentConversationId
                                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                         : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                     }`}
                             >
-                                <span className="truncate flex-1">
-                                    {conv.title}
-                                </span>
+                                <span className="truncate flex-1">{conv.title}</span>
                                 <button
-                                    onClick={(e) =>
-                                        handleDeleteConversation(e, conv.id)
-                                    }
+                                    onClick={(e) => handleDeleteConversation(e, conv.id)}
                                     className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all shrink-0 ml-1"
                                     title="删除对话"
                                 >
@@ -311,25 +392,27 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* Chat Main */}
+            {/* === Chat Main Area === */}
             <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
                 {/* Header */}
                 <header className="h-14 px-8 flex items-center justify-between bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                    <h1 className="text-lg font-semibold text-slate-800 dark:text-white">
-                        智能问答助手
-                    </h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-lg font-semibold text-slate-800 dark:text-white">
+                            WritingBot · 学术工作台
+                        </h1>
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {Object.keys(AGENTS).length} 个智能体就绪
+                        </div>
+                    </div>
                     <select
                         value={selectedKbId || ''}
-                        onChange={(e) =>
-                            setSelectedKbId(e.target.value || null)
-                        }
+                        onChange={(e) => setSelectedKbId(e.target.value || null)}
                         className="w-48 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     >
                         <option value="">选择知识库...</option>
                         {kbs.map((kb) => (
-                            <option key={kb.id} value={kb.id}>
-                                {kb.name}
-                            </option>
+                            <option key={kb.id} value={kb.id}>{kb.name}</option>
                         ))}
                     </select>
                 </header>
@@ -338,54 +421,82 @@ export default function ChatPage() {
                 <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     {messages.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                            <div className="text-5xl mb-4">💬</div>
+                            <div className="text-5xl mb-4">🤖</div>
                             <h2 className="text-xl font-medium text-slate-600 dark:text-slate-300 mb-2">
-                                开始新的对话
+                                WritingBot · 学术工作台
                             </h2>
-                            <p>请在右上角选择一个知识库，然后开始提问</p>
+                            <p className="text-sm mb-6">多智能体协作，让学术研究更高效</p>
+                            <div className="grid grid-cols-2 gap-2 max-w-md">
+                                {Object.values(AGENTS).map((agent) => (
+                                    <div key={agent.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                                        <span className="text-base">{agent.emoji}</span>
+                                        <div>
+                                            <div className="font-medium text-slate-700 dark:text-slate-200">{agent.name}</div>
+                                            <div className="text-slate-400 dark:text-slate-500">{agent.description}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs mt-6 text-slate-400">
+                                输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">/</kbd> 使用快捷指令 · 输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">@</kbd> 指定智能体
+                            </p>
                         </div>
                     ) : (
                         messages.map((msg, idx) => (
-                            <div
-                                key={idx}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div
-                                    className={`max-w-[75%] px-4 py-3 rounded-2xl ${msg.role === 'user'
+                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[75%] ${msg.role === 'user' ? '' : ''}`}>
+                                    {/* Agent workflow (only for assistant messages with workflow) */}
+                                    {msg.role === 'assistant' && (msg.workflow?.length || (msg.isStreaming && currentWorkflow.length > 0)) ? (
+                                        <AgentWorkflow
+                                            steps={msg.isStreaming ? currentWorkflow : (msg.workflow || [])}
+                                            isActive={!!msg.isStreaming}
+                                        />
+                                    ) : null}
+
+                                    {/* Message bubble */}
+                                    <div className={`px-4 py-3 rounded-2xl ${msg.role === 'user'
                                             ? 'bg-blue-500 text-white rounded-br-sm'
                                             : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm'
-                                        }`}
-                                >
-                                    <div className="whitespace-pre-wrap">
-                                        {msg.content}
-                                        {/* 打字机光标 */}
-                                        {msg.isStreaming && msg.content && (
-                                            <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
-                                        )}
-                                    </div>
-                                    {/* 等待中 */}
-                                    {msg.isStreaming && !msg.content && (
-                                        <div className="flex items-center gap-2 text-slate-400">
-                                            <Loader2
-                                                size={16}
-                                                className="animate-spin"
-                                            />
-                                            <span>正在思考...</span>
-                                        </div>
-                                    )}
-                                    {/* 来源 */}
-                                    {msg.sources &&
-                                        msg.sources.length > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
-                                                来源:{' '}
-                                                {msg.sources
-                                                    .map(
-                                                        (s) =>
-                                                            `${s.source} (p.${s.page})`
-                                                    )
-                                                    .join(', ')}
+                                        }`}>
+                                        {/* Agent badge for assistant messages */}
+                                        {msg.role === 'assistant' && msg.agent && !msg.isStreaming && (
+                                            <div className="mb-2">
+                                                <AgentAvatar agentId={msg.agent} showName />
                                             </div>
                                         )}
+
+                                        {/* Content */}
+                                        {msg.role === 'user' ? (
+                                            <div className="whitespace-pre-wrap">{msg.content}</div>
+                                        ) : (
+                                            <div>
+                                                <MarkdownRenderer content={msg.content} />
+                                                {msg.isStreaming && msg.content && (
+                                                    <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Loading state */}
+                                        {msg.isStreaming && !msg.content && (
+                                            <div className="flex items-center gap-2 text-slate-400">
+                                                <Loader2 size={16} className="animate-spin" />
+                                                <span className="text-sm">{statusMessage}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Sources */}
+                                        {msg.sources && msg.sources.length > 0 && (
+                                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
+                                                📄 引用来源：{' '}
+                                                {msg.sources.map((s, i) => (
+                                                    <span key={i} className="inline-block mr-2 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs">
+                                                        {s.source} (p.{s.page})
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -393,37 +504,71 @@ export default function ChatPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input */}
-                <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+                {/* Input Area */}
+                <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 relative">
+                    {/* @mention popup */}
+                    {showMentionMenu && filteredMentions.length > 0 && (
+                        <div className="absolute bottom-full left-4 mb-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
+                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                                选择智能体
+                            </div>
+                            {filteredMentions.map((a) => (
+                                <button
+                                    key={a.id}
+                                    onClick={() => selectMention(a)}
+                                    className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                                >
+                                    <span className="text-lg">{a.emoji}</span>
+                                    <div>
+                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{a.name}</div>
+                                        <div className="text-xs text-slate-400">{a.description}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Slash command popup */}
+                    {showSlashMenu && filteredSlashCommands.length > 0 && (
+                        <div className="absolute bottom-full left-4 mb-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
+                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                                ⚡ 快捷指令
+                            </div>
+                            {filteredSlashCommands.map((cmd) => (
+                                <button
+                                    key={cmd.command}
+                                    onClick={() => selectSlashCommand(cmd)}
+                                    className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
+                                >
+                                    <span className="text-sm font-mono text-blue-500 dark:text-blue-400 shrink-0">
+                                        {cmd.command}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm text-slate-700 dark:text-slate-200">{cmd.label}</div>
+                                        <div className="text-xs text-slate-400 truncate">{cmd.description}</div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-xl px-4 py-2">
                         <input
+                            ref={inputRef}
                             type="text"
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
+                            onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
-                            placeholder={
-                                selectedKbId
-                                    ? '输入问题...'
-                                    : '请先选择知识库'
-                            }
+                            placeholder={selectedKbId ? '输入问题... 使用 / 快捷指令 或 @ 指定智能体' : '请先选择知识库'}
                             disabled={!selectedKbId || sending}
-                            className="flex-1 bg-transparent outline-none text-slate-800 dark:text-white placeholder:text-slate-400"
+                            className="flex-1 bg-transparent outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-sm"
                         />
                         <button
                             onClick={handleSend}
-                            disabled={
-                                !input.trim() || !selectedKbId || sending
-                            }
+                            disabled={!input.trim() || !selectedKbId || sending}
                             className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {sending ? (
-                                <Loader2
-                                    size={18}
-                                    className="animate-spin"
-                                />
-                            ) : (
-                                <Send size={18} />
-                            )}
+                            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                         </button>
                     </div>
                 </div>

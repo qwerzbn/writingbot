@@ -4,6 +4,8 @@ Context Builder Component
 ==========================
 
 Builds context strings and source lists from retrieved documents.
+Context is formatted cleanly for LLM consumption — source metadata
+is tracked separately and NOT embedded in the context text.
 """
 
 
@@ -20,6 +22,9 @@ class ContextBuilder:
     def build(self, results: list[dict]) -> tuple[str, list[dict]]:
         """
         Build context string and source list from retrieval results.
+
+        The context string contains ONLY document content (no source markers).
+        Sources are tracked separately to avoid LLM regurgitating metadata.
 
         Args:
             results: List of retrieval results
@@ -45,9 +50,11 @@ class ContextBuilder:
             source_name = metadata.get("source", "Unknown")
             page = metadata.get("page", "?")
 
-            context_parts.append(f"[{i}] {content}\n[来源: {source_name}, 第{page}页]")
+            # Context: numbered content ONLY, no source metadata
+            context_parts.append(f"[{i}] {content}")
             total_length += len(content)
 
+            # Sources tracked separately for frontend display
             sources.append({
                 "content": content[:200],
                 "source": source_name,

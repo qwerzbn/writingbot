@@ -45,7 +45,7 @@ const features = [
     href: '/co-writer',
     icon: PenTool,
     label: '协同写作',
-    desc: 'AI 辅助改写、扩展、润色',
+    desc: 'LaTeX 论文协同编辑与 AI 辅助写作',
     color: 'from-rose-500 to-pink-400',
   },
 ];

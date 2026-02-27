@@ -19,7 +19,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.api.routers import knowledge, conversation, chat, notebook, research, co_writer
+from src.api.routers import knowledge, conversation, chat, notebook, research, co_writer, settings
 from src.services.config import get_main_config
 
 
@@ -71,6 +71,7 @@ app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(notebook.router, prefix="/api", tags=["notebook"])
 app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(co_writer.router, prefix="/api", tags=["co-writer"])
+app.include_router(settings.router, prefix="/api", tags=["settings"])
 
 
 @app.get("/")
