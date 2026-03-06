@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '100mb',
     },
+    // Required to prevent Next.js from truncating large API proxy requests
+    middlewareClientMaxBodySize: 104857600, // 100MB in bytes
+    // Increase proxy timeout to 30 minutes (1,800,000 ms) for long-running operations
+    proxyTimeout: 1_800_000,
   },
   // Proxy /api requests to FastAPI backend
   async rewrites() {

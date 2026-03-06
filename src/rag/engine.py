@@ -34,8 +34,8 @@ class RAGEngine:
         """Initialize RAG engine (pipeline-based)."""
         self.vector_store = vector_store
 
-        # Create pipeline
-        self._pipeline = create_pipeline("naive", vector_store)
+        # Create pipeline (use reranked for better accuracy)
+        self._pipeline = create_pipeline("reranked", vector_store)
 
         # History (kept for backward compat, not used by pipeline)
         self.history: List[Dict[str, str]] = []

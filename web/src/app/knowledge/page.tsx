@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, AlertCircle, Loader2, Zap } from 'lucide-react';
 
 export default function KnowledgePage() {
     const { kbs, refreshKbs } = useAppContext();
@@ -12,45 +12,106 @@ export default function KnowledgePage() {
     const [newKbName, setNewKbName] = useState('');
     const [newKbDesc, setNewKbDesc] = useState('');
     const [newKbProvider, setNewKbProvider] = useState('sentence-transformers');
-    const [newKbModel, setNewKbModel] = useState('sentence-transformers/all-mpnet-base-v2');
+    const [newKbModel, setNewKbModel] = useState('BAAI/bge-m3');
     const [isCreating, setIsCreating] = useState(false);
+
+    // Connection test state
+    const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+    const [testError, setTestError] = useState('');
+    const [testDimension, setTestDimension] = useState<number | null>(null);
+
+    // Custom API key/base URL (shown when test fails for openai/ollama)
+    const [customApiKey, setCustomApiKey] = useState('');
+    const [customBaseUrl, setCustomBaseUrl] = useState('');
+    const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
     useEffect(() => {
         refreshKbs();
     }, []);
 
-    // Reset model when provider changes
+    // Reset model and test state when provider changes
     const handleProviderChange = (provider: string) => {
         setNewKbProvider(provider);
+        setTestStatus('idle');
+        setTestError('');
+        setTestDimension(null);
+        setShowApiKeyInput(false);
+        setCustomApiKey('');
+        setCustomBaseUrl('');
         if (provider === 'ollama') {
             setNewKbModel('nomic-embed-text:latest');
         } else if (provider === 'openai') {
-            setNewKbModel('text-embedding-3-small');
+            setNewKbModel('text-embedding-v3');
         } else {
-            setNewKbModel('sentence-transformers/all-mpnet-base-v2');
+            setNewKbModel('BAAI/bge-m3');
+        }
+    };
+
+    const handleTestConnection = async () => {
+        setTestStatus('testing');
+        setTestError('');
+        setTestDimension(null);
+        try {
+            const body: Record<string, string> = {
+                embedding_provider: newKbProvider,
+                embedding_model: newKbModel,
+            };
+            if (customApiKey) body.api_key = customApiKey;
+            if (customBaseUrl) body.base_url = customBaseUrl;
+
+            const res = await fetch('/api/embedding/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setTestStatus('success');
+                setTestDimension(data.dimension);
+            } else {
+                setTestStatus('failed');
+                setTestError(data.error || '连接失败');
+                // Show API key input for openai/ollama if test fails
+                if (newKbProvider === 'openai' || newKbProvider === 'ollama') {
+                    setShowApiKeyInput(true);
+                }
+            }
+        } catch (e) {
+            setTestStatus('failed');
+            setTestError('网络错误');
         }
     };
 
     const handleCreateKb = async () => {
         if (!newKbName.trim()) return;
+
+        // For non-local providers, must pass test first
+        if (newKbProvider !== 'sentence-transformers' && testStatus !== 'success') {
+            handleTestConnection();
+            return;
+        }
+
         setIsCreating(true);
         try {
+            const body: Record<string, string> = {
+                name: newKbName,
+                description: newKbDesc,
+                embedding_provider: newKbProvider,
+                embedding_model: newKbModel,
+            };
+            if (customApiKey) body.embedding_api_key = customApiKey;
+            if (customBaseUrl) body.embedding_base_url = customBaseUrl;
+
             const res = await fetch('/api/kbs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: newKbName,
-                    description: newKbDesc,
-                    embedding_provider: newKbProvider,
-                    embedding_model: newKbModel,
-                }),
+                body: JSON.stringify(body),
             });
             const data = await res.json();
             if (data.success) {
                 setShowCreateModal(false);
                 setNewKbName('');
                 setNewKbDesc('');
-                // Reset to default
                 handleProviderChange('sentence-transformers');
                 refreshKbs();
             }
@@ -72,6 +133,9 @@ export default function KnowledgePage() {
         }
     };
 
+    const needsTest = newKbProvider !== 'sentence-transformers';
+    const canCreate = newKbName.trim() && (!needsTest || testStatus === 'success');
+
     return (
         <div className="h-full flex flex-col">
             {/* Header */}
@@ -79,7 +143,7 @@ export default function KnowledgePage() {
                 <h1 className="text-xl font-semibold text-slate-800">知识库管理</h1>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md text-sm font-medium"
                 >
                     <Plus size={18} />
                     新建知识库
@@ -133,10 +197,10 @@ export default function KnowledgePage() {
             {/* Create Modal */}
             {showCreateModal && (
                 <>
-                    <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowCreateModal(false)} />
-                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl w-full max-w-md z-50 animate-in fade-in zoom-in-95">
-                        <div className="p-6 border-b border-slate-200">
-                            <h3 className="text-lg font-semibold">新建知识库</h3>
+                    <div className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-full max-w-md z-50">
+                        <div className="p-6 border-b border-slate-100">
+                            <h3 className="text-lg font-semibold text-slate-800">新建知识库</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
@@ -146,7 +210,7 @@ export default function KnowledgePage() {
                                     value={newKbName}
                                     onChange={(e) => setNewKbName(e.target.value)}
                                     placeholder="例如：2024 AI 论文集"
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                                 />
                             </div>
                             <div>
@@ -155,7 +219,7 @@ export default function KnowledgePage() {
                                     value={newKbDesc}
                                     onChange={(e) => setNewKbDesc(e.target.value)}
                                     placeholder="关于该知识库的描述..."
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-20"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-20 text-sm"
                                 />
                             </div>
                             <div>
@@ -163,11 +227,11 @@ export default function KnowledgePage() {
                                 <select
                                     value={newKbProvider}
                                     onChange={(e) => handleProviderChange(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-3"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-3 text-sm"
                                 >
                                     <option value="sentence-transformers">Local (HuggingFace)</option>
                                     <option value="ollama">Ollama (Local)</option>
-                                    <option value="openai">OpenAI (API)</option>
+                                    <option value="openai">DashScope (API)</option>
                                 </select>
 
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Embedding Model</label>
@@ -175,8 +239,9 @@ export default function KnowledgePage() {
                                     <select
                                         value={newKbModel}
                                         onChange={(e) => setNewKbModel(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                                     >
+                                        <option value="BAAI/bge-m3">BAAI/bge-m3 (高精度多语言)</option>
                                         <option value="sentence-transformers/all-mpnet-base-v2">all-mpnet-base-v2 (推荐)</option>
                                         <option value="sentence-transformers/all-MiniLM-L6-v2">all-MiniLM-L6-v2 (快速)</option>
                                     </select>
@@ -187,35 +252,94 @@ export default function KnowledgePage() {
                                         value={newKbModel}
                                         onChange={(e) => setNewKbModel(e.target.value)}
                                         placeholder="例如: nomic-embed-text"
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                                     />
                                 )}
                                 {newKbProvider === 'openai' && (
-                                    <select
-                                        value={newKbModel}
-                                        onChange={(e) => setNewKbModel(e.target.value)}
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                    >
-                                        <option value="text-embedding-3-small">text-embedding-3-small</option>
-                                        <option value="text-embedding-3-large">text-embedding-3-large</option>
-                                        <option value="text-embedding-ada-002">text-embedding-ada-002 (旧版)</option>
-                                    </select>
+                                    <>
+                                        <input
+                                            type="text"
+                                            value={newKbModel}
+                                            onChange={(e) => { setNewKbModel(e.target.value); setTestStatus('idle'); }}
+                                            placeholder="例如: text-embedding-v3"
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                        />
+                                        <p className="text-[11px] text-slate-400 mt-1">
+                                            推荐: text-embedding-v3 · 可用: text-embedding-v2 / v1
+                                        </p>
+                                    </>
                                 )}
                             </div>
+
+                            {/* Custom API key / Base URL (shown for openai/ollama, or after failure) */}
+                            {showApiKeyInput && (newKbProvider === 'openai' || newKbProvider === 'ollama') && (
+                                <div className="space-y-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                    <p className="text-xs text-amber-700 font-medium">连接失败，请填写 API 配置：</p>
+                                    {newKbProvider === 'openai' && (
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-600 mb-1">API Base URL (可选)</label>
+                                            <input
+                                                type="text"
+                                                value={customBaseUrl}
+                                                onChange={(e) => { setCustomBaseUrl(e.target.value); setTestStatus('idle'); }}
+                                                placeholder="例如: https://api.openai.com/v1"
+                                                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-600 mb-1">API Key</label>
+                                        <input
+                                            type="password"
+                                            value={customApiKey}
+                                            onChange={(e) => { setCustomApiKey(e.target.value); setTestStatus('idle'); }}
+                                            placeholder="sk-..."
+                                            className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Test connection button for non-local providers */}
+                            {needsTest && (
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={handleTestConnection}
+                                        disabled={testStatus === 'testing'}
+                                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                                    >
+                                        {testStatus === 'testing' ? (
+                                            <><Loader2 size={13} className="animate-spin" /> 测试中...</>
+                                        ) : (
+                                            <><Zap size={13} /> 测试连接</>
+                                        )}
+                                    </button>
+                                    {testStatus === 'success' && (
+                                        <span className="flex items-center gap-1 text-xs text-emerald-600">
+                                            <CheckCircle size={13} /> 连接成功 (dim={testDimension})
+                                        </span>
+                                    )}
+                                    {testStatus === 'failed' && (
+                                        <span className="flex items-center gap-1 text-xs text-red-500 max-w-[220px] truncate" title={testError}>
+                                            <AlertCircle size={13} className="shrink-0" /> {testError}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        <div className="p-4 bg-slate-50 rounded-b-xl flex justify-end gap-3">
+                        <div className="p-4 bg-slate-50 rounded-b-2xl flex justify-end gap-3 border-t border-slate-100">
                             <button
-                                onClick={() => setShowCreateModal(false)}
-                                className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                                onClick={() => { setShowCreateModal(false); handleProviderChange('sentence-transformers'); }}
+                                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                             >
                                 取消
                             </button>
                             <button
                                 onClick={handleCreateKb}
-                                disabled={isCreating || !newKbName.trim()}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isCreating || !canCreate}
+                                className="px-5 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
                             >
-                                {isCreating ? '创建中...' : '创建'}
+                                {isCreating ? '创建中...' : needsTest && testStatus !== 'success' ? '测试并创建' : '创建'}
                             </button>
                         </div>
                     </div>

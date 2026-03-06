@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { BookOpen, AlertCircle } from 'lucide-react';
 
 export interface CitationSource {
@@ -19,6 +19,16 @@ interface CitationCardProps {
 
 export default function CitationCard({ index, source, onClick }: CitationCardProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const showCard = useCallback(() => {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        setIsHovered(true);
+    }, []);
+
+    const hideCard = useCallback(() => {
+        hideTimer.current = setTimeout(() => setIsHovered(false), 150);
+    }, []);
 
     if (!source) {
         return (
@@ -31,8 +41,8 @@ export default function CitationCard({ index, source, onClick }: CitationCardPro
     return (
         <span
             className="relative inline-block mx-0.5 align-super"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={showCard}
+            onMouseLeave={hideCard}
         >
             <button
                 onClick={onClick}
@@ -43,7 +53,11 @@ export default function CitationCard({ index, source, onClick }: CitationCardPro
 
             {/* Hover Tooltip Card */}
             {isHovered && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 z-50 text-left cursor-default pointer-events-none transform transition-all origin-bottom">
+                <div
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-0 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 z-50 text-left cursor-default"
+                    onMouseEnter={showCard}
+                    onMouseLeave={hideCard}
+                >
                     <div className="flex items-start gap-2 mb-2">
                         <BookOpen size={14} className="text-blue-500 mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
@@ -67,11 +81,18 @@ export default function CitationCard({ index, source, onClick }: CitationCardPro
                         </div>
                     )}
 
-                    <div className="text-[10px] text-center text-blue-500 mt-2 font-medium">
+                    <button
+                        onClick={onClick}
+                        className="w-full text-[10px] text-center text-blue-500 hover:text-blue-700 mt-2 font-medium cursor-pointer"
+                    >
                         点击查看原文
-                    </div>
+                    </button>
+
+                    {/* Invisible bridge to prevent gap between tooltip and trigger */}
+                    <div className="absolute top-full left-0 w-full h-2" />
                 </div>
             )}
         </span>
     );
 }
+

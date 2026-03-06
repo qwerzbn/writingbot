@@ -64,6 +64,36 @@ def get_vector_store(kb_id: str):
     )
 
 
+# ============== Embedding Test ==============
+
+
+@router.post("/embedding/test")
+async def test_embedding(request: Request):
+    """Test embedding provider connectivity before creating a KB."""
+    data = await request.json()
+    provider = data.get("embedding_provider", "sentence-transformers")
+    model = data.get("embedding_model", "sentence-transformers/all-mpnet-base-v2")
+    api_key = data.get("api_key")  # Optional override
+    base_url = data.get("base_url")  # Optional override
+
+    try:
+        from src.knowledge.vector_store import get_embedding_function
+        embed_fn = get_embedding_function(
+            provider=provider,
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+        )
+        # Try embedding a short test string
+        result = embed_fn(["test connection"])
+        if result and len(result) > 0 and len(result[0]) > 0:
+            return {"success": True, "dimension": len(result[0])}
+        else:
+            return {"success": False, "error": "Embedding returned empty result"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 # ============== Knowledge Base CRUD ==============
 
 
@@ -108,18 +138,13 @@ async def delete_kb(kb_id: str):
 
 @router.get("/kbs/{kb_id}")
 async def get_kb_details(kb_id: str):
-    """Get knowledge base details."""
+    """Get knowledge base details (metadata only, no VectorStore init)."""
     kb_manager = get_kb_manager()
     kb = kb_manager.get_kb(kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail="KB not found")
 
-    try:
-        vs = get_vector_store(kb_id)
-        stats = vs.get_stats()
-        return {"success": True, "data": {"metadata": kb, "stats": stats}}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"success": True, "data": {"metadata": kb}}
 
 
 @router.get("/kbs/{kb_id}/files/{file_id}/content")
@@ -216,6 +241,42 @@ async def ingest_file(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/kbs/{kb_id}/files/{file_id}")
+async def rename_file(kb_id: str, file_id: str, request: Request):
+    """Rename a file in a knowledge base."""
+    kb_manager = get_kb_manager()
+    kb = kb_manager.get_kb(kb_id)
+    if not kb:
+        raise HTTPException(status_code=404, detail="KB not found")
+
+    data = await request.json()
+    new_name = data.get("name")
+    if not new_name:
+        raise HTTPException(status_code=400, detail="Name is required")
+
+    # Update the file name in metadata
+    metadata_file = kb_manager.base_dir / kb_id / "metadata.json"
+    import json
+    with open(metadata_file, encoding="utf-8") as f:
+        metadata = json.load(f)
+
+    updated = False
+    for file_info in metadata.get("files", []):
+        if file_info["id"] == file_id:
+            file_info["name"] = new_name
+            updated = True
+            break
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    metadata["updated_at"] = datetime.now().isoformat()
+    with open(metadata_file, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+    return {"success": True}
 
 
 @router.delete("/kbs/{kb_id}/files/{file_id}")

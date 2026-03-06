@@ -71,10 +71,20 @@ def get_embedding_function(provider: str, model: str, base_url: str = None, api_
     
     elif provider == "openai":
         from openai import OpenAI
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        # Fall back to LLM_API_KEY / LLM_BASE_URL if no dedicated embedding key is set
+        resolved_api_key = api_key or os.getenv("EMBEDDING_API_KEY") or os.getenv("LLM_API_KEY")
+        resolved_base_url = base_url or os.getenv("EMBEDDING_BASE_URL") or os.getenv("LLM_BASE_URL")
+        if not resolved_api_key:
+            raise ValueError("OpenAI embedding requires an API key. Set OPENAI_API_KEY, LLM_API_KEY, or provide it when creating the knowledge base.")
+        client = OpenAI(api_key=resolved_api_key, base_url=resolved_base_url)
+        BATCH_SIZE = 6  # DashScope limits batch to 10; use 6 for safety margin
         def embed_fn(texts: List[str]) -> List[List[float]]:
-            response = client.embeddings.create(model=model, input=texts)
-            return [item.embedding for item in response.data]
+            all_embeddings = []
+            for i in range(0, len(texts), BATCH_SIZE):
+                batch = texts[i:i + BATCH_SIZE]
+                response = client.embeddings.create(model=model, input=batch)
+                all_embeddings.extend([item.embedding for item in response.data])
+            return all_embeddings
         return embed_fn
     
     else:

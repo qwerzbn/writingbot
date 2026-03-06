@@ -18,7 +18,7 @@ def create_pipeline(
     Create a RAG pipeline instance.
 
     Args:
-        pipeline_type: Pipeline type ('naive' or future types)
+        pipeline_type: Pipeline type ('naive', 'reranked')
         vector_store: VectorStore instance
         **kwargs: Additional pipeline configuration
 
@@ -28,5 +28,9 @@ def create_pipeline(
     if pipeline_type == "naive":
         from src.rag.pipelines import NaivePipeline
         return NaivePipeline(vector_store=vector_store, **kwargs)
+    elif pipeline_type == "reranked":
+        from src.rag.pipelines.reranked import RerankedPipeline
+        return RerankedPipeline(vector_store=vector_store, **kwargs)
     else:
-        raise ValueError(f"Unknown pipeline type: {pipeline_type}. Available: ['naive']")
+        raise ValueError(f"Unknown pipeline type: {pipeline_type}. Available: ['naive', 'reranked']")
+
