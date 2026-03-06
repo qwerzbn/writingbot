@@ -2,13 +2,27 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import CitationCard, { CitationSource } from './chat/CitationCard';
 
 interface MarkdownRendererProps {
     content: string;
     className?: string;
+    sources?: CitationSource[];
+    onCitationClick?: (source: CitationSource) => void;
 }
 
-export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, className = '', sources = [], onCitationClick }: MarkdownRendererProps) {
+    // Only convert [N] markers into citation links when we have actual source data.
+    // Limit the conversion to indices that exist in the sources array.
+    const processedContent = sources.length > 0
+        ? content.replace(/\[(\d+)\]/g, (match, num) => {
+            const idx = parseInt(num, 10);
+            return idx >= 1 && idx <= sources.length
+                ? `[${num}](#citation-${num})`
+                : match; // leave as plain text if no matching source
+        })
+        : content;
+
     return (
         <div className={`prose prose-sm prose-slate dark:prose-invert max-w-none 
             prose-headings:font-semibold prose-headings:text-slate-800 dark:prose-headings:text-slate-100
@@ -23,8 +37,30 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
             prose-blockquote:border-blue-400 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:rounded-r-lg prose-blockquote:py-1
             ${className}`}
         >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {content}
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    a: ({ node, href, children, ...props }) => {
+                        if (href?.startsWith('#citation-')) {
+                            const indexStr = href.replace('#citation-', '');
+                            const index = parseInt(indexStr, 10);
+
+                            if (!isNaN(index)) {
+                                const source = sources[index - 1]; // 1-based index to 0-based array
+                                return (
+                                    <CitationCard
+                                        index={index}
+                                        source={source}
+                                        onClick={() => onCitationClick && source && onCitationClick(source)}
+                                    />
+                                );
+                            }
+                        }
+                        return <a href={href} {...props}>{children}</a>;
+                    }
+                }}
+            >
+                {processedContent}
             </ReactMarkdown>
         </div>
     );

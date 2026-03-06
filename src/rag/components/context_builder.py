@@ -60,6 +60,7 @@ class ContextBuilder:
                 "source": source_name,
                 "page": page,
                 "score": result.get("score", 0),
+                "file_id": metadata.get("file_id"), # Required for PDF viewer
             })
 
         context = "\n\n".join(context_parts) if context_parts else ""

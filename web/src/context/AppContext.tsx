@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 
-// Types
+// ---- Types ----
+
 interface KB {
     id: string;
     name: string;
@@ -25,15 +26,24 @@ interface Conversation {
     id: string;
     title: string;
     kb_id?: string;
-    messages: Message[];
+    messages: ChatMessage[];
     updated_at: string;
 }
 
-interface Message {
+export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     sources?: { source: string; page: number }[];
-    timestamp: string;
+    isStreaming?: boolean;
+    agent?: string;
+    workflow?: WorkflowStep[];
+}
+
+export interface WorkflowStep {
+    agent: string;
+    status: 'working' | 'thinking' | 'done' | 'error';
+    message: string;
+    duration?: number;
 }
 
 interface AppState {
@@ -50,6 +60,21 @@ interface AppContextType extends AppState {
     setCurrentConversationId: (id: string | null) => void;
     refreshKbs: () => Promise<void>;
     refreshConversations: () => Promise<void>;
+    // Global chat messages (survives page navigation)
+    chatMessages: ChatMessage[];
+    setChatMessages: (msgs: ChatMessage[]) => void;
+    updateChatMessages: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void;
+    // Streaming state
+    isChatStreaming: boolean;
+    setIsChatStreaming: (v: boolean) => void;
+    chatStatusMessage: string;
+    setChatStatusMessage: (msg: string) => void;
+    chatWorkflow: WorkflowStep[];
+    setChatWorkflow: (steps: WorkflowStep[]) => void;
+    chatCurrentAgent: string;
+    setChatCurrentAgent: (agent: string) => void;
+    // Abort controller for SSE
+    abortStreamRef: React.MutableRefObject<AbortController | null>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,6 +87,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [selectedKbId, setSelectedKbIdState] = useState<string | null>(null);
     const [currentConversationId, setCurrentConversationIdState] = useState<string | null>(null);
     const [isHydrated, setIsHydrated] = useState(false);
+
+    // **Global** chat messages — survive page navigation
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+    const [isChatStreaming, setIsChatStreaming] = useState(false);
+    const [chatStatusMessage, setChatStatusMessage] = useState('正在思考...');
+    const [chatWorkflow, setChatWorkflow] = useState<WorkflowStep[]>([]);
+    const [chatCurrentAgent, setChatCurrentAgent] = useState('reasoner');
+    const abortStreamRef = useRef<AbortController | null>(null);
+
+    const updateChatMessages = useCallback(
+        (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+            setChatMessages((prev) => updater(prev));
+        },
+        []
+    );
 
     // Load from localStorage on mount
     useEffect(() => {
@@ -78,7 +118,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsHydrated(true);
     }, []);
 
-    // Save to localStorage on change
+    // Save to localStorage
     useEffect(() => {
         if (isHydrated) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -88,24 +128,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
     }, [selectedKbId, currentConversationId, isHydrated]);
 
-    // Wrapped setters
-    const setSelectedKbId = (id: string | null) => {
-        setSelectedKbIdState(id);
-    };
+    const setSelectedKbId = (id: string | null) => setSelectedKbIdState(id);
+    const setCurrentConversationId = (id: string | null) => setCurrentConversationIdState(id);
 
-    const setCurrentConversationId = (id: string | null) => {
-        setCurrentConversationIdState(id);
-    };
-
-    // API Helpers
     const refreshKbs = async () => {
         try {
             const res = await fetch('/api/kbs');
             const data = await res.json();
             if (data.success) setKbs(data.data);
-        } catch (e) {
-            console.error('Failed to fetch KBs', e);
-        }
+        } catch (e) { console.error('Failed to fetch KBs', e); }
     };
 
     const refreshConversations = async () => {
@@ -113,12 +144,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const res = await fetch('/api/conversations');
             const data = await res.json();
             if (data.success) setConversations(data.data);
-        } catch (e) {
-            console.error('Failed to fetch conversations', e);
-        }
+        } catch (e) { console.error('Failed to fetch conversations', e); }
     };
 
-    // Initial data load
     useEffect(() => {
         if (isHydrated) {
             refreshKbs();
@@ -133,6 +161,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             selectedKbId, setSelectedKbId,
             currentConversationId, setCurrentConversationId,
             refreshKbs, refreshConversations,
+            chatMessages, setChatMessages, updateChatMessages,
+            isChatStreaming, setIsChatStreaming,
+            chatStatusMessage, setChatStatusMessage,
+            chatWorkflow, setChatWorkflow,
+            chatCurrentAgent, setChatCurrentAgent,
+            abortStreamRef,
         }}>
             {children}
         </AppContext.Provider>

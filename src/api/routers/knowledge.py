@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 
 # Project root for data directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -119,6 +120,30 @@ async def get_kb_details(kb_id: str):
         return {"success": True, "data": {"metadata": kb, "stats": stats}}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/kbs/{kb_id}/files/{file_id}/content")
+async def get_file_content(kb_id: str, file_id: str):
+    """Get the raw content of a file (e.g., PDF) in a knowledge base."""
+    kb_manager = get_kb_manager()
+    kb = kb_manager.get_kb(kb_id)
+    if not kb:
+        raise HTTPException(status_code=404, detail="KB not found")
+
+    file_info = next((f for f in kb.get("files", []) if f["id"] == file_id), None)
+    if not file_info:
+        raise HTTPException(status_code=404, detail="File not found in KB")
+
+    file_path = Path(file_info["path"])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File content not found on disk")
+
+    return FileResponse(
+        path=str(file_path),
+        filename=file_info["name"],
+        media_type="application/pdf" if file_info["name"].lower().endswith(".pdf") else "application/octet-stream",
+        headers={"Accept-Ranges": "bytes"} # Important for PDF viewer seeking
+    )
 
 
 @router.post("/kbs/{kb_id}/ingest")

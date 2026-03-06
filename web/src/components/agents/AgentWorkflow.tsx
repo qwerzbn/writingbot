@@ -6,7 +6,7 @@ import { getAgent } from './AgentRegistry';
 
 export interface WorkflowStep {
     agent: string;
-    status: 'working' | 'done' | 'error';
+    status: 'working' | 'thinking' | 'done' | 'error';
     message: string;
     duration?: number;
 }
@@ -58,6 +58,8 @@ export default function AgentWorkflow({ steps, isActive }: AgentWorkflowProps) {
                                 <div className="shrink-0">
                                     {step.status === 'working' ? (
                                         <Loader2 size={12} className="animate-spin" style={{ color: agent.color }} />
+                                    ) : step.status === 'thinking' ? (
+                                        <span className="text-xs animate-pulse">🧠</span>
                                     ) : step.status === 'done' ? (
                                         <CheckCircle2 size={12} className="text-emerald-500" />
                                     ) : (

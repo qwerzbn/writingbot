@@ -53,7 +53,7 @@ FASTWRITE_BACKEND_PID=$!
 # Start FastWrite Frontend
 echo "Starting FastWrite Web UI (Port 3002)..."
 cd web
-bun run dev &
+bun run dev --no-open &
 FASTWRITE_FRONTEND_PID=$!
 cd ../..
 
@@ -69,5 +69,8 @@ echo "  FastWrite UI:        http://localhost:3002"
 echo "=========================================="
 echo "  Press Ctrl+C to stop all servers."
 echo ""
+
+# Auto-open WritingBot frontend
+open http://localhost:3000
 
 wait

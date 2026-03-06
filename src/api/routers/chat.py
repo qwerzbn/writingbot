@@ -6,8 +6,9 @@ Chat API Router
 Multi-agent chat with SSE streaming and agent collaboration workflow.
 
 SSE Event Protocol:
-- agent_step: {"type":"agent_step", "agent":"retriever", "status":"working|done", "message":"...", "duration":1.2}
-- chunk:      {"type":"chunk", "content":"...", "agent":"reasoner"}
+- init:       {"type":"init", "conversation_id":"..."}  (sent FIRST)
+- agent_step: {"type":"agent_step", "agent":"...", "status":"working|thinking|done", ...}
+- chunk:      {"type":"chunk", "content":"...", "agent":"..."}
 - sources:    {"type":"sources", "data":[...]}
 - done:       {"type":"done", "conversation_id":"..."}
 - error:      {"type":"error", "error":"..."}
@@ -23,12 +24,13 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from src.agents.registry import get_all_agents, AGENT_REGISTRY
+from src.rag.components.generator import THINK_SENTINEL
 
 # Project root for data directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 
-# Lazy-loaded instances
+# Lazy-loaded singletons
 _session_manager = None
 _chat_agent = None
 
@@ -94,38 +96,30 @@ def _get_or_create_session(sm, conv_id, message, kb_id):
 
 
 def _sse(data: dict) -> str:
-    """Format a dict as an SSE data event."""
     return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
 def _parse_at_mention(message: str) -> tuple[str | None, str]:
-    """
-    Parse @agent mention from message.
-    Returns (agent_id, clean_message).
-    """
     match = re.match(r"@(\S+)\s*(.*)", message, re.DOTALL)
     if match:
         mention = match.group(1)
         clean_msg = match.group(2).strip()
-        # Try to match by ID or name
         for agent_id, info in AGENT_REGISTRY.items():
             if mention in (agent_id, info.name):
                 return agent_id, clean_msg
     return None, message
 
 
-# ============== API Endpoints ==============
+# ============== API ==============
 
 
 @router.get("/agents")
 async def list_agents():
-    """List all available agents with their metadata."""
     return {"success": True, "data": get_all_agents()}
 
 
 @router.post("/chat")
 async def chat(request: Request):
-    """Non-streaming chat endpoint."""
     try:
         data = await request.json()
         if not data or "message" not in data:
@@ -137,12 +131,10 @@ async def chat(request: Request):
 
         sm = get_session_manager()
         session, conv_id, kb_id = _get_or_create_session(sm, conv_id, message, kb_id)
-
         if not kb_id:
             raise HTTPException(status_code=400, detail="No Knowledge Base selected")
 
         session.add_message("user", message)
-
         agent = get_chat_agent()
         vs = get_vector_store(kb_id)
         history = session.get_history()
@@ -166,8 +158,9 @@ async def chat(request: Request):
 @router.post("/chat/stream")
 async def chat_stream(request: Request):
     """
-    Streaming chat with multi-agent collaboration workflow.
-    Sends agent_step events to visualize the collaboration process.
+    Multi-agent streaming chat.
+    Sends conversation_id IMMEDIATELY so the frontend can persist it
+    even if the user navigates away mid-stream.
     """
     data = await request.json()
     if not data or "message" not in data:
@@ -180,7 +173,7 @@ async def chat_stream(request: Request):
     def generate():
         nonlocal conv_id
 
-        # Buffer flush for proxies
+        # Buffer flush
         yield f": {' ' * 2048}\n\n"
 
         try:
@@ -190,46 +183,43 @@ async def chat_stream(request: Request):
             )
             conv_id = conv_id_local
 
+            # *** SEND CONVERSATION ID IMMEDIATELY ***
+            # This ensures the frontend persists it even if user navigates away
+            yield _sse({"type": "init", "conversation_id": conv_id})
+
             if not session_kb_id:
                 yield _sse({"type": "error", "error": "请先选择知识库"})
                 return
 
-            # Parse @mention
             target_agent, clean_message = _parse_at_mention(message)
-
             session.add_message("user", message)
 
-            # ========== Agent Collaboration Workflow ==========
+            # ========== Workflow ==========
 
-            # --- Step 1: Retrieval ---
+            # Step 1: Retrieval
             t0 = time.time()
             yield _sse({
-                "type": "agent_step",
-                "agent": "retriever",
-                "status": "working",
-                "message": "正在从知识库检索相关文献...",
+                "type": "agent_step", "agent": "retriever",
+                "status": "working", "message": "正在从知识库检索相关文献...",
             })
 
             agent = get_chat_agent()
             vs = get_vector_store(session_kb_id)
             history = session.get_history()
 
-            # Route to appropriate agent based on @mention
             if target_agent == "researcher":
+                # --- Research agent flow ---
+                retrieval_time = round(time.time() - t0, 1)
                 yield _sse({
-                    "type": "agent_step",
-                    "agent": "retriever",
-                    "status": "done",
-                    "message": "检索完成",
-                    "duration": round(time.time() - t0, 1),
+                    "type": "agent_step", "agent": "retriever",
+                    "status": "done", "message": "检索完成",
+                    "duration": retrieval_time,
                 })
-                # Use ResearchAgent for deeper analysis
+
                 t1 = time.time()
                 yield _sse({
-                    "type": "agent_step",
-                    "agent": "researcher",
-                    "status": "working",
-                    "message": "正在生成研究报告...",
+                    "type": "agent_step", "agent": "researcher",
+                    "status": "working", "message": "正在生成研究报告...",
                 })
 
                 from src.agents.research import ResearchAgent
@@ -243,25 +233,29 @@ async def chat_stream(request: Request):
                     yield _sse({"type": "sources", "data": sources})
 
                 yield _sse({
-                    "type": "agent_step",
-                    "agent": "researcher",
-                    "status": "done",
-                    "message": "报告生成中",
+                    "type": "agent_step", "agent": "researcher",
+                    "status": "done", "message": "报告生成中",
                     "duration": round(time.time() - t1, 1),
                 })
 
-                # Stream report
                 full_response = ""
                 if result.get("plan"):
-                    full_response += f"## 📋 研究计划\n\n{result['plan']}\n\n---\n\n## 📝 研究报告\n\n"
-                    yield _sse({"type": "chunk", "content": full_response, "agent": "researcher"})
+                    plan_text = f"## 📋 研究计划\n\n{result['plan']}\n\n---\n\n## 📝 研究报告\n\n"
+                    full_response += plan_text
+                    yield _sse({"type": "chunk", "content": plan_text, "agent": "researcher"})
 
                 for chunk in result.get("stream", []):
+                    if chunk == THINK_SENTINEL:
+                        yield _sse({
+                            "type": "agent_step", "agent": "researcher",
+                            "status": "thinking", "message": "模型正在深度推理...",
+                        })
+                        continue
                     full_response += chunk
                     yield _sse({"type": "chunk", "content": chunk, "agent": "researcher"})
 
             else:
-                # Default: ChatAgent (RAG question-answering)
+                # --- Default: ChatAgent (RAG) ---
                 result = agent.process(
                     clean_message, vector_store=vs, history=history, stream=True
                 )
@@ -270,8 +264,7 @@ async def chat_stream(request: Request):
                 retrieval_time = round(time.time() - t0, 1)
 
                 yield _sse({
-                    "type": "agent_step",
-                    "agent": "retriever",
+                    "type": "agent_step", "agent": "retriever",
                     "status": "done",
                     "message": f"已找到 {len(sources)} 条相关段落",
                     "duration": retrieval_time,
@@ -280,44 +273,46 @@ async def chat_stream(request: Request):
                 if sources:
                     yield _sse({"type": "sources", "data": sources})
 
-                # --- Step 2: Reasoning ---
+                # Step 2: Reasoning
                 t1 = time.time()
                 yield _sse({
-                    "type": "agent_step",
-                    "agent": "reasoner",
-                    "status": "working",
-                    "message": "正在基于检索结果进行分析推理...",
+                    "type": "agent_step", "agent": "reasoner",
+                    "status": "working", "message": "正在分析推理...",
                 })
 
                 full_response = ""
                 first_chunk = True
                 for chunk in result["stream"]:
+                    # Handle think sentinel
+                    if chunk == THINK_SENTINEL:
+                        yield _sse({
+                            "type": "agent_step", "agent": "reasoner",
+                            "status": "thinking",
+                            "message": "模型正在深度推理，请稍候...",
+                        })
+                        continue
+
                     if first_chunk:
                         yield _sse({
-                            "type": "agent_step",
-                            "agent": "reasoner",
-                            "status": "done",
-                            "message": "分析推理中",
+                            "type": "agent_step", "agent": "reasoner",
+                            "status": "done", "message": "推理完成，输出中",
                             "duration": round(time.time() - t1, 1),
                         })
                         first_chunk = False
+
                     full_response += chunk
                     yield _sse({"type": "chunk", "content": chunk, "agent": "reasoner"})
 
-                # If no chunks came through (empty response)
                 if first_chunk:
                     yield _sse({
-                        "type": "agent_step",
-                        "agent": "reasoner",
-                        "status": "done",
-                        "message": "分析完成",
+                        "type": "agent_step", "agent": "reasoner",
+                        "status": "done", "message": "推理完成",
                         "duration": round(time.time() - t1, 1),
                     })
 
-            # Save and finalize
+            # Save
             session.add_message("assistant", full_response, sources=sources)
             sm.save(session)
-
             yield _sse({"type": "done", "conversation_id": conv_id})
 
         except Exception as e:

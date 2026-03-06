@@ -1,68 +1,44 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type ChatMessage, type WorkflowStep } from '@/context/AppContext';
 import { Plus, Send, Loader2, Trash2, MessageSquare } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import AgentAvatar from '@/components/agents/AgentAvatar';
-import AgentWorkflow, { type WorkflowStep } from '@/components/agents/AgentWorkflow';
+import AgentWorkflow from '@/components/agents/AgentWorkflow';
 import { AGENTS } from '@/components/agents/AgentRegistry';
+import dynamic from 'next/dynamic';
+const PdfViewer = dynamic(() => import('@/components/chat/PdfViewer'), { ssr: false });
+import { type CitationSource } from '@/components/chat/CitationCard';
 
-// --- Types ---
+// ---- Direct backend URL for SSE (bypass Next.js proxy to avoid buffering) ----
+const STREAM_API = 'http://localhost:5001/api';
 
-interface Message {
-    role: 'user' | 'assistant';
-    content: string;
-    sources?: { source: string; page: number }[];
-    isStreaming?: boolean;
-    agent?: string;          // Which agent produced this message
-    workflow?: WorkflowStep[]; // Collaboration steps for this message
-}
-
-interface Conversation {
-    id: string;
-    title: string;
-    kb_id?: string;
-    messages: Message[];
-}
-
-const API_BASE = '';
-
-// --- @mention popup ---
-
-interface MentionOption {
-    id: string;
-    name: string;
-    emoji: string;
-    description: string;
-}
-
-const MENTION_OPTIONS: MentionOption[] = Object.values(AGENTS).map((a) => ({
-    id: a.id,
-    name: a.name,
-    emoji: a.emoji,
-    description: a.description,
-}));
-
-// --- Slash commands ---
+// ---- Slash commands ----
 
 interface SlashCommand {
     command: string;
     label: string;
     description: string;
     prompt: string;
-    agent?: string;
 }
 
 const SLASH_COMMANDS: SlashCommand[] = [
-    { command: '/总结创新点', label: '总结创新点', description: '总结论文的核心创新和贡献', prompt: '@研究智能体 请总结当前知识库论文的核心创新点和主要贡献', agent: 'researcher' },
-    { command: '/文献综述', label: '文献综述', description: '生成涵盖所有论文的文献综述', prompt: '@研究智能体 请基于知识库中的论文，生成一篇结构化的文献综述', agent: 'researcher' },
-    { command: '/对比分析', label: '对比分析', description: '对比多篇论文的方法和结果', prompt: '@研究智能体 请对比分析知识库中论文的研究方法和实验结果', agent: 'researcher' },
+    { command: '/总结创新点', label: '总结创新点', description: '总结论文的核心创新和贡献', prompt: '@研究智能体 请总结当前知识库论文的核心创新点和主要贡献' },
+    { command: '/文献综述', label: '文献综述', description: '生成涵盖所有论文的文献综述', prompt: '@研究智能体 请基于知识库中的论文，生成一篇结构化的文献综述' },
+    { command: '/对比分析', label: '对比分析', description: '对比多篇论文的方法和结果', prompt: '@研究智能体 请对比分析知识库中论文的研究方法和实验结果' },
     { command: '/分析实验', label: '分析实验设计', description: '分析论文实验设计的优缺点', prompt: '请分析知识库中论文的实验设计，指出其优势和局限性' },
     { command: '/提取公式', label: '提取核心公式', description: '提取并解释论文中的关键公式', prompt: '请提取知识库论文中的核心数学公式并逐一解释' },
     { command: '/研究空白', label: '发现研究空白', description: '识别可能的研究方向和不足', prompt: '基于知识库论文，请识别当前研究的空白和未来可能的研究方向' },
 ];
 
+// ---- @mention options ----
+
+const MENTION_OPTIONS = Object.values(AGENTS).map((a) => ({
+    id: a.id, name: a.name, emoji: a.emoji, description: a.description,
+}));
+
+// ---- Component ----
 
 export default function ChatPage() {
     const {
@@ -70,49 +46,50 @@ export default function ChatPage() {
         selectedKbId, setSelectedKbId,
         currentConversationId, setCurrentConversationId,
         conversations, refreshConversations,
+        // Global chat state
+        chatMessages, setChatMessages, updateChatMessages,
+        isChatStreaming, setIsChatStreaming,
+        chatStatusMessage, setChatStatusMessage,
+        chatWorkflow, setChatWorkflow,
+        chatCurrentAgent, setChatCurrentAgent,
+        abortStreamRef,
     } = useAppContext();
 
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
-    const [sending, setSending] = useState(false);
-    const [statusMessage, setStatusMessage] = useState('正在思考...');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    // Local UI state only (menus, input)
     const inputRef = useRef<HTMLInputElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const streamingContentRef = useRef('');
+    const workflowRef = useRef<WorkflowStep[]>([]);
 
-    // @mention state
+    // Menu state
     const [showMentionMenu, setShowMentionMenu] = useState(false);
     const [mentionFilter, setMentionFilter] = useState('');
-
-    // Slash command state
     const [showSlashMenu, setShowSlashMenu] = useState(false);
     const [slashFilter, setSlashFilter] = useState('');
+    const [input, setInput] = useState('');
 
-    // Workflow steps for current streaming message
-    const workflowRef = useRef<WorkflowStep[]>([]);
-    const [currentWorkflow, setCurrentWorkflow] = useState<WorkflowStep[]>([]);
-    const [currentAgent, setCurrentAgent] = useState<string>('reasoner');
+    // PDF Viewer state
+    const [activePdf, setActivePdf] = useState<{ url: string; name: string; page?: number } | null>(null);
 
-    useEffect(() => { refreshKbs(); refreshConversations(); }, []);
-
+    // Load conversation when switching
     useEffect(() => {
-        if (currentConversationId) {
+        if (currentConversationId && !isChatStreaming) {
             loadConversation(currentConversationId);
-        } else {
-            setMessages([]);
+        } else if (!currentConversationId && !isChatStreaming) {
+            setChatMessages([]);
         }
     }, [currentConversationId]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, currentWorkflow]);
+    }, [chatMessages, chatWorkflow]);
 
     const loadConversation = async (id: string) => {
         try {
             const res = await fetch(`/api/conversations/${id}`);
             const data = await res.json();
             if (data.success) {
-                setMessages(data.data.messages || []);
+                setChatMessages(data.data.messages || []);
                 if (data.data.kb_id && !selectedKbId) {
                     setSelectedKbId(data.data.kb_id);
                 }
@@ -121,12 +98,21 @@ export default function ChatPage() {
     };
 
     const handleNewChat = () => {
+        // Abort any in-progress stream
+        abortStreamRef.current?.abort();
         setCurrentConversationId(null);
-        setMessages([]);
+        setChatMessages([]);
+        setIsChatStreaming(false);
+        setChatWorkflow([]);
+        setActivePdf(null);
     };
 
-    const handleSelectConversation = (conv: Conversation) => {
+    const handleSelectConversation = (conv: { id: string; kb_id?: string }) => {
+        abortStreamRef.current?.abort();
+        setIsChatStreaming(false);
+        setChatWorkflow([]);
         setCurrentConversationId(conv.id);
+        setActivePdf(null);
         if (conv.kb_id) setSelectedKbId(conv.kb_id);
     };
 
@@ -137,38 +123,18 @@ export default function ChatPage() {
             await fetch(`/api/conversations/${convId}`, { method: 'DELETE' });
             if (currentConversationId === convId) {
                 setCurrentConversationId(null);
-                setMessages([]);
+                setChatMessages([]);
             }
             refreshConversations();
         } catch (e) { console.error(e); }
     };
 
-    const updateLastMessage = useCallback(
-        (content: string, isStreaming: boolean, extras?: Partial<Message>) => {
-            setMessages((prev) => {
-                const newMsgs = prev.slice(0, -1);
-                const last = prev[prev.length - 1];
-                if (last && last.role === 'assistant') {
-                    newMsgs.push({
-                        ...last,
-                        content,
-                        isStreaming,
-                        ...extras,
-                    });
-                }
-                return newMsgs;
-            });
-        },
-        []
-    );
-
-    // --- Input handlers ---
+    // ---- Input handlers ----
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setInput(val);
 
-        // @mention detection
         const atMatch = val.match(/@(\S*)$/);
         if (atMatch) {
             setMentionFilter(atMatch[1]);
@@ -178,7 +144,6 @@ export default function ChatPage() {
             setShowMentionMenu(false);
         }
 
-        // Slash command detection
         if (val === '/' || val.match(/^\/\S*$/)) {
             setSlashFilter(val.slice(1));
             setShowSlashMenu(true);
@@ -188,7 +153,7 @@ export default function ChatPage() {
         }
     };
 
-    const selectMention = (agent: MentionOption) => {
+    const selectMention = (agent: { id: string; name: string }) => {
         const beforeAt = input.replace(/@\S*$/, '');
         setInput(`@${agent.name} ${beforeAt}`);
         setShowMentionMenu(false);
@@ -209,10 +174,10 @@ export default function ChatPage() {
         (c) => !slashFilter || c.command.includes(slashFilter) || c.label.includes(slashFilter)
     );
 
-    // --- Streaming send ---
+    // ---- Streaming send (using global state) ----
 
     const handleSend = async () => {
-        if (!input.trim() || !selectedKbId) return;
+        if (!input.trim() || !selectedKbId || isChatStreaming) return;
         const userMessage = input.trim();
         setInput('');
         setShowMentionMenu(false);
@@ -220,20 +185,26 @@ export default function ChatPage() {
 
         streamingContentRef.current = '';
         workflowRef.current = [];
-        setCurrentWorkflow([]);
-        setCurrentAgent('reasoner');
+        setChatWorkflow([]);
+        setChatCurrentAgent('reasoner');
 
-        // Add user + empty assistant message
-        setMessages((prev) => [
-            ...prev,
+        // Add messages to global state
+        const newMessages: ChatMessage[] = [
+            ...chatMessages,
             { role: 'user', content: userMessage },
             { role: 'assistant', content: '', isStreaming: true, workflow: [] },
-        ]);
-        setSending(true);
-        setStatusMessage('正在思考...');
+        ];
+        setChatMessages(newMessages);
+        setIsChatStreaming(true);
+        setChatStatusMessage('正在连接...');
+
+        // Create abort controller
+        const abortController = new AbortController();
+        abortStreamRef.current = abortController;
 
         try {
-            const res = await fetch(`${API_BASE}/api/chat/stream`, {
+            // *** DIRECT call to backend — bypass Next.js proxy for SSE ***
+            const res = await fetch(`${STREAM_API}/chat/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -241,6 +212,7 @@ export default function ChatPage() {
                     conversation_id: currentConversationId,
                     kb_id: selectedKbId,
                 }),
+                signal: abortController.signal,
             });
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -251,7 +223,6 @@ export default function ChatPage() {
             const decoder = new TextDecoder();
             let buffer = '';
             let receivedSources: { source: string; page: number }[] = [];
-            let receivedConvId: string | null = null;
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -267,43 +238,55 @@ export default function ChatPage() {
                         const ev = JSON.parse(event.slice(6));
 
                         switch (ev.type) {
+                            case 'init':
+                                // Persist conversation ID immediately
+                                if (!currentConversationId && ev.conversation_id) {
+                                    setCurrentConversationId(ev.conversation_id);
+                                }
+                                break;
+
                             case 'agent_step': {
-                                // Update or add workflow step
                                 const steps = [...workflowRef.current];
                                 const existing = steps.findIndex(
-                                    (s) => s.agent === ev.agent && s.status === 'working'
+                                    (s) => s.agent === ev.agent && (s.status === 'working' || s.status === 'thinking')
                                 );
+                                const step: WorkflowStep = {
+                                    agent: ev.agent,
+                                    status: ev.status,
+                                    message: ev.message,
+                                    duration: ev.duration,
+                                };
                                 if (existing >= 0) {
-                                    steps[existing] = {
-                                        agent: ev.agent,
-                                        status: ev.status,
-                                        message: ev.message,
-                                        duration: ev.duration,
-                                    };
+                                    steps[existing] = step;
                                 } else {
-                                    steps.push({
-                                        agent: ev.agent,
-                                        status: ev.status,
-                                        message: ev.message,
-                                        duration: ev.duration,
-                                    });
+                                    steps.push(step);
                                 }
                                 workflowRef.current = steps;
-                                setCurrentWorkflow([...steps]);
+                                setChatWorkflow([...steps]);
 
-                                // Update status message
-                                if (ev.status === 'working') {
-                                    setStatusMessage(ev.message);
+                                if (ev.status === 'working' || ev.status === 'thinking') {
+                                    setChatStatusMessage(ev.message);
                                 }
                                 break;
                             }
 
                             case 'chunk':
                                 streamingContentRef.current += ev.content;
-                                if (ev.agent) setCurrentAgent(ev.agent);
-                                updateLastMessage(streamingContentRef.current, true, {
-                                    agent: ev.agent || currentAgent,
-                                    workflow: workflowRef.current,
+                                if (ev.agent) setChatCurrentAgent(ev.agent);
+                                // Update the last message in global state
+                                updateChatMessages((prev) => {
+                                    const msgs = [...prev];
+                                    const last = msgs[msgs.length - 1];
+                                    if (last?.role === 'assistant') {
+                                        msgs[msgs.length - 1] = {
+                                            ...last,
+                                            content: streamingContentRef.current,
+                                            isStreaming: true,
+                                            agent: ev.agent || last.agent,
+                                            workflow: workflowRef.current,
+                                        };
+                                    }
+                                    return msgs;
                                 });
                                 break;
 
@@ -312,11 +295,21 @@ export default function ChatPage() {
                                 break;
 
                             case 'done':
-                                receivedConvId = ev.conversation_id;
                                 break;
 
                             case 'error':
-                                updateLastMessage(`错误: ${ev.error}`, false);
+                                updateChatMessages((prev) => {
+                                    const msgs = [...prev];
+                                    const last = msgs[msgs.length - 1];
+                                    if (last?.role === 'assistant') {
+                                        msgs[msgs.length - 1] = {
+                                            ...last,
+                                            content: `错误: ${ev.error}`,
+                                            isStreaming: false,
+                                        };
+                                    }
+                                    return msgs;
+                                });
                                 break;
                         }
                     } catch (e) { console.error('Parse SSE:', e); }
@@ -324,21 +317,57 @@ export default function ChatPage() {
             }
 
             // Finalize
-            updateLastMessage(streamingContentRef.current, false, {
-                sources: receivedSources,
-                agent: currentAgent,
-                workflow: workflowRef.current,
+            updateChatMessages((prev) => {
+                const msgs = [...prev];
+                const last = msgs[msgs.length - 1];
+                if (last?.role === 'assistant') {
+                    msgs[msgs.length - 1] = {
+                        ...last,
+                        content: streamingContentRef.current,
+                        isStreaming: false,
+                        sources: receivedSources,
+                        agent: chatCurrentAgent,
+                        workflow: workflowRef.current,
+                    };
+                }
+                return msgs;
             });
 
-            if (receivedConvId && !currentConversationId) {
-                setCurrentConversationId(receivedConvId);
-                refreshConversations();
+            refreshConversations();
+
+        } catch (e: unknown) {
+            if (e instanceof Error && e.name === 'AbortError') {
+                // User navigated away or started new chat — keep partial content
+                updateChatMessages((prev) => {
+                    const msgs = [...prev];
+                    const last = msgs[msgs.length - 1];
+                    if (last?.role === 'assistant') {
+                        msgs[msgs.length - 1] = {
+                            ...last,
+                            content: streamingContentRef.current || '(对话中断)',
+                            isStreaming: false,
+                        };
+                    }
+                    return msgs;
+                });
+            } else {
+                console.error('Stream error:', e);
+                updateChatMessages((prev) => {
+                    const msgs = [...prev];
+                    const last = msgs[msgs.length - 1];
+                    if (last?.role === 'assistant') {
+                        msgs[msgs.length - 1] = {
+                            ...last,
+                            content: `网络错误: ${e}`,
+                            isStreaming: false,
+                        };
+                    }
+                    return msgs;
+                });
             }
-        } catch (e) {
-            console.error('Stream error:', e);
-            updateLastMessage(`网络错误: ${e}`, false);
         } finally {
-            setSending(false);
+            setIsChatStreaming(false);
+            abortStreamRef.current = null;
         }
     };
 
@@ -349,11 +378,13 @@ export default function ChatPage() {
         }
     };
 
-    // --- Render ---
+    // ---- Render ----
+
+    const messages = chatMessages;
 
     return (
         <div className="h-full flex">
-            {/* === Conversation Sidebar === */}
+            {/* Conversation Sidebar */}
             <div className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0">
                 <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
                     <span className="font-semibold text-slate-800 dark:text-white text-sm">对话列表</span>
@@ -372,10 +403,10 @@ export default function ChatPage() {
                         conversations.map((conv) => (
                             <div
                                 key={conv.id}
-                                onClick={() => handleSelectConversation(conv as Conversation)}
+                                onClick={() => handleSelectConversation(conv)}
                                 className={`group px-3 py-2 rounded-lg cursor-pointer text-sm mb-1 transition-colors flex items-center justify-between ${conv.id === currentConversationId
-                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
-                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <span className="truncate flex-1">{conv.title}</span>
@@ -392,7 +423,7 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* === Chat Main Area === */}
+            {/* Chat Main */}
             <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
                 {/* Header */}
                 <header className="h-14 px-8 flex items-center justify-between bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
@@ -408,7 +439,7 @@ export default function ChatPage() {
                     <select
                         value={selectedKbId || ''}
                         onChange={(e) => setSelectedKbId(e.target.value || null)}
-                        className="w-48 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        className="w-48 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                     >
                         <option value="">选择知识库...</option>
                         {kbs.map((kb) => (
@@ -438,54 +469,62 @@ export default function ChatPage() {
                                 ))}
                             </div>
                             <p className="text-xs mt-6 text-slate-400">
-                                输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">/</kbd> 使用快捷指令 · 输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">@</kbd> 指定智能体
+                                输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">/</kbd> 快捷指令 · <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">@</kbd> 指定智能体
                             </p>
                         </div>
                     ) : (
                         messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[75%] ${msg.role === 'user' ? '' : ''}`}>
-                                    {/* Agent workflow (only for assistant messages with workflow) */}
-                                    {msg.role === 'assistant' && (msg.workflow?.length || (msg.isStreaming && currentWorkflow.length > 0)) ? (
+                                <div className="max-w-[75%]">
+                                    {/* Agent workflow */}
+                                    {msg.role === 'assistant' && (msg.workflow?.length || (msg.isStreaming && chatWorkflow.length > 0)) ? (
                                         <AgentWorkflow
-                                            steps={msg.isStreaming ? currentWorkflow : (msg.workflow || [])}
+                                            steps={msg.isStreaming ? chatWorkflow : (msg.workflow || [])}
                                             isActive={!!msg.isStreaming}
                                         />
                                     ) : null}
 
-                                    {/* Message bubble */}
+                                    {/* Bubble */}
                                     <div className={`px-4 py-3 rounded-2xl ${msg.role === 'user'
-                                            ? 'bg-blue-500 text-white rounded-br-sm'
-                                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm'
+                                        ? 'bg-blue-500 text-white rounded-br-sm'
+                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm'
                                         }`}>
-                                        {/* Agent badge for assistant messages */}
                                         {msg.role === 'assistant' && msg.agent && !msg.isStreaming && (
                                             <div className="mb-2">
                                                 <AgentAvatar agentId={msg.agent} showName />
                                             </div>
                                         )}
 
-                                        {/* Content */}
                                         {msg.role === 'user' ? (
                                             <div className="whitespace-pre-wrap">{msg.content}</div>
                                         ) : (
                                             <div>
-                                                <MarkdownRenderer content={msg.content} />
+                                                <MarkdownRenderer
+                                                    content={msg.content}
+                                                    sources={msg.sources}
+                                                    onCitationClick={(source: CitationSource) => {
+                                                        if (source.file_id && selectedKbId) {
+                                                            setActivePdf({
+                                                                url: `/api/kbs/${selectedKbId}/files/${source.file_id}/content`,
+                                                                name: source.source,
+                                                                page: typeof source.page === 'number' ? source.page : parseInt(String(source.page)) || 1
+                                                            });
+                                                        }
+                                                    }}
+                                                />
                                                 {msg.isStreaming && msg.content && (
                                                     <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
                                                 )}
                                             </div>
                                         )}
 
-                                        {/* Loading state */}
                                         {msg.isStreaming && !msg.content && (
                                             <div className="flex items-center gap-2 text-slate-400">
                                                 <Loader2 size={16} className="animate-spin" />
-                                                <span className="text-sm">{statusMessage}</span>
+                                                <span className="text-sm">{chatStatusMessage}</span>
                                             </div>
                                         )}
 
-                                        {/* Sources */}
                                         {msg.sources && msg.sources.length > 0 && (
                                             <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
                                                 📄 引用来源：{' '}
@@ -504,14 +543,12 @@ export default function ChatPage() {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
+                {/* Input */}
                 <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 relative">
                     {/* @mention popup */}
                     {showMentionMenu && filteredMentions.length > 0 && (
                         <div className="absolute bottom-full left-4 mb-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
-                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">
-                                选择智能体
-                            </div>
+                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">选择智能体</div>
                             {filteredMentions.map((a) => (
                                 <button
                                     key={a.id}
@@ -528,21 +565,17 @@ export default function ChatPage() {
                         </div>
                     )}
 
-                    {/* Slash command popup */}
+                    {/* Slash popup */}
                     {showSlashMenu && filteredSlashCommands.length > 0 && (
                         <div className="absolute bottom-full left-4 mb-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
-                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">
-                                ⚡ 快捷指令
-                            </div>
+                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">⚡ 快捷指令</div>
                             {filteredSlashCommands.map((cmd) => (
                                 <button
                                     key={cmd.command}
                                     onClick={() => selectSlashCommand(cmd)}
                                     className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
                                 >
-                                    <span className="text-sm font-mono text-blue-500 dark:text-blue-400 shrink-0">
-                                        {cmd.command}
-                                    </span>
+                                    <span className="text-sm font-mono text-blue-500 dark:text-blue-400 shrink-0">{cmd.command}</span>
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm text-slate-700 dark:text-slate-200">{cmd.label}</div>
                                         <div className="text-xs text-slate-400 truncate">{cmd.description}</div>
@@ -559,20 +592,31 @@ export default function ChatPage() {
                             value={input}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
-                            placeholder={selectedKbId ? '输入问题... 使用 / 快捷指令 或 @ 指定智能体' : '请先选择知识库'}
-                            disabled={!selectedKbId || sending}
+                            placeholder={selectedKbId ? '输入问题... 用 / 快捷指令 或 @ 指定智能体' : '请先选择知识库'}
+                            disabled={!selectedKbId || isChatStreaming}
                             className="flex-1 bg-transparent outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-sm"
                         />
                         <button
                             onClick={handleSend}
-                            disabled={!input.trim() || !selectedKbId || sending}
+                            disabled={!input.trim() || !selectedKbId || isChatStreaming}
                             className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                            {isChatStreaming ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                         </button>
                     </div>
                 </div>
             </div>
+
+            {/* Split-screen PDF Viewer */}
+            {activePdf && (
+                <PdfViewer
+                    fileUrl={activePdf.url}
+                    fileName={activePdf.name}
+                    initialPage={activePdf.page}
+                    onClose={() => setActivePdf(null)}
+                />
+            )}
         </div>
     );
 }
+
