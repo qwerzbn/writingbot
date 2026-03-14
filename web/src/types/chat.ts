@@ -62,7 +62,8 @@ export interface ChatDoneEvent {
   conversation_id?: string;
   meta?: {
     paper_hits?: number;
-    time_to_first_chunk_ms?: number;
+    time_to_first_progress_ms?: number;
+    time_to_first_content_ms?: number;
     progress_event_count?: number;
     fallback_chunk_used?: boolean;
     stream_idle_max_s?: number;

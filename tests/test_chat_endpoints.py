@@ -1,4 +1,5 @@
 import re
+import time
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -99,6 +100,47 @@ def _build_client_with_orchestrator(monkeypatch, tmp_path, orchestrator):
     app = FastAPI()
     app.include_router(chat_router.router, prefix="/api")
     return TestClient(app), session_manager
+
+
+class _FakeSlowNoContentOrchestrator(_FakeChatOrchestrator):
+    def stream_run(self, run_id: str):
+        payload = self._runs[run_id]
+        has_kb = bool(payload.get("kb_id"))
+        prefix = "RAG" if has_kb else "LLM"
+        sources = [{"source": "paper.pdf", "page": 11}] if has_kb else []
+        yield {"type": "init", "run_id": run_id, "trace_id": f"trace-{run_id}", "mode": "chat_research"}
+        yield {"type": "step", "step": "plan", "status": "working", "agent_id": "question_planner"}
+        time.sleep(2.4)
+        yield {
+            "type": "done",
+            "run_id": run_id,
+            "trace_id": f"trace-{run_id}",
+            "output": f"{prefix}-WAIT",
+            "sources": sources,
+            "meta": {"paper_hits": 1 if has_kb else 0},
+        }
+
+
+def _extract_sse_events(body: str) -> list[dict]:
+    events: list[dict] = []
+    for block in body.split("\n\n"):
+        block = block.strip()
+        if not block:
+            continue
+        data_lines = []
+        for line in block.splitlines():
+            if line.startswith("data:"):
+                data_lines.append(line[5:].strip())
+        if not data_lines:
+            continue
+        raw = "\n".join(data_lines)
+        try:
+            import json
+
+            events.append(json.loads(raw))
+        except Exception:  # noqa: BLE001
+            continue
+    return events
 
 
 def test_empty_draft_not_persisted_and_message_persists(monkeypatch, tmp_path):
@@ -206,6 +248,7 @@ def test_chat_stream_event_order_and_persistence(monkeypatch, tmp_path):
 
     resp = client.post("/api/chat/stream", json={"message": "流式测试", "kb_id": "kb-1"})
     assert resp.status_code == 200
+    assert "no-transform" in (resp.headers.get("cache-control") or "")
 
     body = resp.text
     assert '"type": "chunk"' in body
@@ -237,7 +280,7 @@ def test_chat_stream_fallback_chunk_when_upstream_is_one_shot(monkeypatch, tmp_p
     assert '"type": "chunk"' in body
     assert '"kind": "content"' in body
     assert '"fallback_chunk_used": true' in body
-    assert '"time_to_first_chunk_ms":' in body
+    assert '"time_to_first_content_ms":' in body
     assert body.find('"kind": "progress"') < body.find('"kind": "content"') < body.find('"type": "done"')
 
     match = re.search(r'"conversation_id": "([^\"]+)"', body)
@@ -248,6 +291,30 @@ def test_chat_stream_fallback_chunk_when_upstream_is_one_shot(monkeypatch, tmp_p
     assert session is not None
     assert len(session.messages) == 2
     assert session.messages[1]["content"] == "RAG-ONE-SHOT-OUTPUT"
+
+
+def test_chat_stream_long_wait_emits_progress_heartbeat(monkeypatch, tmp_path):
+    client, _ = _build_client_with_orchestrator(monkeypatch, tmp_path, _FakeSlowNoContentOrchestrator())
+
+    resp = client.post("/api/chat/stream", json={"message": "slow", "kb_id": "kb-1"})
+    assert resp.status_code == 200
+    events = _extract_sse_events(resp.text)
+    assert events
+
+    progress_events = [
+        ev
+        for ev in events
+        if ev.get("type") == "chunk"
+        and isinstance(ev.get("meta"), dict)
+        and ev.get("meta", {}).get("kind") == "progress"
+    ]
+    assert len(progress_events) >= 2
+
+    done = [ev for ev in events if ev.get("type") == "done"]
+    assert done
+    done_meta = done[-1].get("meta") or {}
+    assert int(done_meta.get("time_to_first_progress_ms", 99999)) <= 1500
+    assert int(done_meta.get("progress_event_count", 0)) >= 2
 
 
 def test_chat_stream_idempotency_replay(monkeypatch, tmp_path):

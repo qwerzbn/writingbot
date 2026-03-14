@@ -68,6 +68,7 @@ _METRICS: dict[str, int] = {
     "retries_total": 0,
     "stream_progress_events_total": 0,
     "stream_fallback_chunk_total": 0,
+    "stream_heartbeat_progress_total": 0,
 }
 _LATENCIES_MS: list[int] = []
 
@@ -608,7 +609,8 @@ def _stream_orchestrator_with_retry(
             progress_event_count = 0
             content_chunk_count = 0
             fallback_chunk_used = False
-            time_to_first_chunk_ms: int | None = None
+            time_to_first_progress_ms: int | None = None
+            time_to_first_content_ms: int | None = None
             stream_started_at = time.perf_counter()
             last_upstream_event_at = stream_started_at
             stream_idle_max_s = 0.0
@@ -621,8 +623,8 @@ def _stream_orchestrator_with_retry(
                     full_response += chunk
                     if chunk:
                         content_chunk_count += 1
-                        if time_to_first_chunk_ms is None:
-                            time_to_first_chunk_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
+                        if time_to_first_content_ms is None:
+                            time_to_first_content_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
                         emit_event(
                             {
                                 "type": "chunk",
@@ -638,6 +640,8 @@ def _stream_orchestrator_with_retry(
                 elif event.get("type") == "step":
                     step_name = str(event.get("step") or "")
                     step_status = str(event.get("status") or "")
+                    if time_to_first_progress_ms is None:
+                        time_to_first_progress_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
                     progress_event_count += 1
                     if event.get("status") == "working":
                         current_agent = str(event.get("agent_id") or "")
@@ -667,8 +671,8 @@ def _stream_orchestrator_with_retry(
                             fallback_chunk_used = True
                             _inc_metric("stream_fallback_chunk_total", 1)
                             for chunk in _chunk_text(output, size=80):
-                                if time_to_first_chunk_ms is None:
-                                    time_to_first_chunk_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
+                                if time_to_first_content_ms is None:
+                                    time_to_first_content_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
                                 emit_event(
                                     {
                                         "type": "chunk",
@@ -694,7 +698,8 @@ def _stream_orchestrator_with_retry(
                 "trace_id": trace_id,
                 "done": done_event,
                 "stream": {
-                    "time_to_first_chunk_ms": time_to_first_chunk_ms or 0,
+                    "time_to_first_progress_ms": time_to_first_progress_ms or 0,
+                    "time_to_first_content_ms": time_to_first_content_ms or 0,
                     "progress_event_count": progress_event_count,
                     "fallback_chunk_used": fallback_chunk_used,
                     "stream_idle_max_s": round(stream_idle_max_s, 3),
@@ -986,7 +991,7 @@ async def chat_stream(
                 _stream_replay_generate(session, existing_assistant),
                 media_type="text/event-stream",
                 headers={
-                    "Cache-Control": "no-cache",
+                    "Cache-Control": "no-cache, no-transform",
                     "Connection": "keep-alive",
                     "X-Accel-Buffering": "no",
                 },
@@ -1008,6 +1013,9 @@ async def chat_stream(
         heartbeat_progress_count = 0
         stream_idle_max_s = 0.0
         last_user_visible_event_at = time.perf_counter()
+        stream_emit_started_at = time.perf_counter()
+        first_progress_emit_ms: int | None = None
+        first_content_emit_ms: int | None = None
 
         def worker() -> None:
             nonlocal finished
@@ -1072,7 +1080,10 @@ async def chat_stream(
                         if isinstance(orchestrator_meta.get("done"), dict)
                         and isinstance(orchestrator_meta.get("done", {}).get("meta"), dict)
                         else None,
-                        "time_to_first_chunk_ms": orchestrator_meta.get("stream", {}).get("time_to_first_chunk_ms")
+                        "time_to_first_progress_ms": orchestrator_meta.get("stream", {}).get("time_to_first_progress_ms")
+                        if isinstance(orchestrator_meta.get("stream"), dict)
+                        else None,
+                        "time_to_first_content_ms": orchestrator_meta.get("stream", {}).get("time_to_first_content_ms")
                         if isinstance(orchestrator_meta.get("stream"), dict)
                         else None,
                         "progress_event_count": orchestrator_meta.get("stream", {}).get("progress_event_count")
@@ -1137,6 +1148,7 @@ async def chat_stream(
                     if finished:
                         break
                     heartbeat_progress_count += 1
+                    _inc_metric("stream_heartbeat_progress_total", 1)
                     now = time.perf_counter()
                     stream_idle_max_s = max(stream_idle_max_s, max(0.0, now - last_user_visible_event_at))
                     with progress_lock:
@@ -1144,6 +1156,8 @@ async def chat_stream(
                         agent_id = str(progress_state.get("agent_id") or "")
                         attempt = int(progress_state.get("attempt") or 1)
                     event_id += 1
+                    if first_progress_emit_ms is None:
+                        first_progress_emit_ms = max(0, int((time.perf_counter() - stream_emit_started_at) * 1000))
                     yield _sse_data(
                         {
                             "type": "chunk",
@@ -1174,6 +1188,8 @@ async def chat_stream(
                 if item.get("type") == "chunk":
                     meta = item.get("meta")
                     if isinstance(meta, dict) and meta.get("kind") == "progress":
+                        if first_progress_emit_ms is None:
+                            first_progress_emit_ms = max(0, int((time.perf_counter() - stream_emit_started_at) * 1000))
                         with progress_lock:
                             if meta.get("step"):
                                 progress_state["step"] = str(meta.get("step"))
@@ -1181,11 +1197,15 @@ async def chat_stream(
                                 progress_state["agent_id"] = str(meta.get("agent_id"))
                             if meta.get("attempt") is not None:
                                 progress_state["attempt"] = int(meta.get("attempt") or 1)
+                    elif str(item.get("content") or "").strip() and first_content_emit_ms is None:
+                        first_content_emit_ms = max(0, int((time.perf_counter() - stream_emit_started_at) * 1000))
 
                 if item.get("type") == "done":
                     done_meta = item.get("meta") if isinstance(item.get("meta"), dict) else {}
                     item["meta"] = {
                         **done_meta,
+                        "time_to_first_progress_ms": int(done_meta.get("time_to_first_progress_ms") or first_progress_emit_ms or 0),
+                        "time_to_first_content_ms": int(done_meta.get("time_to_first_content_ms") or first_content_emit_ms or 0),
                         "progress_event_count": int(done_meta.get("progress_event_count") or 0) + heartbeat_progress_count,
                         "stream_idle_max_s": round(max(float(done_meta.get("stream_idle_max_s") or 0.0), stream_idle_max_s), 3),
                     }
@@ -1200,7 +1220,7 @@ async def chat_stream(
         generate(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
         },

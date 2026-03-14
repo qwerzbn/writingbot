@@ -66,6 +66,8 @@ interface ThinkingStep {
   agent?: string;
 }
 
+const THINKING_STEP_THRESHOLDS = [20, 40, 60, 80, 95];
+
 const THINKING_STEP_ORDER: Array<{ key: ThinkingStepKey; label: string }> = [
   { key: 'plan', label: '问题规划' },
   { key: 'retrieve', label: '文献检索' },
@@ -76,6 +78,32 @@ const THINKING_STEP_ORDER: Array<{ key: ThinkingStepKey; label: string }> = [
 
 function buildThinkingSteps(): ThinkingStep[] {
   return THINKING_STEP_ORDER.map((item) => ({ ...item, status: 'waiting' }));
+}
+
+function computeRealProgressPercent(steps: ThinkingStep[]): number {
+  const doneCount = steps.filter((item) => item.status === 'done' || item.status === 'skipped').length;
+  return Math.round((doneCount / Math.max(1, steps.length)) * 100);
+}
+
+function computeActivityProgressPercent(
+  steps: ThinkingStep[],
+  elapsedSeconds: number,
+  progressEventCount: number,
+  hasFirstChunk: boolean,
+  streamChars: number
+): number {
+  const doneCount = steps.filter((item) => item.status === 'done' || item.status === 'skipped').length;
+  const workingIndex = steps.findIndex((item) => item.status === 'working');
+  const stageIndex = workingIndex >= 0 ? workingIndex : Math.min(doneCount, THINKING_STEP_THRESHOLDS.length - 1);
+  const stageCap = THINKING_STEP_THRESHOLDS[stageIndex] ?? 95;
+
+  const timeBoost = Math.min(28, elapsedSeconds * 1.6);
+  const eventBoost = Math.min(20, progressEventCount * 1.8);
+  const streamBoost = hasFirstChunk ? 8 + Math.min(12, Math.floor(streamChars / 160)) : 0;
+  const floor = Math.min(stageCap - 1, Math.max(2, doneCount * 20 + 2));
+
+  const activity = Math.max(floor, Math.round(6 + timeBoost + eventBoost + streamBoost));
+  return Math.max(1, Math.min(stageCap, activity));
 }
 
 function skillLabel(skill: SkillItem): string {
@@ -143,6 +171,12 @@ export default function ChatPage() {
     () => (selectedSkillId ? skills.find((skill) => skill.id === selectedSkillId) || null : null),
     [selectedSkillId, skills]
   );
+  const realProgressPercent = useMemo(() => computeRealProgressPercent(thinkingSteps), [thinkingSteps]);
+  const activityProgressPercent = useMemo(
+    () => computeActivityProgressPercent(thinkingSteps, elapsedSeconds, progressEventCount, hasFirstChunk, streamChars),
+    [thinkingSteps, elapsedSeconds, progressEventCount, hasFirstChunk, streamChars]
+  );
+  const displayProgressPercent = sending ? Math.max(realProgressPercent, activityProgressPercent) : realProgressPercent;
 
   const refreshConversations = useCallback(async () => {
     const rows = await listConversations();
@@ -651,28 +685,20 @@ export default function ChatPage() {
             <div className="mx-3 mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 px-2.5 py-2">
               <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                 <span>智能体思考过程</span>
-                <span>
-                  进度{' '}
-                  {Math.round(
-                    (thinkingSteps.filter((item) => item.status === 'done' || item.status === 'skipped').length /
-                      Math.max(1, thinkingSteps.length)) *
-                      100
-                  )}
-                  %
+                <span data-testid="thinking-progress-value">
+                  进度 {displayProgressPercent}%
                 </span>
               </div>
               <div className="mb-1 text-[11px] text-slate-500 dark:text-slate-400">
-                进度更新 {progressEventCount} 次{lastProgressTs ? ` · 最近更新 ${new Date(lastProgressTs).toLocaleTimeString()}` : ''}
+                真实进度 {realProgressPercent}% · 活动进度 {activityProgressPercent}% · 进度更新 {progressEventCount} 次
+                {lastProgressTs ? ` · 最近更新 ${new Date(lastProgressTs).toLocaleTimeString()}` : ''}
               </div>
               <div className="mb-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                 <div
+                  data-testid="thinking-progress-bar"
                   className="h-full bg-blue-500 transition-all duration-300"
                   style={{
-                    width: `${Math.round(
-                      (thinkingSteps.filter((item) => item.status === 'done' || item.status === 'skipped').length /
-                        Math.max(1, thinkingSteps.length)) *
-                        100
-                    )}%`,
+                    width: `${displayProgressPercent}%`,
                   }}
                 />
               </div>
@@ -723,6 +749,7 @@ export default function ChatPage() {
                 return (
                   <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
+                      data-testid={`message-${msg.role}-${idx}`}
                       className={`max-w-[90%] rounded-2xl px-3 py-2 border ${
                         isUser
                           ? 'bg-blue-500 border-blue-500 text-white'
@@ -755,7 +782,7 @@ export default function ChatPage() {
 
           <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
             {selectedSkill && (
-              <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5">
+              <div data-testid="selected-skill-card" className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5">
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium text-blue-700 dark:text-blue-200">{skillLabel(selectedSkill)}</div>
                   <div className="text-[11px] text-blue-600/80 dark:text-blue-300/80 truncate">{skillDesc(selectedSkill)}</div>
@@ -780,6 +807,7 @@ export default function ChatPage() {
                   visibleSkills.map((skill) => (
                     <button
                       key={skill.id}
+                      data-testid={`skill-option-${skill.id.replace('/', '')}`}
                       type="button"
                       onClick={() => handleSelectSkill(skill.id)}
                       className="w-full text-left px-2 py-1 rounded-md mb-1 text-[11px] border bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-200"
@@ -793,6 +821,7 @@ export default function ChatPage() {
             )}
             <div className="flex gap-2">
               <textarea
+                data-testid="chat-input"
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -809,6 +838,7 @@ export default function ChatPage() {
                 className="flex-1 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
               />
               <button
+                data-testid="chat-send"
                 onClick={() => void handleSend()}
                 disabled={sending || (!input.trim() && !selectedSkill)}
                 className="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 inline-flex items-center gap-1.5 transition-colors text-sm"

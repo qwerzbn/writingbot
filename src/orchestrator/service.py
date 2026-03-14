@@ -464,7 +464,9 @@ class OrchestratorService:
                 "写作要求：\n"
                 "- 回答聚焦学术论文场景。\n"
                 "- 有证据时优先引用[1][2]，无证据请明确标注（推断）。\n"
-                "- 给出简明、结构化输出。\n"
+                "- 仅使用 Markdown 输出，禁止输出任何 HTML 标签（例如 <br>、<div>）。\n"
+                "- 输出结构至少包含：标题、要点、证据引用、结论/建议。\n"
+                "- 给出简明、结构化输出，列表优先使用项目符号。\n"
                 f"- Skills指令：\n{skill_directive}"
             )
             messages = self._build_messages(

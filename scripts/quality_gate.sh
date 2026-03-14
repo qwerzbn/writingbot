@@ -11,6 +11,9 @@ pytest -q
 echo "[quality-gate] linting web"
 npm --prefix web run lint
 
+echo "[quality-gate] running web e2e"
+npm --prefix web run test:e2e
+
 echo "[quality-gate] building web"
 npm --prefix web run build
 

@@ -15,6 +15,7 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ path: s
         const headers = new Headers(req.headers);
         headers.delete('host');
         headers.delete('connection');
+        headers.delete('accept-encoding');
 
         // Forward the request to Flask
         const res = await fetch(url, {
@@ -25,11 +26,21 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ path: s
             duplex: 'half',
         });
 
+        const resHeaders = new Headers(res.headers);
+        if ((resHeaders.get('content-type') || '').includes('text/event-stream')) {
+            resHeaders.set('Cache-Control', 'no-cache, no-transform');
+            resHeaders.set('X-Accel-Buffering', 'no');
+            resHeaders.delete('content-length');
+            resHeaders.delete('Content-Length');
+            resHeaders.delete('content-encoding');
+            resHeaders.delete('Content-Encoding');
+        }
+
         // Stream the response back
         return new NextResponse(res.body, {
             status: res.status,
             statusText: res.statusText,
-            headers: res.headers,
+            headers: resHeaders,
         });
 
     } catch (error) {
