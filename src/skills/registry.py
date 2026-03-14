@@ -14,6 +14,8 @@ class SkillDefinition:
     id: str
     name: str
     description: str
+    label_cn: str = ""
+    description_cn: str = ""
     domain: str = "research"
     enabled: bool = True
     requires_kb: bool = False
@@ -25,6 +27,8 @@ class SkillDefinition:
             "id": self.id,
             "name": self.name,
             "description": self.description,
+            "label_cn": self.label_cn or self.name,
+            "description_cn": self.description_cn or self.description,
             "domain": self.domain,
             "enabled": self.enabled,
             "requires_kb": self.requires_kb,
@@ -43,6 +47,8 @@ def _normalize_skill_row(row: dict) -> SkillDefinition | None:
         return None
     name = str(row.get("name") or skill_id).strip() or skill_id
     description = str(row.get("description") or "").strip()
+    label_cn = str(row.get("label_cn") or name).strip() or name
+    description_cn = str(row.get("description_cn") or description).strip() or description
     domain = str(row.get("domain") or "research").strip() or "research"
     enabled = bool(row.get("enabled", True))
     requires_kb = bool(row.get("requires_kb", False))
@@ -52,6 +58,8 @@ def _normalize_skill_row(row: dict) -> SkillDefinition | None:
         id=skill_id,
         name=name,
         description=description,
+        label_cn=label_cn,
+        description_cn=description_cn,
         domain=domain,
         enabled=enabled,
         requires_kb=requires_kb,

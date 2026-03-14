@@ -1,70 +1,42 @@
 skills:
-  - id: /paper-find
-    name: Paper Find
-    description: Locate relevant papers and anchor evidence snippets.
-    domain: research
-    enabled: true
-    requires_kb: true
-    critical: false
-    timeout_ms: 2000
-
   - id: /paper-summary
-    name: Paper Summary
-    description: Summarize key claims, methods, and findings from cited papers.
-    domain: research
-    enabled: true
-    requires_kb: true
-    critical: false
-    timeout_ms: 2000
-
-  - id: /paper-compare
-    name: Paper Compare
-    description: Compare methods, assumptions, and outcomes across papers.
-    domain: research
-    enabled: true
-    requires_kb: true
-    critical: false
-    timeout_ms: 2000
-
-  - id: /method-explain
-    name: Method Explain
-    description: Explain methods with implementation-oriented detail.
+    name: 论文总结
+    label_cn: 论文总结
+    description: 提炼研究问题、方法、实验设置与核心结论。
+    description_cn: 提炼研究问题、方法、实验设置与核心结论。
     domain: research
     enabled: true
     requires_kb: false
     critical: false
     timeout_ms: 2000
 
-  - id: /related-work
-    name: Related Work
-    description: Organize related work by themes and gaps.
-    domain: research
-    enabled: true
-    requires_kb: true
-    critical: false
-    timeout_ms: 2000
-
-  - id: /citation-check
-    name: Citation Check
-    description: Enforce citation coverage and flag unsupported claims.
-    domain: research
-    enabled: true
-    requires_kb: false
-    critical: true
-    timeout_ms: 2000
-
-  - id: /limitations
-    name: Limitations
-    description: Highlight limitations, threats to validity, and uncertainty.
+  - id: /experiment-compare
+    name: 实验对比
+    label_cn: 实验对比
+    description: 对比不同论文或方法在数据集、指标和结果上的差异。
+    description_cn: 对比不同论文或方法在数据集、指标和结果上的差异。
     domain: research
     enabled: true
     requires_kb: false
     critical: false
     timeout_ms: 2000
 
-  - id: /experiment-ideas
-    name: Experiment Ideas
-    description: Propose follow-up experiments and evaluation plans.
+  - id: /innovation-summary
+    name: 创新总结
+    label_cn: 创新总结
+    description: 总结论文创新点以及与已有工作的关键区别。
+    description_cn: 总结论文创新点以及与已有工作的关键区别。
+    domain: research
+    enabled: true
+    requires_kb: false
+    critical: false
+    timeout_ms: 2000
+
+  - id: /research-gaps
+    name: 研究不足
+    label_cn: 研究不足
+    description: 指出局限、潜在偏差、外推风险与后续改进方向。
+    description_cn: 指出局限、潜在偏差、外推风险与后续改进方向。
     domain: research
     enabled: true
     requires_kb: false

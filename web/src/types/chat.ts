@@ -38,7 +38,11 @@ export interface ChatChunkEvent {
   type: 'chunk';
   content: string;
   meta?: {
+    kind?: 'progress' | 'content';
     agent_id?: string;
+    step?: string;
+    status?: 'working' | 'done' | 'retry' | 'skipped' | 'error';
+    attempt?: number;
     skill_id?: string;
     paper_hits?: number;
   };

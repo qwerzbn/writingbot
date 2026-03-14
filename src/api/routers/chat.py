@@ -579,7 +579,7 @@ def _stream_orchestrator_with_retry(
     message: str,
     kb_id: str | None,
     skill_ids: list[str],
-    emit_chunk: Callable[[str, dict | None], None],
+    emit_event: Callable[[dict], None],
 ) -> tuple[str, list[dict], dict]:
     last_exc: Exception | None = None
     for attempt in range(1, _STREAM_INIT_RETRY_ATTEMPTS + 1):
@@ -608,10 +608,31 @@ def _stream_orchestrator_with_retry(
                     chunk = str(event.get("content") or "")
                     full_response += chunk
                     if chunk:
-                        emit_chunk(chunk, {"agent_id": current_agent} if current_agent else None)
+                        emit_event(
+                            {
+                                "type": "chunk",
+                                "content": chunk,
+                                "meta": {"agent_id": current_agent} if current_agent else {},
+                            }
+                        )
                 elif event.get("type") == "step":
+                    step_name = str(event.get("step") or "")
+                    step_status = str(event.get("status") or "")
                     if event.get("status") == "working":
                         current_agent = str(event.get("agent_id") or "")
+                    emit_event(
+                        {
+                            "type": "chunk",
+                            "content": "",
+                            "meta": {
+                                "kind": "progress",
+                                "step": step_name,
+                                "status": step_status,
+                                "attempt": int(event.get("attempt") or 1),
+                                "agent_id": str(event.get("agent_id") or current_agent or ""),
+                            },
+                        }
+                    )
                 elif event.get("type") == "sources":
                     data = event.get("data")
                     if isinstance(data, list):
@@ -956,10 +977,7 @@ async def chat_stream(
                 elif history and history[-1].get("role") == "user" and history[-1].get("content") == message:
                     effective_history = history[:-1]
 
-                def emit_chunk(chunk: str, meta: dict | None = None) -> None:
-                    payload = {"type": "chunk", "content": chunk}
-                    if isinstance(meta, dict) and meta:
-                        payload["meta"] = meta
+                def emit_event(payload: dict) -> None:
                     event_queue.put(payload)
 
                 full_response, sources, orchestrator_meta = _stream_orchestrator_with_retry(
@@ -967,7 +985,7 @@ async def chat_stream(
                     kb_id=session.kb_id,
                     skill_ids=selected_skill_ids,
                     message=message,
-                    emit_chunk=emit_chunk,
+                    emit_event=emit_event,
                 )
 
                 assistant_meta = _make_message_meta(

@@ -179,6 +179,7 @@ def test_chat_stream_event_order_and_persistence(monkeypatch, tmp_path):
 
     body = resp.text
     assert '"type": "chunk"' in body
+    assert '"kind": "progress"' in body
     assert '"type": "sources"' in body
     assert '"type": "done"' in body
     assert body.find('"type": "chunk"') < body.find('"type": "sources"') < body.find('"type": "done"')
@@ -250,11 +251,11 @@ def test_chat_skill_ids_persist_to_session_default(monkeypatch, tmp_path):
     client, _, _ = _build_client(monkeypatch, tmp_path)
     resp = client.post(
         "/api/chat",
-        json={"message": "帮我总结方法", "kb_id": "kb-1", "skill_ids": ["/paper-summary", "/citation-check"]},
+        json={"message": "帮我总结方法", "kb_id": "kb-1", "skill_ids": ["/paper-summary"]},
     )
     assert resp.status_code == 200
     conv_id = resp.json()["data"]["conversation_id"]
 
     detail = client.get(f"/api/conversations/{conv_id}").json()["data"]
-    assert detail["default_skill_ids"] == ["/paper-summary", "/citation-check"]
-    assert detail["messages"][0]["metadata"]["selected_skill_ids"] == ["/paper-summary", "/citation-check"]
+    assert detail["default_skill_ids"] == ["/paper-summary"]
+    assert detail["messages"][0]["metadata"]["selected_skill_ids"] == ["/paper-summary"]

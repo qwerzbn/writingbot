@@ -56,6 +56,36 @@ function parseSlashQuery(text: string): string | null {
   return trimmed.slice(1).toLowerCase();
 }
 
+type ThinkingStepKey = 'plan' | 'retrieve' | 'synthesize' | 'critique' | 'finalize';
+type ThinkingStepStatus = 'waiting' | 'working' | 'done' | 'skipped' | 'error';
+
+interface ThinkingStep {
+  key: ThinkingStepKey;
+  label: string;
+  status: ThinkingStepStatus;
+  agent?: string;
+}
+
+const THINKING_STEP_ORDER: Array<{ key: ThinkingStepKey; label: string }> = [
+  { key: 'plan', label: '问题规划' },
+  { key: 'retrieve', label: '文献检索' },
+  { key: 'synthesize', label: '方法对比' },
+  { key: 'critique', label: '引用校验' },
+  { key: 'finalize', label: '学术写作' },
+];
+
+function buildThinkingSteps(): ThinkingStep[] {
+  return THINKING_STEP_ORDER.map((item) => ({ ...item, status: 'waiting' }));
+}
+
+function skillLabel(skill: SkillItem): string {
+  return skill.label_cn || skill.name;
+}
+
+function skillDesc(skill: SkillItem): string {
+  return skill.description_cn || skill.description;
+}
+
 export default function ChatPage() {
   const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
 
@@ -73,7 +103,13 @@ export default function ChatPage() {
   const [lastPaperHits, setLastPaperHits] = useState<number>(0);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
-  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [thinkingSteps, setThinkingSteps] = useState<ThinkingStep[]>(() => buildThinkingSteps());
+  const [thinkingVisible, setThinkingVisible] = useState(false);
+  const [streamStartedAt, setStreamStartedAt] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [streamChars, setStreamChars] = useState(0);
+  const [hasFirstChunk, setHasFirstChunk] = useState(false);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -82,8 +118,17 @@ export default function ChatPage() {
   const visibleSkills = useMemo(() => {
     if (slashQuery === null) return [];
     if (!slashQuery) return skills;
-    return skills.filter((skill) => skill.id.slice(1).toLowerCase().includes(slashQuery));
+    return skills.filter((skill) => {
+      const haystacks = [skill.id, skill.name, skill.description, skill.label_cn || '', skill.description_cn || '']
+        .join(' ')
+        .toLowerCase();
+      return haystacks.includes(slashQuery);
+    });
   }, [slashQuery, skills]);
+  const selectedSkill = useMemo(
+    () => (selectedSkillId ? skills.find((skill) => skill.id === selectedSkillId) || null : null),
+    [selectedSkillId, skills]
+  );
 
   const refreshConversations = useCallback(async () => {
     const rows = await listConversations();
@@ -99,8 +144,16 @@ export default function ChatPage() {
   const openDraftConversation = useCallback(() => {
     setActiveConversationId(null);
     setActiveConversation(buildDraftConversation(selectedKbId || null));
-    setSelectedSkillIds([]);
+    setSelectedSkillId(null);
     setPageError(null);
+    setThinkingVisible(false);
+    setThinkingSteps(buildThinkingSteps());
+    setStreamAgent('');
+    setLastPaperHits(0);
+    setStreamStartedAt(0);
+    setElapsedSeconds(0);
+    setStreamChars(0);
+    setHasFirstChunk(false);
   }, [selectedKbId]);
 
   const loadConversation = useCallback(
@@ -119,8 +172,16 @@ export default function ChatPage() {
         setActiveConversation(detail);
         setActiveConversationId(convId);
         setSelectedKbId(detail.kb_id || null);
-        setSelectedSkillIds(detail.default_skill_ids || []);
+        setSelectedSkillId((detail.default_skill_ids || [])[0] || null);
         setPageError(null);
+        setThinkingVisible(false);
+        setThinkingSteps(buildThinkingSteps());
+        setStreamAgent('');
+        setLastPaperHits(0);
+        setStreamStartedAt(0);
+        setElapsedSeconds(0);
+        setStreamChars(0);
+        setHasFirstChunk(false);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           setConversations((prev) => prev.filter((row) => row.id !== convId));
@@ -178,6 +239,18 @@ export default function ChatPage() {
     }
   }, [activeConversationId, selectedKbId]);
 
+  useEffect(() => {
+    if (!sending || !streamStartedAt) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const t = window.setInterval(() => {
+      const diff = Math.max(0, Math.floor((Date.now() - streamStartedAt) / 1000));
+      setElapsedSeconds(diff);
+    }, 250);
+    return () => window.clearInterval(t);
+  }, [sending, streamStartedAt]);
+
   const handleCreateConversation = () => {
     if (!activeConversationId && activeConversation.messages.length === 0) {
       setInput('');
@@ -204,6 +277,10 @@ export default function ChatPage() {
   };
 
   const appendAssistantChunk = (chunk: string) => {
+    if (chunk) {
+      setHasFirstChunk(true);
+      setStreamChars((prev) => prev + chunk.length);
+    }
     setActiveConversation((prev) => {
       const next = [...prev.messages];
       for (let i = next.length - 1; i >= 0; i -= 1) {
@@ -239,17 +316,30 @@ export default function ChatPage() {
     appendAssistantChunk(`\n\n> ${error}`);
   };
 
-  const toggleSkill = (skillId: string) => {
-    setSelectedSkillIds((prev) => (prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]));
+  const handleSelectSkill = (skillId: string) => {
+    setSelectedSkillId(skillId);
+    setInput((prev) => {
+      const raw = prev.trimStart();
+      if (!raw.startsWith('/')) return prev;
+      const i = raw.indexOf(' ');
+      if (i < 0) return '';
+      return raw.slice(i + 1);
+    });
+  };
+
+  const clearSkill = () => {
+    setSelectedSkillId(null);
+  };
+
+  const updateThinkingStep = (step: ThinkingStepKey, status: ThinkingStepStatus, agent?: string) => {
+    setThinkingSteps((prev) =>
+      prev.map((item) => (item.key === step ? { ...item, status, agent: agent || item.agent } : item))
+    );
   };
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
-    if (text.startsWith('/')) {
-      setPageError('请先选择技能，再输入具体问题后发送。');
-      return;
-    }
 
     setInput('');
 
@@ -272,7 +362,7 @@ export default function ChatPage() {
       ...prev,
       title: prev.messages.length === 0 ? trimmedTitle || '新聊天' : prev.title,
       kb_id: selectedKbId ?? prev.kb_id,
-      default_skill_ids: selectedSkillIds,
+      default_skill_ids: selectedSkillId ? [selectedSkillId] : [],
       updated_at: now,
       messages: [...prev.messages, userMessage, assistantPlaceholder],
     }));
@@ -281,6 +371,16 @@ export default function ChatPage() {
     setPageError(null);
     setStreamAgent('');
     setLastPaperHits(0);
+    setStreamStartedAt(Date.now());
+    setElapsedSeconds(0);
+    setStreamChars(0);
+    setHasFirstChunk(false);
+    setThinkingVisible(true);
+    setThinkingSteps(buildThinkingSteps());
+    updateThinkingStep('plan', 'working');
+    if (!selectedKbId) {
+      updateThinkingStep('retrieve', 'skipped');
+    }
 
     let finalConversationId = activeConversationId || undefined;
     const idempotencyKey = createIdempotencyKey(activeConversationId || DRAFT_ID);
@@ -293,25 +393,57 @@ export default function ChatPage() {
           kb_id: selectedKbId || undefined,
           title: activeConversation.messages.length === 0 ? trimmedTitle : undefined,
           idempotency_key: idempotencyKey,
-          skill_ids: selectedSkillIds,
+          skill_ids: selectedSkillId ? [selectedSkillId] : [],
         },
         {
           onChunk: appendAssistantChunk,
-          onSources: setAssistantSources,
+          onSources: (sources) => {
+            setAssistantSources(sources);
+            if (!selectedKbId || (sources || []).length === 0) {
+              updateThinkingStep('retrieve', 'skipped');
+            } else {
+              updateThinkingStep('retrieve', 'done');
+            }
+            updateThinkingStep('synthesize', 'working');
+          },
           onDone: (event) => {
             if (event.conversation_id) {
               finalConversationId = event.conversation_id;
             }
             setLastPaperHits(event.meta?.paper_hits || 0);
             setStreamAgent('');
+            setStreamStartedAt(0);
+            setThinkingSteps((prev) =>
+              prev.map((item) => {
+                if (item.status === 'error' || item.status === 'skipped' || item.status === 'done') return item;
+                return { ...item, status: 'done' };
+              })
+            );
           },
           onError: (event) => {
             appendAssistantError(event.error || '请求失败');
             setStreamAgent('');
+            setStreamStartedAt(0);
+            setThinkingSteps((prev) =>
+              prev.map((item) => {
+                if (item.status === 'done' || item.status === 'skipped') return item;
+                return { ...item, status: 'error' };
+              })
+            );
           },
           onEvent: (event) => {
-            if (event.type === 'chunk' && event.meta?.agent_id) {
-              setStreamAgent(event.meta.agent_id);
+            if (event.type === 'chunk') {
+              if (event.meta?.agent_id) {
+                setStreamAgent(event.meta.agent_id);
+              }
+              if (event.meta?.kind === 'progress') {
+                const step = event.meta.step as ThinkingStepKey | undefined;
+                const status = event.meta.status as ThinkingStepStatus | undefined;
+                if (step && status) {
+                  const mapped: ThinkingStepStatus = status === 'retry' ? 'working' : status;
+                  updateThinkingStep(step, mapped, event.meta.agent_id);
+                }
+              }
             }
           },
         }
@@ -326,6 +458,7 @@ export default function ChatPage() {
       setPageError(msg);
     } finally {
       setSending(false);
+      setStreamStartedAt(0);
     }
 
     if (finalConversationId) {
@@ -442,6 +575,14 @@ export default function ChatPage() {
                 {streamAgent ? ` 当前阶段：${streamAgent}` : ''}
                 {lastPaperHits > 0 ? ` 命中论文：${lastPaperHits}` : ''}
               </p>
+              {sending && (
+                <div className="mt-1 inline-flex items-center gap-2 rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-200">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  <span>{hasFirstChunk ? '正在生成中' : '模型准备中'}</span>
+                  <span>已耗时 {elapsedSeconds}s</span>
+                  <span>已接收 {streamChars} 字符</span>
+                </div>
+              )}
             </div>
             <select
               value={selectedKbId || ''}
@@ -463,6 +604,62 @@ export default function ChatPage() {
             </div>
           )}
 
+          {thinkingVisible && (
+            <div className="mx-3 mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 px-2.5 py-2">
+              <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                <span>智能体思考过程</span>
+                <span>
+                  进度{' '}
+                  {Math.round(
+                    (thinkingSteps.filter((item) => item.status === 'done' || item.status === 'skipped').length /
+                      Math.max(1, thinkingSteps.length)) *
+                      100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="mb-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-300"
+                  style={{
+                    width: `${Math.round(
+                      (thinkingSteps.filter((item) => item.status === 'done' || item.status === 'skipped').length /
+                        Math.max(1, thinkingSteps.length)) *
+                        100
+                    )}%`,
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5">
+                {thinkingSteps.map((step) => (
+                  <div
+                    key={step.key}
+                    className={`rounded-md border px-2 py-1.5 text-[11px] ${
+                      step.status === 'working'
+                        ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-200'
+                        : step.status === 'done'
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-200'
+                          : step.status === 'skipped'
+                            ? 'border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200'
+                            : step.status === 'error'
+                              ? 'border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-900/20 dark:text-rose-200'
+                              : 'border-slate-200 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                    }`}
+                  >
+                    <div className="font-medium">{step.label}</div>
+                    <div className="mt-0.5 opacity-80">
+                      {step.status === 'waiting' && '等待中'}
+                      {step.status === 'working' && '思考中...'}
+                      {step.status === 'done' && '已完成'}
+                      {step.status === 'skipped' && '已跳过（无本地证据）'}
+                      {step.status === 'error' && '失败'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
             {loadingDetail ? (
               <div className="h-full flex items-center justify-center text-slate-400">
@@ -475,6 +672,8 @@ export default function ChatPage() {
             ) : (
               messages.map((msg, idx) => {
                 const isUser = msg.role === 'user';
+                const isStreamingPlaceholder =
+                  !isUser && sending && idx === messages.length - 1 && !(msg.content || '').trim();
                 return (
                   <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
@@ -491,6 +690,12 @@ export default function ChatPage() {
 
                       {isUser ? (
                         <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
+                      ) : isStreamingPlaceholder ? (
+                        <div className="space-y-1.5 py-1">
+                          <div className="h-2 w-32 rounded bg-slate-300/70 dark:bg-slate-600/70 animate-pulse" />
+                          <div className="h-2 w-52 rounded bg-slate-300/60 dark:bg-slate-600/60 animate-pulse" />
+                          <div className="h-2 w-40 rounded bg-slate-300/50 dark:bg-slate-600/50 animate-pulse" />
+                        </div>
                       ) : (
                         <MarkdownRenderer content={msg.content} sources={msg.sources || []} className="text-sm" />
                       )}
@@ -503,18 +708,40 @@ export default function ChatPage() {
           </div>
 
           <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
-            {selectedSkillIds.length > 0 && (
-              <div className="mb-1.5 flex flex-wrap gap-1">
-                {selectedSkillIds.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => toggleSkill(id)}
-                    className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/25 px-1.5 py-0.5 text-[11px] text-blue-700 dark:text-blue-200"
-                  >
-                    {id}
-                  </button>
-                ))}
+            {selectedSkill && (
+              <div className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-medium text-blue-700 dark:text-blue-200">{skillLabel(selectedSkill)}</div>
+                  <div className="text-[11px] text-blue-600/80 dark:text-blue-300/80 truncate">{skillDesc(selectedSkill)}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSkill}
+                  className="shrink-0 rounded-md border border-blue-300 dark:border-blue-700 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                >
+                  更换技能
+                </button>
+              </div>
+            )}
+            {slashQuery !== null && !selectedSkill && (
+              <div className="mb-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 max-h-36 overflow-y-auto">
+                {loadingSkills ? (
+                  <div className="text-[11px] text-slate-400 px-1 py-1">加载技能中...</div>
+                ) : visibleSkills.length === 0 ? (
+                  <div className="text-[11px] text-slate-400 px-1 py-1">未找到可用科研技能</div>
+                ) : (
+                  visibleSkills.map((skill) => (
+                    <button
+                      key={skill.id}
+                      type="button"
+                      onClick={() => handleSelectSkill(skill.id)}
+                      className="w-full text-left px-2 py-1 rounded-md mb-1 text-[11px] border bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-200"
+                    >
+                      <div className="font-medium">{skillLabel(skill)}</div>
+                      <div className="opacity-75 truncate">{skillDesc(skill)}</div>
+                    </button>
+                  ))
+                )}
               </div>
             )}
             <div className="flex gap-2">
@@ -528,7 +755,7 @@ export default function ChatPage() {
                   }
                 }}
                 rows={2}
-                placeholder="输入问题，或输入 / 选择技能"
+                placeholder={selectedSkill ? '已选择技能，直接输入问题即可对话' : '输入问题；输入 / 可选择技能'}
                 className="flex-1 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
               />
               <button
@@ -541,34 +768,6 @@ export default function ChatPage() {
                 发送
               </button>
             </div>
-            {slashQuery !== null && (
-              <div className="mt-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 max-h-36 overflow-y-auto">
-                {loadingSkills ? (
-                  <div className="text-[11px] text-slate-400 px-1 py-1">加载技能中...</div>
-                ) : visibleSkills.length === 0 ? (
-                  <div className="text-[11px] text-slate-400 px-1 py-1">未找到可用科研技能</div>
-                ) : (
-                  visibleSkills.map((skill) => {
-                    const active = selectedSkillIds.includes(skill.id);
-                    return (
-                      <button
-                        key={skill.id}
-                        type="button"
-                        onClick={() => toggleSkill(skill.id)}
-                        className={`w-full text-left px-2 py-1 rounded-md mb-1 text-[11px] border ${
-                          active
-                            ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-200'
-                            : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-200'
-                        }`}
-                      >
-                        <div className="font-medium">{skill.id}</div>
-                        <div className="opacity-75 truncate">{skill.description}</div>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

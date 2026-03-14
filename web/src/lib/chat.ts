@@ -16,6 +16,8 @@ export interface SkillItem {
   id: string;
   name: string;
   description: string;
+  label_cn?: string;
+  description_cn?: string;
   domain: string;
   enabled: boolean;
   requires_kb: boolean;

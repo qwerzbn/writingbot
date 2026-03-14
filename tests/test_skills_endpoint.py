@@ -15,6 +15,12 @@ def test_skills_endpoint_returns_research_skills():
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert isinstance(data, list)
-    skill_ids = {row["id"] for row in data}
-    assert "/paper-find" in skill_ids
-    assert "/citation-check" in skill_ids
+    assert len(data) == 4
+    assert [row["id"] for row in data] == [
+        "/paper-summary",
+        "/experiment-compare",
+        "/innovation-summary",
+        "/research-gaps",
+    ]
+    assert data[0]["label_cn"] == "论文总结"
+    assert "description_cn" in data[0]
