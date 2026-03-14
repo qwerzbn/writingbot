@@ -121,6 +121,8 @@ export default function ChatPage() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [streamChars, setStreamChars] = useState(0);
   const [hasFirstChunk, setHasFirstChunk] = useState(false);
+  const [progressEventCount, setProgressEventCount] = useState(0);
+  const [lastProgressTs, setLastProgressTs] = useState('');
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -166,10 +168,12 @@ export default function ChatPage() {
     setElapsedSeconds(0);
     setStreamChars(0);
     setHasFirstChunk(false);
+    setProgressEventCount(0);
+    setLastProgressTs('');
   }, [selectedKbId]);
 
   const loadConversation = useCallback(
-    async (convId: string) => {
+    async (convId: string, options?: { preserveStreamingState?: boolean }) => {
       setLoadingDetail(true);
       try {
         const detail = await getConversation(convId);
@@ -186,14 +190,18 @@ export default function ChatPage() {
         setSelectedKbId(detail.kb_id || null);
         setSelectedSkillId((detail.default_skill_ids || [])[0] || null);
         setPageError(null);
-        setThinkingVisible(false);
-        setThinkingSteps(buildThinkingSteps());
-        setStreamAgent('');
-        setLastPaperHits(0);
-        setStreamStartedAt(0);
-        setElapsedSeconds(0);
-        setStreamChars(0);
-        setHasFirstChunk(false);
+        if (!options?.preserveStreamingState) {
+          setThinkingVisible(false);
+          setThinkingSteps(buildThinkingSteps());
+          setStreamAgent('');
+          setLastPaperHits(0);
+          setStreamStartedAt(0);
+          setElapsedSeconds(0);
+          setStreamChars(0);
+          setHasFirstChunk(false);
+          setProgressEventCount(0);
+          setLastProgressTs('');
+        }
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
           setConversations((prev) => prev.filter((row) => row.id !== convId));
@@ -332,15 +340,8 @@ export default function ChatPage() {
     setSelectedSkillId(skillId);
     setInput((prev) => {
       const raw = prev.trimStart();
-      const selected = skills.find((item) => item.id === skillId);
-      const label = selected ? skillLabel(selected) : skillId;
-      const prefix = `${label}：`;
-      if (!raw.startsWith('/')) {
-        return prev.startsWith(prefix) ? prev : `${prefix}${prev}`;
-      }
-      const i = raw.indexOf(' ');
-      if (i < 0) return prefix;
-      return `${prefix}${raw.slice(i + 1)}`;
+      if (raw.startsWith('/')) return '';
+      return prev;
     });
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -415,6 +416,8 @@ export default function ChatPage() {
     setElapsedSeconds(0);
     setStreamChars(0);
     setHasFirstChunk(false);
+    setProgressEventCount(0);
+    setLastProgressTs('');
     setThinkingVisible(true);
     setThinkingSteps(buildThinkingSteps());
     updateThinkingStep('plan', 'working');
@@ -449,6 +452,7 @@ export default function ChatPage() {
           onDone: (event) => {
             if (event.conversation_id) {
               finalConversationId = event.conversation_id;
+              setActiveConversation((prev) => ({ ...prev, id: event.conversation_id || prev.id }));
             }
             setLastPaperHits(event.meta?.paper_hits || 0);
             setStreamAgent('');
@@ -478,7 +482,9 @@ export default function ChatPage() {
               }
               if (event.meta?.kind === 'progress') {
                 const step = event.meta.step as ThinkingStepKey | undefined;
-                const status = event.meta.status as ThinkingStepStatus | undefined;
+                const status = event.meta.status;
+                setProgressEventCount((prev) => prev + 1);
+                setLastProgressTs(event.meta.ts || nowIso());
                 if (step && status) {
                   const mapped: ThinkingStepStatus = status === 'retry' ? 'working' : status;
                   updateThinkingStep(step, mapped, event.meta.agent_id);
@@ -507,9 +513,6 @@ export default function ChatPage() {
 
     try {
       await refreshConversations();
-      if (finalConversationId) {
-        await loadConversation(finalConversationId);
-      }
     } catch {
       // Keep local streamed content to avoid visible flicker.
     }
@@ -657,6 +660,9 @@ export default function ChatPage() {
                   )}
                   %
                 </span>
+              </div>
+              <div className="mb-1 text-[11px] text-slate-500 dark:text-slate-400">
+                进度更新 {progressEventCount} 次{lastProgressTs ? ` · 最近更新 ${new Date(lastProgressTs).toLocaleTimeString()}` : ''}
               </div>
               <div className="mb-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                 <div

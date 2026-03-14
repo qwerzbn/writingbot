@@ -71,6 +71,36 @@ def _build_client(monkeypatch, tmp_path):
     return TestClient(app), session_manager, fake_orchestrator
 
 
+class _FakeNoChunkOrchestrator(_FakeChatOrchestrator):
+    def stream_run(self, run_id: str):
+        payload = self._runs[run_id]
+        has_kb = bool(payload.get("kb_id"))
+        prefix = "RAG" if has_kb else "LLM"
+        sources = [{"source": "paper.pdf", "page": 9, "paper_id": "p-1", "title": "Paper 1", "score": 0.76}] if has_kb else []
+        yield {"type": "init", "run_id": run_id, "trace_id": f"trace-{run_id}", "mode": "chat_research"}
+        yield {"type": "step", "step": "plan", "status": "done"}
+        yield {"type": "step", "step": "synthesize", "status": "working", "agent_id": "academic_writer"}
+        yield {
+            "type": "done",
+            "run_id": run_id,
+            "trace_id": f"trace-{run_id}",
+            "output": f"{prefix}-ONE-SHOT-OUTPUT",
+            "sources": sources,
+            "meta": {"paper_hits": 1 if has_kb else 0},
+        }
+
+
+def _build_client_with_orchestrator(monkeypatch, tmp_path, orchestrator):
+    session_manager = SessionManager(tmp_path / "sessions")
+    chat_router._reset_runtime_state_for_tests()
+    monkeypatch.setattr(chat_router, "get_session_manager", lambda: session_manager)
+    monkeypatch.setattr(chat_router, "get_orchestrator_service", lambda: orchestrator)
+
+    app = FastAPI()
+    app.include_router(chat_router.router, prefix="/api")
+    return TestClient(app), session_manager
+
+
 def test_empty_draft_not_persisted_and_message_persists(monkeypatch, tmp_path):
     client, _, _ = _build_client(monkeypatch, tmp_path)
 
@@ -195,6 +225,29 @@ def test_chat_stream_event_order_and_persistence(monkeypatch, tmp_path):
     assert len(session.messages) == 2
     assert session.messages[1]["content"] == "RAG-STREAM"
     assert session.messages[1]["sources"][0]["page"] == 2
+
+
+def test_chat_stream_fallback_chunk_when_upstream_is_one_shot(monkeypatch, tmp_path):
+    client, session_manager = _build_client_with_orchestrator(monkeypatch, tmp_path, _FakeNoChunkOrchestrator())
+
+    resp = client.post("/api/chat/stream", json={"message": "fallback", "kb_id": "kb-1"})
+    assert resp.status_code == 200
+
+    body = resp.text
+    assert '"type": "chunk"' in body
+    assert '"kind": "content"' in body
+    assert '"fallback_chunk_used": true' in body
+    assert '"time_to_first_chunk_ms":' in body
+    assert body.find('"kind": "progress"') < body.find('"kind": "content"') < body.find('"type": "done"')
+
+    match = re.search(r'"conversation_id": "([^\"]+)"', body)
+    assert match is not None
+    conv_id = match.group(1)
+
+    session = session_manager.get(conv_id)
+    assert session is not None
+    assert len(session.messages) == 2
+    assert session.messages[1]["content"] == "RAG-ONE-SHOT-OUTPUT"
 
 
 def test_chat_stream_idempotency_replay(monkeypatch, tmp_path):

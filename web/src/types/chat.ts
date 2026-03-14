@@ -43,6 +43,7 @@ export interface ChatChunkEvent {
     step?: string;
     status?: 'working' | 'done' | 'retry' | 'skipped' | 'error';
     attempt?: number;
+    ts?: string;
     skill_id?: string;
     paper_hits?: number;
   };
@@ -61,6 +62,10 @@ export interface ChatDoneEvent {
   conversation_id?: string;
   meta?: {
     paper_hits?: number;
+    time_to_first_chunk_ms?: number;
+    progress_event_count?: number;
+    fallback_chunk_used?: boolean;
+    stream_idle_max_s?: number;
     selected_skill_ids?: string[];
     skill_runs?: Array<{
       skill_id: string;

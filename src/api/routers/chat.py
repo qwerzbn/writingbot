@@ -40,7 +40,7 @@ _NON_STREAM_RETRY_ATTEMPTS = 2
 _STREAM_INIT_RETRY_ATTEMPTS = 2
 _RETRY_BACKOFF_SECONDS = 0.35
 _LLM_TIMEOUT_SECONDS = 60.0
-_STREAM_HEARTBEAT_SECONDS = 10.0
+_STREAM_HEARTBEAT_SECONDS = 1.0
 
 _RATE_LIMIT_WINDOW_SECONDS = 10.0
 _RATE_LIMIT_MAX_REQUESTS = 20
@@ -66,6 +66,8 @@ _METRICS: dict[str, int] = {
     "idempotent_replay_total": 0,
     "inflight_reject_total": 0,
     "retries_total": 0,
+    "stream_progress_events_total": 0,
+    "stream_fallback_chunk_total": 0,
 }
 _LATENCIES_MS: list[int] = []
 
@@ -603,21 +605,40 @@ def _stream_orchestrator_with_retry(
             sources: list[dict] = []
             done_event: dict = {}
             current_agent = ""
+            progress_event_count = 0
+            content_chunk_count = 0
+            fallback_chunk_used = False
+            time_to_first_chunk_ms: int | None = None
+            stream_started_at = time.perf_counter()
+            last_upstream_event_at = stream_started_at
+            stream_idle_max_s = 0.0
             for event in service.stream_run(run_id):
+                now = time.perf_counter()
+                stream_idle_max_s = max(stream_idle_max_s, max(0.0, now - last_upstream_event_at))
+                last_upstream_event_at = now
                 if event.get("type") == "chunk":
                     chunk = str(event.get("content") or "")
                     full_response += chunk
                     if chunk:
+                        content_chunk_count += 1
+                        if time_to_first_chunk_ms is None:
+                            time_to_first_chunk_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
                         emit_event(
                             {
                                 "type": "chunk",
                                 "content": chunk,
-                                "meta": {"agent_id": current_agent} if current_agent else {},
+                                "meta": {
+                                    "kind": "content",
+                                    "agent_id": current_agent,
+                                    "attempt": attempt,
+                                    "ts": datetime.now().isoformat(),
+                                },
                             }
                         )
                 elif event.get("type") == "step":
                     step_name = str(event.get("step") or "")
                     step_status = str(event.get("status") or "")
+                    progress_event_count += 1
                     if event.get("status") == "working":
                         current_agent = str(event.get("agent_id") or "")
                     emit_event(
@@ -630,6 +651,7 @@ def _stream_orchestrator_with_retry(
                                 "status": step_status,
                                 "attempt": int(event.get("attempt") or 1),
                                 "agent_id": str(event.get("agent_id") or current_agent or ""),
+                                "ts": datetime.now().isoformat(),
                             },
                         }
                     )
@@ -641,6 +663,24 @@ def _stream_orchestrator_with_retry(
                     done_event = event
                     output = str(event.get("output") or "")
                     if output and output != full_response:
+                        if content_chunk_count == 0:
+                            fallback_chunk_used = True
+                            _inc_metric("stream_fallback_chunk_total", 1)
+                            for chunk in _chunk_text(output, size=80):
+                                if time_to_first_chunk_ms is None:
+                                    time_to_first_chunk_ms = max(0, int((time.perf_counter() - stream_started_at) * 1000))
+                                emit_event(
+                                    {
+                                        "type": "chunk",
+                                        "content": chunk,
+                                        "meta": {
+                                            "kind": "content",
+                                            "agent_id": current_agent,
+                                            "attempt": attempt,
+                                            "ts": datetime.now().isoformat(),
+                                        },
+                                    }
+                                )
                         full_response = output
                     ev_sources = event.get("sources")
                     if isinstance(ev_sources, list):
@@ -648,10 +688,17 @@ def _stream_orchestrator_with_retry(
                 elif event.get("type") == "error":
                     raise RuntimeError(str(event.get("error") or "orchestrator stream failed"))
 
+            _inc_metric("stream_progress_events_total", progress_event_count)
             return full_response, sources, {
                 "run_id": run_id,
                 "trace_id": trace_id,
                 "done": done_event,
+                "stream": {
+                    "time_to_first_chunk_ms": time_to_first_chunk_ms or 0,
+                    "progress_event_count": progress_event_count,
+                    "fallback_chunk_used": fallback_chunk_used,
+                    "stream_idle_max_s": round(stream_idle_max_s, 3),
+                },
             }
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
@@ -956,6 +1003,11 @@ async def chat_stream(
         request_id = str(uuid.uuid4())
         selected_skill_ids = _normalize_skill_ids(req.skill_ids) if req.skill_ids is not None else list(session.default_skill_ids)
         finished = False
+        progress_state: dict[str, str | int] = {"step": "plan", "status": "working", "agent_id": "", "attempt": 1}
+        progress_lock = threading.Lock()
+        heartbeat_progress_count = 0
+        stream_idle_max_s = 0.0
+        last_user_visible_event_at = time.perf_counter()
 
         def worker() -> None:
             nonlocal finished
@@ -1020,6 +1072,15 @@ async def chat_stream(
                         if isinstance(orchestrator_meta.get("done"), dict)
                         and isinstance(orchestrator_meta.get("done", {}).get("meta"), dict)
                         else None,
+                        "time_to_first_chunk_ms": orchestrator_meta.get("stream", {}).get("time_to_first_chunk_ms")
+                        if isinstance(orchestrator_meta.get("stream"), dict)
+                        else None,
+                        "progress_event_count": orchestrator_meta.get("stream", {}).get("progress_event_count")
+                        if isinstance(orchestrator_meta.get("stream"), dict)
+                        else None,
+                        "fallback_chunk_used": orchestrator_meta.get("stream", {}).get("fallback_chunk_used")
+                        if isinstance(orchestrator_meta.get("stream"), dict)
+                        else None,
                     },
                 )
 
@@ -1028,6 +1089,9 @@ async def chat_stream(
                     meta = orchestrator_meta.get("done", {}).get("meta")
                     if isinstance(meta, dict):
                         done_meta = meta
+                stream_diag = orchestrator_meta.get("stream")
+                if isinstance(stream_diag, dict):
+                    done_meta = {**done_meta, **stream_diag}
                 event_queue.put({"type": "sources", "data": sources, "meta": {"paper_hits": done_meta.get("paper_hits", 0)}})
                 event_queue.put({"type": "done", "conversation_id": session.id, "meta": done_meta})
             except Exception as exc:  # noqa: BLE001
@@ -1072,7 +1136,29 @@ async def chat_stream(
                 except queue.Empty:
                     if finished:
                         break
-                    yield ": heartbeat\n\n"
+                    heartbeat_progress_count += 1
+                    now = time.perf_counter()
+                    stream_idle_max_s = max(stream_idle_max_s, max(0.0, now - last_user_visible_event_at))
+                    with progress_lock:
+                        step = str(progress_state.get("step") or "plan")
+                        agent_id = str(progress_state.get("agent_id") or "")
+                        attempt = int(progress_state.get("attempt") or 1)
+                    event_id += 1
+                    yield _sse_data(
+                        {
+                            "type": "chunk",
+                            "content": "",
+                            "meta": {
+                                "kind": "progress",
+                                "step": step,
+                                "status": "working",
+                                "agent_id": agent_id,
+                                "attempt": attempt,
+                                "ts": datetime.now().isoformat(),
+                            },
+                        },
+                        event_id,
+                    )
                     continue
 
                 if item is _STREAM_END:
@@ -1080,6 +1166,29 @@ async def chat_stream(
 
                 if not isinstance(item, dict):
                     continue
+
+                now = time.perf_counter()
+                stream_idle_max_s = max(stream_idle_max_s, max(0.0, now - last_user_visible_event_at))
+                last_user_visible_event_at = now
+
+                if item.get("type") == "chunk":
+                    meta = item.get("meta")
+                    if isinstance(meta, dict) and meta.get("kind") == "progress":
+                        with progress_lock:
+                            if meta.get("step"):
+                                progress_state["step"] = str(meta.get("step"))
+                            if meta.get("agent_id"):
+                                progress_state["agent_id"] = str(meta.get("agent_id"))
+                            if meta.get("attempt") is not None:
+                                progress_state["attempt"] = int(meta.get("attempt") or 1)
+
+                if item.get("type") == "done":
+                    done_meta = item.get("meta") if isinstance(item.get("meta"), dict) else {}
+                    item["meta"] = {
+                        **done_meta,
+                        "progress_event_count": int(done_meta.get("progress_event_count") or 0) + heartbeat_progress_count,
+                        "stream_idle_max_s": round(max(float(done_meta.get("stream_idle_max_s") or 0.0), stream_idle_max_s), 3),
+                    }
 
                 event_id += 1
                 yield _sse_data(item, event_id)
