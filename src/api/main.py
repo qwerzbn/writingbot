@@ -19,7 +19,18 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.api.routers import knowledge, conversation, chat, notebook, research, co_writer, settings
+from src.api.routers import (
+    chat,
+    knowledge,
+    notebook,
+    research,
+    co_writer,
+    settings,
+    orchestrator,
+    retrieval,
+    evaluation,
+    fastwrite_bridge,
+)
 from src.services.config import get_main_config
 
 
@@ -66,12 +77,15 @@ app.add_middleware(
 
 # Include routers
 app.include_router(knowledge.router, prefix="/api", tags=["knowledge"])
-app.include_router(conversation.router, prefix="/api", tags=["conversations"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(notebook.router, prefix="/api", tags=["notebook"])
 app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(co_writer.router, prefix="/api", tags=["co-writer"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
+app.include_router(orchestrator.router, prefix="/api", tags=["orchestrator"])
+app.include_router(retrieval.router, prefix="/api", tags=["retrieval"])
+app.include_router(evaluation.router, prefix="/api", tags=["evaluation"])
+app.include_router(fastwrite_bridge.router, prefix="/api", tags=["fastwrite"])
 
 
 @app.get("/")

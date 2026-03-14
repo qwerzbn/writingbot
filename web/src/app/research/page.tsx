@@ -12,7 +12,6 @@ export default function ResearchPage() {
     const [topic, setTopic] = useState('');
     const [plan, setPlan] = useState('');
     const [report, setReport] = useState('');
-    const [sources, setSources] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     const handleResearch = async () => {
@@ -20,7 +19,6 @@ export default function ResearchPage() {
         setLoading(true);
         setPlan('');
         setReport('');
-        setSources([]);
 
         try {
             const res = await fetch(`${API_BASE}/api/research/stream`, {
@@ -53,8 +51,6 @@ export default function ResearchPage() {
                         if (data.type === 'plan') setPlan(data.content);
                         else if (data.type === 'chunk')
                             setReport((prev) => prev + data.content);
-                        else if (data.type === 'sources')
-                            setSources(data.data || []);
                     } catch { }
                 }
             }

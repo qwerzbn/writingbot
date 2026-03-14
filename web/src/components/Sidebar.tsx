@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard,
     BookOpen,
-    MessageSquare,
+    MessageCircle,
     Notebook,
     Search,
     PenTool,
@@ -18,7 +18,7 @@ import { useState, useEffect } from 'react';
 const navItems = [
     { href: '/', icon: LayoutDashboard, label: '总览' },
     { href: '/knowledge', icon: BookOpen, label: '知识库' },
-    { href: '/chat', icon: MessageSquare, label: '对话' },
+    { href: '/chat', icon: MessageCircle, label: '聊天' },
     { href: '/notebook', icon: Notebook, label: '笔记本' },
     { href: '/research', icon: Search, label: '研究' },
     { href: '/co-writer', icon: PenTool, label: '写作' },
@@ -26,15 +26,14 @@ const navItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
-    const [dark, setDark] = useState(false);
+    const [dark, setDark] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('writingbot_dark') === 'true';
+    });
 
     useEffect(() => {
-        const saved = localStorage.getItem('writingbot_dark');
-        if (saved === 'true') {
-            setDark(true);
-            document.documentElement.classList.add('dark');
-        }
-    }, []);
+        document.documentElement.classList.toggle('dark', dark);
+    }, [dark]);
 
     const toggleDark = () => {
         const next = !dark;

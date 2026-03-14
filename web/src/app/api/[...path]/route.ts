@@ -21,7 +21,7 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ path: s
             method: req.method,
             headers: headers,
             body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
-            // @ts-ignore - duplex is needed for streaming bodies in fetch (node/next)
+            // @ts-expect-error RequestInit in Node fetch supports duplex for stream bodies.
             duplex: 'half',
         });
 

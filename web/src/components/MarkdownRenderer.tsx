@@ -2,7 +2,10 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import CitationCard, { CitationSource } from './chat/CitationCard';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import CitationCard, { CitationSource } from './common/CitationCard';
 
 interface MarkdownRendererProps {
     content: string;
@@ -38,9 +41,10 @@ export default function MarkdownRenderer({ content, className = '', sources = []
             ${className}`}
         >
             <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
                 components={{
-                    a: ({ node, href, children, ...props }) => {
+                    a: ({ href, children, ...props }) => {
                         if (href?.startsWith('#citation-')) {
                             const indexStr = href.replace('#citation-', '');
                             const index = parseInt(indexStr, 10);

@@ -225,6 +225,11 @@ async def ingest_file(
         chunk_dicts = [c.to_dict() for c in chunks]
         vs.add_chunks(chunk_dicts)
 
+        # Incrementally update local retrieval indexes (BM25 + concept graph)
+        from src.retrieval import KnowledgeIndexStore
+
+        KnowledgeIndexStore(DATA_DIR / "knowledge_bases").upsert_chunks(kb_id, chunk_dicts)
+
         # Record file info
         file_info = {
             "id": file_id,

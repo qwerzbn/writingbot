@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
-import { ArrowLeft, Upload, Trash2, X, CheckCircle, AlertCircle, Loader2, FileText, Eye, Pencil, Check, FileUp, Calendar, Database, Hash } from 'lucide-react';
+import { ArrowLeft, Upload, Trash2, X, AlertCircle, Loader2, FileText, Eye, Pencil, Check, FileUp, Calendar, Database, Hash } from 'lucide-react';
 import dynamic from 'next/dynamic';
-const PdfViewer = dynamic(() => import('@/components/chat/PdfViewer'), { ssr: false });
+const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 
 interface KBDetail {
     id: string;
@@ -84,7 +84,7 @@ export default function KBDetailPage() {
 
     const kbId = params.id as string;
 
-    const fetchKbDetail = async () => {
+    const fetchKbDetail = useCallback(async () => {
         try {
             const res = await fetch(`/api/kbs/${kbId}`);
             const data = await res.json();
@@ -96,11 +96,11 @@ export default function KBDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [kbId]);
 
     useEffect(() => {
         fetchKbDetail();
-    }, [kbId]);
+    }, [fetchKbDetail]);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -151,7 +151,7 @@ export default function KBDetailPage() {
                     } else {
                         setToast({ visible: true, status: 'error', fileName, message: data.error || data.detail });
                     }
-                } catch (e) {
+                } catch {
                     setToast({ visible: true, status: 'error', fileName, message: '响应解析失败' });
                 }
             } else {

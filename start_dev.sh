@@ -9,6 +9,7 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+
 echo "Starting WritingBot + FastWrite..."
 
 # Kill any existing processes on all used ports

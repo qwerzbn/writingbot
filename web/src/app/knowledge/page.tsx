@@ -27,7 +27,7 @@ export default function KnowledgePage() {
 
     useEffect(() => {
         refreshKbs();
-    }, []);
+    }, [refreshKbs]);
 
     // Reset model and test state when provider changes
     const handleProviderChange = (provider: string) => {
@@ -76,7 +76,7 @@ export default function KnowledgePage() {
                     setShowApiKeyInput(true);
                 }
             }
-        } catch (e) {
+        } catch {
             setTestStatus('failed');
             setTestError('网络错误');
         }

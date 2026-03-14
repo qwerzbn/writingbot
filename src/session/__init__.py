@@ -1,3 +1,3 @@
-from .manager import SessionManager, Session
+from src.session.manager import ConversationSession, SessionManager
 
-__all__ = ["SessionManager", "Session"]
+__all__ = ["ConversationSession", "SessionManager"]

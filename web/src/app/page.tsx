@@ -3,7 +3,7 @@
 import { useAppContext } from '@/context/AppContext';
 import {
   BookOpen,
-  MessageSquare,
+  MessageCircle,
   Notebook,
   Search,
   PenTool,
@@ -22,10 +22,10 @@ const features = [
   },
   {
     href: '/chat',
-    icon: MessageSquare,
-    label: '智能对话',
-    desc: '基于知识库的 RAG 问答',
-    color: 'from-violet-500 to-purple-400',
+    icon: MessageCircle,
+    label: '智能问答',
+    desc: '基于知识库进行多轮对话，支持来源引用',
+    color: 'from-sky-500 to-blue-400',
   },
   {
     href: '/notebook',
@@ -51,7 +51,7 @@ const features = [
 ];
 
 export default function Dashboard() {
-  const { kbs, conversations } = useAppContext();
+  const { kbs } = useAppContext();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-8 transition-colors">
@@ -66,10 +66,9 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-2 gap-4 mb-10">
         {[
           { label: '知识库', value: kbs.length, icon: BookOpen },
-          { label: '对话', value: conversations.length, icon: MessageSquare },
           { label: '文档', value: kbs.reduce((sum, kb) => sum + (kb.files?.length || 0), 0), icon: FileText },
         ].map(({ label, value, icon: Icon }) => (
           <div

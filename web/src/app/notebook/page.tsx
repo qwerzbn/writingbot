@@ -126,6 +126,7 @@ export default function NotebookPage() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchNotebooks();
     }, []);
 
@@ -334,7 +335,7 @@ export default function NotebookPage() {
                                     暂无记录
                                 </p>
                                 <p className="text-slate-400 text-xs">
-                                    在对话、研究或写作时可将结果保存到此笔记本
+                                    在研究或写作时可将结果保存到此笔记本
                                 </p>
                             </div>
                         ) : (
@@ -389,7 +390,7 @@ export default function NotebookPage() {
                         <BookOpen size={48} className="mb-4 opacity-30" />
                         <p className="text-lg mb-1">选择或创建一个笔记本</p>
                         <p className="text-sm">
-                            笔记本用于保存对话、研究报告和写作记录
+                            笔记本用于保存研究报告和写作记录
                         </p>
                     </div>
                 )}

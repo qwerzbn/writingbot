@@ -1,622 +1,477 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { useAppContext, type ChatMessage, type WorkflowStep } from '@/context/AppContext';
-import { Plus, Send, Loader2, Trash2, MessageSquare } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Bot, Loader2, MessageCircle, Plus, Send, Trash2, User } from 'lucide-react';
+
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import AgentAvatar from '@/components/agents/AgentAvatar';
-import AgentWorkflow from '@/components/agents/AgentWorkflow';
-import { AGENTS } from '@/components/agents/AgentRegistry';
-import dynamic from 'next/dynamic';
-const PdfViewer = dynamic(() => import('@/components/chat/PdfViewer'), { ssr: false });
-import { type CitationSource } from '@/components/chat/CitationCard';
+import { useAppContext } from '@/context/AppContext';
+import { ApiError, getConversation, listConversations, removeConversation, streamChat } from '@/lib/chat';
+import type { ChatMessage, ConversationDetail, ConversationSummary } from '@/types/chat';
 
-// ---- Direct backend URL for SSE (bypass Next.js proxy to avoid buffering) ----
-const STREAM_API = 'http://localhost:5001/api';
+const DRAFT_ID = '__draft__';
 
-// ---- Slash commands ----
-
-interface SlashCommand {
-    command: string;
-    label: string;
-    description: string;
-    prompt: string;
+function nowIso(): string {
+  return new Date().toISOString();
 }
 
-const SLASH_COMMANDS: SlashCommand[] = [
-    { command: '/总结创新点', label: '总结创新点', description: '总结论文的核心创新和贡献', prompt: '@研究智能体 请总结当前知识库论文的核心创新点和主要贡献' },
-    { command: '/文献综述', label: '文献综述', description: '生成涵盖所有论文的文献综述', prompt: '@研究智能体 请基于知识库中的论文，生成一篇结构化的文献综述' },
-    { command: '/对比分析', label: '对比分析', description: '对比多篇论文的方法和结果', prompt: '@研究智能体 请对比分析知识库中论文的研究方法和实验结果' },
-    { command: '/分析实验', label: '分析实验设计', description: '分析论文实验设计的优缺点', prompt: '请分析知识库中论文的实验设计，指出其优势和局限性' },
-    { command: '/提取公式', label: '提取核心公式', description: '提取并解释论文中的关键公式', prompt: '请提取知识库论文中的核心数学公式并逐一解释' },
-    { command: '/研究空白', label: '发现研究空白', description: '识别可能的研究方向和不足', prompt: '基于知识库论文，请识别当前研究的空白和未来可能的研究方向' },
-];
+function createIdempotencyKey(seed: string): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `${seed}:${crypto.randomUUID()}`;
+  }
+  return `${seed}:${Date.now()}:${Math.random().toString(16).slice(2, 10)}`;
+}
 
-// ---- @mention options ----
+function buildDraftConversation(kbId: string | null): ConversationDetail {
+  const now = nowIso();
+  return {
+    id: DRAFT_ID,
+    title: '新聊天',
+    kb_id: kbId,
+    created_at: now,
+    updated_at: now,
+    messages: [],
+  };
+}
 
-const MENTION_OPTIONS = Object.values(AGENTS).map((a) => ({
-    id: a.id, name: a.name, emoji: a.emoji, description: a.description,
-}));
-
-// ---- Component ----
+function normalizeConversations(rows: ConversationSummary[]): ConversationSummary[] {
+  const unique = new Map<string, ConversationSummary>();
+  for (const row of rows) {
+    const messageCount = row.message_count ?? 0;
+    const hasLastMessage = Boolean((row.last_message || '').trim());
+    if (messageCount <= 0 && !hasLastMessage) {
+      continue;
+    }
+    unique.set(row.id, row);
+  }
+  return Array.from(unique.values()).sort((a, b) =>
+    String(b.updated_at || '').localeCompare(String(a.updated_at || ''))
+  );
+}
 
 export default function ChatPage() {
-    const {
-        kbs, refreshKbs,
-        selectedKbId, setSelectedKbId,
-        currentConversationId, setCurrentConversationId,
-        conversations, refreshConversations,
-        // Global chat state
-        chatMessages, setChatMessages, updateChatMessages,
-        isChatStreaming, setIsChatStreaming,
-        chatStatusMessage, setChatStatusMessage,
-        chatWorkflow, setChatWorkflow,
-        chatCurrentAgent, setChatCurrentAgent,
-        abortStreamRef,
-    } = useAppContext();
+  const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
 
-    // Local UI state only (menus, input)
-    const inputRef = useRef<HTMLInputElement>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const streamingContentRef = useRef('');
-    const workflowRef = useRef<WorkflowStep[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversation, setActiveConversation] = useState<ConversationDetail>(() =>
+    buildDraftConversation(null)
+  );
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
 
-    // Menu state
-    const [showMentionMenu, setShowMentionMenu] = useState(false);
-    const [mentionFilter, setMentionFilter] = useState('');
-    const [showSlashMenu, setShowSlashMenu] = useState(false);
-    const [slashFilter, setSlashFilter] = useState('');
-    const [input, setInput] = useState('');
+  const endRef = useRef<HTMLDivElement | null>(null);
 
-    // PDF Viewer state
-    const [activePdf, setActivePdf] = useState<{ url: string; name: string; page?: number } | null>(null);
+  const messages = useMemo(() => activeConversation.messages || [], [activeConversation]);
 
-    // Load conversation when switching
-    useEffect(() => {
-        if (currentConversationId && !isChatStreaming) {
-            loadConversation(currentConversationId);
-        } else if (!currentConversationId && !isChatStreaming) {
-            setChatMessages([]);
+  const refreshConversations = useCallback(async () => {
+    const rows = await listConversations();
+    const normalized = normalizeConversations(rows);
+    setConversations(normalized);
+
+    if (activeConversationId && !normalized.some((row) => row.id === activeConversationId)) {
+      setActiveConversationId(null);
+      setActiveConversation(buildDraftConversation(selectedKbId || null));
+    }
+  }, [activeConversationId, selectedKbId]);
+
+  const openDraftConversation = useCallback(() => {
+    setActiveConversationId(null);
+    setActiveConversation(buildDraftConversation(selectedKbId || null));
+    setPageError(null);
+  }, [selectedKbId]);
+
+  const loadConversation = useCallback(
+    async (convId: string) => {
+      setLoadingDetail(true);
+      try {
+        const detail = await getConversation(convId);
+        if (!detail.messages?.length) {
+          await removeConversation(convId).catch(() => {});
+          setConversations((prev) => prev.filter((row) => row.id !== convId));
+          openDraftConversation();
+          setPageError('检测到空会话，已自动清理并切换到新聊天。');
+          return;
         }
-    }, [currentConversationId]);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [chatMessages, chatWorkflow]);
+        setActiveConversation(detail);
+        setActiveConversationId(convId);
+        setSelectedKbId(detail.kb_id || null);
+        setPageError(null);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          setConversations((prev) => prev.filter((row) => row.id !== convId));
+          openDraftConversation();
+          setPageError('会话已不存在，已自动刷新列表。');
+          return;
+        }
+        setPageError(error instanceof Error ? error.message : '加载会话失败');
+        throw error;
+      } finally {
+        setLoadingDetail(false);
+      }
+    },
+    [openDraftConversation, setSelectedKbId]
+  );
 
-    const loadConversation = async (id: string) => {
-        try {
-            const res = await fetch(`/api/conversations/${id}`);
-            const data = await res.json();
-            if (data.success) {
-                setChatMessages(data.data.messages || []);
-                if (data.data.kb_id && !selectedKbId) {
-                    setSelectedKbId(data.data.kb_id);
-                }
+  useEffect(() => {
+    const run = async () => {
+      setLoadingList(true);
+      try {
+        await refreshConversations();
+        setPageError(null);
+      } catch (error) {
+        setPageError(error instanceof Error ? error.message : '加载会话列表失败');
+      } finally {
+        setLoadingList(false);
+      }
+    };
+
+    void run();
+  }, [refreshConversations]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, sending]);
+
+  useEffect(() => {
+    if (!activeConversationId) {
+      setActiveConversation((prev) => ({ ...prev, kb_id: selectedKbId || null }));
+    }
+  }, [activeConversationId, selectedKbId]);
+
+  const handleCreateConversation = () => {
+    if (!activeConversationId && activeConversation.messages.length === 0) {
+      setInput('');
+      setPageError(null);
+      return;
+    }
+    openDraftConversation();
+    setInput('');
+  };
+
+  const handleDeleteConversation = async (convId: string) => {
+    try {
+      await removeConversation(convId);
+      setConversations((prev) => prev.filter((row) => row.id !== convId));
+
+      if (activeConversationId === convId) {
+        openDraftConversation();
+      }
+
+      setPageError(null);
+    } catch (error) {
+      setPageError(error instanceof Error ? error.message : '删除会话失败');
+    }
+  };
+
+  const appendAssistantChunk = (chunk: string) => {
+    setActiveConversation((prev) => {
+      const next = [...prev.messages];
+      for (let i = next.length - 1; i >= 0; i -= 1) {
+        if (next[i].role === 'assistant') {
+          next[i] = {
+            ...next[i],
+            content: `${next[i].content || ''}${chunk}`,
+          };
+          break;
+        }
+      }
+      return { ...prev, messages: next, updated_at: nowIso() };
+    });
+  };
+
+  const setAssistantSources = (sources: ChatMessage['sources']) => {
+    setActiveConversation((prev) => {
+      const next = [...prev.messages];
+      for (let i = next.length - 1; i >= 0; i -= 1) {
+        if (next[i].role === 'assistant') {
+          next[i] = {
+            ...next[i],
+            sources,
+          };
+          break;
+        }
+      }
+      return { ...prev, messages: next, updated_at: nowIso() };
+    });
+  };
+
+  const appendAssistantError = (error: string) => {
+    appendAssistantChunk(`\n\n> ${error}`);
+  };
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    setInput('');
+
+    const now = nowIso();
+    const trimmedTitle = text.slice(0, 30);
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: text,
+      timestamp: now,
+      sources: [],
+    };
+    const assistantPlaceholder: ChatMessage = {
+      role: 'assistant',
+      content: '',
+      timestamp: now,
+      sources: [],
+    };
+
+    setActiveConversation((prev) => ({
+      ...prev,
+      title: prev.messages.length === 0 ? trimmedTitle || '新聊天' : prev.title,
+      kb_id: selectedKbId ?? prev.kb_id,
+      updated_at: now,
+      messages: [...prev.messages, userMessage, assistantPlaceholder],
+    }));
+
+    setSending(true);
+    setPageError(null);
+
+    let finalConversationId = activeConversationId || undefined;
+    const idempotencyKey = createIdempotencyKey(activeConversationId || DRAFT_ID);
+
+    try {
+      const done = await streamChat(
+        {
+          message: text,
+          conversation_id: activeConversationId || undefined,
+          kb_id: selectedKbId || undefined,
+          title: activeConversation.messages.length === 0 ? trimmedTitle : undefined,
+          idempotency_key: idempotencyKey,
+        },
+        {
+          onChunk: appendAssistantChunk,
+          onSources: setAssistantSources,
+          onDone: (event) => {
+            if (event.conversation_id) {
+              finalConversationId = event.conversation_id;
             }
-        } catch (e) { console.error(e); }
-    };
-
-    const handleNewChat = () => {
-        // Abort any in-progress stream
-        abortStreamRef.current?.abort();
-        setCurrentConversationId(null);
-        setChatMessages([]);
-        setIsChatStreaming(false);
-        setChatWorkflow([]);
-        setActivePdf(null);
-    };
-
-    const handleSelectConversation = (conv: { id: string; kb_id?: string }) => {
-        abortStreamRef.current?.abort();
-        setIsChatStreaming(false);
-        setChatWorkflow([]);
-        setCurrentConversationId(conv.id);
-        setActivePdf(null);
-        if (conv.kb_id) setSelectedKbId(conv.kb_id);
-    };
-
-    const handleDeleteConversation = async (e: React.MouseEvent, convId: string) => {
-        e.stopPropagation();
-        if (!confirm('确定删除此对话？')) return;
-        try {
-            await fetch(`/api/conversations/${convId}`, { method: 'DELETE' });
-            if (currentConversationId === convId) {
-                setCurrentConversationId(null);
-                setChatMessages([]);
-            }
-            refreshConversations();
-        } catch (e) { console.error(e); }
-    };
-
-    // ---- Input handlers ----
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setInput(val);
-
-        const atMatch = val.match(/@(\S*)$/);
-        if (atMatch) {
-            setMentionFilter(atMatch[1]);
-            setShowMentionMenu(true);
-            setShowSlashMenu(false);
-        } else {
-            setShowMentionMenu(false);
+          },
+          onError: (event) => {
+            appendAssistantError(event.error || '请求失败');
+          },
         }
+      );
 
-        if (val === '/' || val.match(/^\/\S*$/)) {
-            setSlashFilter(val.slice(1));
-            setShowSlashMenu(true);
-            setShowMentionMenu(false);
-        } else if (!val.startsWith('/')) {
-            setShowSlashMenu(false);
-        }
-    };
+      if (done?.conversation_id) {
+        finalConversationId = done.conversation_id;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '请求失败';
+      appendAssistantError(msg);
+      setPageError(msg);
+    } finally {
+      setSending(false);
+    }
 
-    const selectMention = (agent: { id: string; name: string }) => {
-        const beforeAt = input.replace(/@\S*$/, '');
-        setInput(`@${agent.name} ${beforeAt}`);
-        setShowMentionMenu(false);
-        inputRef.current?.focus();
-    };
+    if (finalConversationId) {
+      setActiveConversationId(finalConversationId);
+    }
 
-    const selectSlashCommand = (cmd: SlashCommand) => {
-        setInput(cmd.prompt);
-        setShowSlashMenu(false);
-        inputRef.current?.focus();
-    };
+    try {
+      await refreshConversations();
+      if (finalConversationId) {
+        await loadConversation(finalConversationId);
+      }
+    } catch {
+      // Keep local streamed content to avoid visible flicker.
+    }
+  };
 
-    const filteredMentions = MENTION_OPTIONS.filter(
-        (a) => !mentionFilter || a.name.includes(mentionFilter) || a.id.includes(mentionFilter)
-    );
-
-    const filteredSlashCommands = SLASH_COMMANDS.filter(
-        (c) => !slashFilter || c.command.includes(slashFilter) || c.label.includes(slashFilter)
-    );
-
-    // ---- Streaming send (using global state) ----
-
-    const handleSend = async () => {
-        if (!input.trim() || !selectedKbId || isChatStreaming) return;
-        const userMessage = input.trim();
-        setInput('');
-        setShowMentionMenu(false);
-        setShowSlashMenu(false);
-
-        streamingContentRef.current = '';
-        workflowRef.current = [];
-        setChatWorkflow([]);
-        setChatCurrentAgent('reasoner');
-
-        // Add messages to global state
-        const newMessages: ChatMessage[] = [
-            ...chatMessages,
-            { role: 'user', content: userMessage },
-            { role: 'assistant', content: '', isStreaming: true, workflow: [] },
-        ];
-        setChatMessages(newMessages);
-        setIsChatStreaming(true);
-        setChatStatusMessage('正在连接...');
-
-        // Create abort controller
-        const abortController = new AbortController();
-        abortStreamRef.current = abortController;
-
-        try {
-            // *** DIRECT call to backend — bypass Next.js proxy for SSE ***
-            const res = await fetch(`${STREAM_API}/chat/stream`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: userMessage,
-                    conversation_id: currentConversationId,
-                    kb_id: selectedKbId,
-                }),
-                signal: abortController.signal,
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-            const reader = res.body?.getReader();
-            if (!reader) throw new Error('No response body');
-
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let receivedSources: { source: string; page: number }[] = [];
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const events = buffer.split('\n\n');
-                buffer = events.pop() || '';
-
-                for (const event of events) {
-                    if (!event.startsWith('data: ')) continue;
-                    try {
-                        const ev = JSON.parse(event.slice(6));
-
-                        switch (ev.type) {
-                            case 'init':
-                                // Persist conversation ID immediately
-                                if (!currentConversationId && ev.conversation_id) {
-                                    setCurrentConversationId(ev.conversation_id);
-                                }
-                                break;
-
-                            case 'agent_step': {
-                                const steps = [...workflowRef.current];
-                                const existing = steps.findIndex(
-                                    (s) => s.agent === ev.agent && (s.status === 'working' || s.status === 'thinking')
-                                );
-                                const step: WorkflowStep = {
-                                    agent: ev.agent,
-                                    status: ev.status,
-                                    message: ev.message,
-                                    duration: ev.duration,
-                                };
-                                if (existing >= 0) {
-                                    steps[existing] = step;
-                                } else {
-                                    steps.push(step);
-                                }
-                                workflowRef.current = steps;
-                                setChatWorkflow([...steps]);
-
-                                if (ev.status === 'working' || ev.status === 'thinking') {
-                                    setChatStatusMessage(ev.message);
-                                }
-                                break;
-                            }
-
-                            case 'chunk':
-                                streamingContentRef.current += ev.content;
-                                if (ev.agent) setChatCurrentAgent(ev.agent);
-                                // Update the last message in global state
-                                updateChatMessages((prev) => {
-                                    const msgs = [...prev];
-                                    const last = msgs[msgs.length - 1];
-                                    if (last?.role === 'assistant') {
-                                        msgs[msgs.length - 1] = {
-                                            ...last,
-                                            content: streamingContentRef.current,
-                                            isStreaming: true,
-                                            agent: ev.agent || last.agent,
-                                            workflow: workflowRef.current,
-                                        };
-                                    }
-                                    return msgs;
-                                });
-                                break;
-
-                            case 'sources':
-                                receivedSources = ev.data;
-                                break;
-
-                            case 'done':
-                                break;
-
-                            case 'error':
-                                updateChatMessages((prev) => {
-                                    const msgs = [...prev];
-                                    const last = msgs[msgs.length - 1];
-                                    if (last?.role === 'assistant') {
-                                        msgs[msgs.length - 1] = {
-                                            ...last,
-                                            content: `错误: ${ev.error}`,
-                                            isStreaming: false,
-                                        };
-                                    }
-                                    return msgs;
-                                });
-                                break;
-                        }
-                    } catch (e) { console.error('Parse SSE:', e); }
-                }
-            }
-
-            // Finalize
-            updateChatMessages((prev) => {
-                const msgs = [...prev];
-                const last = msgs[msgs.length - 1];
-                if (last?.role === 'assistant') {
-                    msgs[msgs.length - 1] = {
-                        ...last,
-                        content: streamingContentRef.current,
-                        isStreaming: false,
-                        sources: receivedSources,
-                        agent: chatCurrentAgent,
-                        workflow: workflowRef.current,
-                    };
-                }
-                return msgs;
-            });
-
-            refreshConversations();
-
-        } catch (e: unknown) {
-            if (e instanceof Error && e.name === 'AbortError') {
-                // User navigated away or started new chat — keep partial content
-                updateChatMessages((prev) => {
-                    const msgs = [...prev];
-                    const last = msgs[msgs.length - 1];
-                    if (last?.role === 'assistant') {
-                        msgs[msgs.length - 1] = {
-                            ...last,
-                            content: streamingContentRef.current || '(对话中断)',
-                            isStreaming: false,
-                        };
-                    }
-                    return msgs;
-                });
-            } else {
-                console.error('Stream error:', e);
-                updateChatMessages((prev) => {
-                    const msgs = [...prev];
-                    const last = msgs[msgs.length - 1];
-                    if (last?.role === 'assistant') {
-                        msgs[msgs.length - 1] = {
-                            ...last,
-                            content: `网络错误: ${e}`,
-                            isStreaming: false,
-                        };
-                    }
-                    return msgs;
-                });
-            }
-        } finally {
-            setIsChatStreaming(false);
-            abortStreamRef.current = null;
-        }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    };
-
-    // ---- Render ----
-
-    const messages = chatMessages;
-
-    return (
-        <div className="h-full flex">
-            {/* Conversation Sidebar */}
-            <div className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col shrink-0">
-                <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
-                    <span className="font-semibold text-slate-800 dark:text-white text-sm">对话列表</span>
-                    <button onClick={handleNewChat} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors" title="新建对话">
-                        <Plus size={18} />
-                    </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-2">
-                    {conversations.length === 0 ? (
-                        <div className="text-center py-8 text-slate-400 text-sm">
-                            <MessageSquare size={24} className="mx-auto mb-2 opacity-30" />
-                            <p>暂无对话</p>
-                            <p className="text-xs mt-1">选择知识库后开始提问</p>
-                        </div>
-                    ) : (
-                        conversations.map((conv) => (
-                            <div
-                                key={conv.id}
-                                onClick={() => handleSelectConversation(conv)}
-                                className={`group px-3 py-2 rounded-lg cursor-pointer text-sm mb-1 transition-colors flex items-center justify-between ${conv.id === currentConversationId
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
-                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
-                            >
-                                <span className="truncate flex-1">{conv.title}</span>
-                                <button
-                                    onClick={(e) => handleDeleteConversation(e, conv.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 transition-all shrink-0 ml-1"
-                                    title="删除对话"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
-                        ))
-                    )}
-                </div>
+  return (
+    <div className="h-full min-h-0 bg-slate-50 dark:bg-slate-900 p-3 md:p-4 transition-colors">
+      <div className="h-full min-h-0 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-3">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
+          <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-sm">
+              <MessageCircle size={15} /> 会话
             </div>
+            <button
+              onClick={handleCreateConversation}
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-blue-500 text-white text-xs hover:bg-blue-600 transition-colors"
+              type="button"
+            >
+              <Plus size={13} /> 新建
+            </button>
+          </div>
 
-            {/* Chat Main */}
-            <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
-                {/* Header */}
-                <header className="h-14 px-8 flex items-center justify-between bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-lg font-semibold text-slate-800 dark:text-white">
-                            WritingBot · 学术工作台
-                        </h1>
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            {Object.keys(AGENTS).length} 个智能体就绪
+          <div className="flex-1 overflow-y-auto p-2 min-h-0">
+            <button
+              type="button"
+              onClick={openDraftConversation}
+              className={`w-full text-left px-2.5 py-2 rounded-lg mb-1 border transition-colors ${
+                activeConversationId === null
+                  ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800'
+                  : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/50'
+              }`}
+            >
+              <div className="text-sm font-medium text-slate-700 dark:text-slate-200">新聊天</div>
+              <div className="text-xs text-slate-400 mt-0.5 truncate">未发送内容不会保存</div>
+            </button>
+
+            {loadingList ? (
+              <div className="h-20 flex items-center justify-center text-slate-400">
+                <Loader2 size={16} className="animate-spin" />
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="h-20 flex items-center justify-center text-xs text-slate-400 px-2 text-center">
+                暂无已保存会话
+              </div>
+            ) : (
+              conversations.map((conv) => {
+                const active = conv.id === activeConversationId;
+                return (
+                  <div
+                    key={conv.id}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg mb-1 border transition-colors ${
+                      active
+                        ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800'
+                        : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                    }`}
+                    onClick={() => void loadConversation(conv.id).catch(() => {})}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        void loadConversation(conv.id).catch(() => {});
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                          {conv.title || '会话'}
                         </div>
+                        <div className="text-xs text-slate-400 truncate mt-0.5">
+                          {conv.last_message || '暂无内容'}
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void handleDeleteConversation(conv.id);
+                        }}
+                        className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        type="button"
+                        title="删除会话"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
-                    <select
-                        value={selectedKbId || ''}
-                        onChange={(e) => setSelectedKbId(e.target.value || null)}
-                        className="w-48 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
-                    >
-                        <option value="">选择知识库...</option>
-                        {kbs.map((kb) => (
-                            <option key={kb.id} value={kb.id}>{kb.name}</option>
-                        ))}
-                    </select>
-                </header>
-
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {messages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                            <div className="text-5xl mb-4">🤖</div>
-                            <h2 className="text-xl font-medium text-slate-600 dark:text-slate-300 mb-2">
-                                WritingBot · 学术工作台
-                            </h2>
-                            <p className="text-sm mb-6">多智能体协作，让学术研究更高效</p>
-                            <div className="grid grid-cols-2 gap-2 max-w-md">
-                                {Object.values(AGENTS).map((agent) => (
-                                    <div key={agent.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-                                        <span className="text-base">{agent.emoji}</span>
-                                        <div>
-                                            <div className="font-medium text-slate-700 dark:text-slate-200">{agent.name}</div>
-                                            <div className="text-slate-400 dark:text-slate-500">{agent.description}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <p className="text-xs mt-6 text-slate-400">
-                                输入 <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">/</kbd> 快捷指令 · <kbd className="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-xs">@</kbd> 指定智能体
-                            </p>
-                        </div>
-                    ) : (
-                        messages.map((msg, idx) => (
-                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className="max-w-[75%]">
-                                    {/* Agent workflow */}
-                                    {msg.role === 'assistant' && (msg.workflow?.length || (msg.isStreaming && chatWorkflow.length > 0)) ? (
-                                        <AgentWorkflow
-                                            steps={msg.isStreaming ? chatWorkflow : (msg.workflow || [])}
-                                            isActive={!!msg.isStreaming}
-                                        />
-                                    ) : null}
-
-                                    {/* Bubble */}
-                                    <div className={`px-4 py-3 rounded-2xl ${msg.role === 'user'
-                                        ? 'bg-blue-500 text-white rounded-br-sm'
-                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm'
-                                        }`}>
-                                        {msg.role === 'assistant' && msg.agent && !msg.isStreaming && (
-                                            <div className="mb-2">
-                                                <AgentAvatar agentId={msg.agent} showName />
-                                            </div>
-                                        )}
-
-                                        {msg.role === 'user' ? (
-                                            <div className="whitespace-pre-wrap">{msg.content}</div>
-                                        ) : (
-                                            <div>
-                                                <MarkdownRenderer
-                                                    content={msg.content}
-                                                    sources={msg.sources}
-                                                    onCitationClick={(source: CitationSource) => {
-                                                        if (source.file_id && selectedKbId) {
-                                                            setActivePdf({
-                                                                url: `/api/kbs/${selectedKbId}/files/${source.file_id}/content`,
-                                                                name: source.source,
-                                                                page: typeof source.page === 'number' ? source.page : parseInt(String(source.page)) || 1
-                                                            });
-                                                        }
-                                                    }}
-                                                />
-                                                {msg.isStreaming && msg.content && (
-                                                    <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {msg.isStreaming && !msg.content && (
-                                            <div className="flex items-center gap-2 text-slate-400">
-                                                <Loader2 size={16} className="animate-spin" />
-                                                <span className="text-sm">{chatStatusMessage}</span>
-                                            </div>
-                                        )}
-
-                                        {msg.sources && msg.sources.length > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-600 text-xs text-slate-500 dark:text-slate-400">
-                                                📄 引用来源：{' '}
-                                                {msg.sources.map((s, i) => (
-                                                    <span key={i} className="inline-block mr-2 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs">
-                                                        {s.source} (p.{s.page})
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input */}
-                <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 relative">
-                    {/* @mention popup */}
-                    {showMentionMenu && filteredMentions.length > 0 && (
-                        <div className="absolute bottom-full left-4 mb-2 w-72 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
-                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">选择智能体</div>
-                            {filteredMentions.map((a) => (
-                                <button
-                                    key={a.id}
-                                    onClick={() => selectMention(a)}
-                                    className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
-                                >
-                                    <span className="text-lg">{a.emoji}</span>
-                                    <div>
-                                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200">{a.name}</div>
-                                        <div className="text-xs text-slate-400">{a.description}</div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Slash popup */}
-                    {showSlashMenu && filteredSlashCommands.length > 0 && (
-                        <div className="absolute bottom-full left-4 mb-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-10">
-                            <div className="px-3 py-2 text-xs text-slate-400 border-b border-slate-100 dark:border-slate-700">⚡ 快捷指令</div>
-                            {filteredSlashCommands.map((cmd) => (
-                                <button
-                                    key={cmd.command}
-                                    onClick={() => selectSlashCommand(cmd)}
-                                    className="w-full px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-left"
-                                >
-                                    <span className="text-sm font-mono text-blue-500 dark:text-blue-400 shrink-0">{cmd.command}</span>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm text-slate-700 dark:text-slate-200">{cmd.label}</div>
-                                        <div className="text-xs text-slate-400 truncate">{cmd.description}</div>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-xl px-4 py-2">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={input}
-                            onChange={handleInputChange}
-                            onKeyDown={handleKeyDown}
-                            placeholder={selectedKbId ? '输入问题... 用 / 快捷指令 或 @ 指定智能体' : '请先选择知识库'}
-                            disabled={!selectedKbId || isChatStreaming}
-                            className="flex-1 bg-transparent outline-none text-slate-800 dark:text-white placeholder:text-slate-400 text-sm"
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim() || !selectedKbId || isChatStreaming}
-                            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            {isChatStreaming ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Split-screen PDF Viewer */}
-            {activePdf && (
-                <PdfViewer
-                    fileUrl={activePdf.url}
-                    fileName={activePdf.name}
-                    initialPage={activePdf.page}
-                    onClose={() => setActivePdf(null)}
-                />
+                  </div>
+                );
+              })
             )}
+          </div>
         </div>
-    );
-}
 
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
+          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h1 className="text-base font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                <MessageCircle size={16} className="text-blue-500" />
+                {activeConversationId ? activeConversation.title || '智能对话' : '新聊天'}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                流式输出已开启，未发送内容不会保存为会话。
+              </p>
+            </div>
+            <select
+              value={selectedKbId || ''}
+              onChange={(e) => setSelectedKbId(e.target.value || null)}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">不使用知识库（纯 LLM）</option>
+              {kbs.map((kb) => (
+                <option key={kb.id} value={kb.id}>
+                  {kb.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {pageError && (
+            <div className="mx-4 mt-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+              {pageError}
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+            {loadingDetail ? (
+              <div className="h-full flex items-center justify-center text-slate-400">
+                <Loader2 size={18} className="animate-spin" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                开始输入你的问题
+              </div>
+            ) : (
+              messages.map((msg, idx) => {
+                const isUser = msg.role === 'user';
+                return (
+                  <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 border ${
+                        isUser
+                          ? 'bg-blue-500 border-blue-500 text-white'
+                          : 'bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-80">
+                        {isUser ? <User size={12} /> : <Bot size={12} />}
+                        <span>{isUser ? '你' : '助手'}</span>
+                      </div>
+
+                      {isUser ? (
+                        <div className="text-sm whitespace-pre-wrap break-words">{msg.content}</div>
+                      ) : (
+                        <MarkdownRenderer content={msg.content} sources={msg.sources || []} className="text-sm" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={endRef} />
+          </div>
+
+          <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
+            <div className="flex gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    void handleSend();
+                  }
+                }}
+                rows={2}
+                placeholder="输入问题，回车发送（Shift+Enter 换行）"
+                className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+              />
+              <button
+                onClick={() => void handleSend()}
+                disabled={sending || !input.trim()}
+                className="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 inline-flex items-center gap-1.5 transition-colors text-sm"
+                type="button"
+              >
+                {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                发送
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

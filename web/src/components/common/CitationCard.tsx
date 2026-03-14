@@ -73,7 +73,7 @@ export default function CitationCard({ index, source, onClick }: CitationCardPro
 
                     {source.content ? (
                         <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-4 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
-                            "{source.content}..."
+                            &ldquo;{source.content}...&rdquo;
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 text-xs text-amber-500 bg-amber-50 dark:bg-amber-900/20 p-2 rounded-lg">
@@ -95,4 +95,3 @@ export default function CitationCard({ index, source, onClick }: CitationCardPro
         </span>
     );
 }
-

@@ -26,16 +26,18 @@ export default function PdfViewer({ fileUrl, fileName, initialPage = 1, onClose 
     // Sync pageNumber when initialPage prop changes (e.g., user clicked a citation)
     useEffect(() => {
         if (initialPage && numPages && initialPage <= numPages) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPageNumber(initialPage);
         }
     }, [initialPage, numPages]);
 
     // Reset state on new file
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLoading(true);
         setPageNumber(initialPage || 1);
         setScale(1.0);
-    }, [fileUrl]);
+    }, [fileUrl, initialPage]);
 
     if (!fileUrl) return null;
 

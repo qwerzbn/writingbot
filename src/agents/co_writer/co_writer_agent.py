@@ -33,6 +33,7 @@ class CoWriterAgent(BaseAgent):
         text: str,
         action: str = "rewrite",
         instruction: str = "",
+        evidence: list[dict] | None = None,
         stream: bool = False,
     ) -> str | Generator[str, None, None]:
         """
@@ -42,6 +43,7 @@ class CoWriterAgent(BaseAgent):
             text: Input text to edit
             action: Action type (rewrite/expand/shorten/polish)
             instruction: Additional user instruction (for rewrite)
+            evidence: Optional supporting evidence snippets from KB retrieval
             stream: Whether to stream the result
 
         Returns:
@@ -57,6 +59,20 @@ class CoWriterAgent(BaseAgent):
 
         # Format prompt
         user_prompt = prompt_template.format(text=text, instruction=instruction)
+        if evidence:
+            evidence_lines: list[str] = []
+            for i, item in enumerate(evidence[:6], 1):
+                source = item.get("source", "未知来源")
+                page = item.get("page", "?")
+                content = (item.get("content", "") or "").strip()
+                if len(content) > 180:
+                    content = content[:180] + "..."
+                evidence_lines.append(f"[{i}] {source} p.{page}: {content}")
+            if evidence_lines:
+                user_prompt += (
+                    "\n\n请结合以下可用证据进行写作（如证据不足，请保持审慎，不要编造）：\n"
+                    + "\n".join(evidence_lines)
+                )
 
         messages = [
             {"role": "system", "content": self.get_prompt("system", "你是一个写作助手。")},
@@ -72,6 +88,7 @@ class CoWriterAgent(BaseAgent):
         text: str,
         action: str = "rewrite",
         instruction: str = "",
+        evidence: list[dict] | None = None,
         stream: bool = False,
     ) -> dict:
         """
@@ -80,8 +97,8 @@ class CoWriterAgent(BaseAgent):
         Returns:
             Dict with 'edited_text' (or 'stream')
         """
-        result = self.edit(text, action, instruction, stream)
+        result = self.edit(text, action, instruction, evidence=evidence, stream=stream)
 
         if stream:
-            return {"stream": result, "action": action}
-        return {"edited_text": result, "action": action}
+            return {"stream": result, "action": action, "used_sources": evidence or []}
+        return {"edited_text": result, "action": action, "used_sources": evidence or []}
