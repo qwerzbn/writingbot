@@ -143,6 +143,19 @@ python main.py
 - `/clear` — 清除对话历史
 - `/quit` — 退出
 
+## ✅ 质量门禁
+
+本项目提供企业级基础门禁：
+
+- CI 工作流：`.github/workflows/quality-gate.yml`
+- 本地一键门禁脚本：`scripts/quality_gate.sh`
+
+本地执行：
+
+```bash
+bash scripts/quality_gate.sh
+```
+
 ## 📄 License
 
 MIT

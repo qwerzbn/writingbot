@@ -180,6 +180,8 @@ def test_chat_stream_event_order_and_persistence(monkeypatch, tmp_path):
     body = resp.text
     assert '"type": "chunk"' in body
     assert '"kind": "progress"' in body
+    assert '"step": "plan"' in body
+    assert '"status": "done"' in body
     assert '"type": "sources"' in body
     assert '"type": "done"' in body
     assert body.find('"type": "chunk"') < body.find('"type": "sources"') < body.find('"type": "done"')
