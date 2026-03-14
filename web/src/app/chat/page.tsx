@@ -112,6 +112,7 @@ export default function ChatPage() {
   const [hasFirstChunk, setHasFirstChunk] = useState(false);
 
   const endRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const messages = useMemo(() => activeConversation.messages || [], [activeConversation]);
   const slashQuery = useMemo(() => parseSlashQuery(input), [input]);
@@ -325,6 +326,9 @@ export default function ChatPage() {
       if (i < 0) return '';
       return raw.slice(i + 1);
     });
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   const clearSkill = () => {
@@ -713,6 +717,7 @@ export default function ChatPage() {
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium text-blue-700 dark:text-blue-200">{skillLabel(selectedSkill)}</div>
                   <div className="text-[11px] text-blue-600/80 dark:text-blue-300/80 truncate">{skillDesc(selectedSkill)}</div>
+                  <div className="text-[11px] text-blue-600/80 dark:text-blue-300/80 mt-0.5">已启用技能，直接输入你的问题即可发送</div>
                 </div>
                 <button
                   type="button"
@@ -746,9 +751,12 @@ export default function ChatPage() {
             )}
             <div className="flex gap-2">
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
+                  // Avoid accidental submit while using IME composition.
+                  if ((e.nativeEvent as { isComposing?: boolean }).isComposing) return;
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     void handleSend();
