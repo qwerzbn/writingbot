@@ -12,6 +12,17 @@ interface ApiSuccess<T> {
   data: T;
 }
 
+export interface SkillItem {
+  id: string;
+  name: string;
+  description: string;
+  domain: string;
+  enabled: boolean;
+  requires_kb: boolean;
+  critical: boolean;
+  timeout_ms: number;
+}
+
 export class ApiError extends Error {
   status: number;
   detail: string;
@@ -27,6 +38,7 @@ export class ApiError extends Error {
 interface CreateConversationPayload {
   title?: string;
   kb_id?: string;
+  default_skill_ids?: string[];
 }
 
 interface ChatRequestPayload {
@@ -35,6 +47,7 @@ interface ChatRequestPayload {
   kb_id?: string;
   title?: string;
   idempotency_key?: string;
+  skill_ids?: string[];
 }
 
 interface StreamHandlers {
@@ -81,6 +94,16 @@ export async function createConversation(payload: CreateConversationPayload, api
   }
   const body = await readJson<ApiSuccess<ConversationDetail>>(res);
   return body.data;
+}
+
+export async function listSkills(domain = 'research', apiBase = ''): Promise<SkillItem[]> {
+  const qs = new URLSearchParams({ domain, enabled_only: 'true' });
+  const res = await fetch(`${apiBase}/api/skills?${qs.toString()}`);
+  if (!res.ok) {
+    await throwApiError(res);
+  }
+  const body = await readJson<ApiSuccess<SkillItem[]>>(res);
+  return body.data || [];
 }
 
 export async function getConversation(convId: string, apiBase = ''): Promise<ConversationDetail> {

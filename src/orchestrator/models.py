@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Literal
 
 
-OrchestratorMode = Literal["research", "writing"]
+OrchestratorMode = Literal["research", "writing", "chat_research"]
 OrchestratorStep = Literal["plan", "retrieve", "synthesize", "critique", "finalize"]
 StepStatus = Literal["working", "done", "retry", "skipped", "error"]
 
@@ -56,3 +56,6 @@ class RunExecutionContext:
     critique: str = ""
     confidence: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
+    chat_history: list[dict[str, str]] = field(default_factory=list)
+    message: str = ""
+    selected_skill_ids: list[str] = field(default_factory=list)

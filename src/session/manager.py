@@ -23,6 +23,7 @@ class ConversationSession:
     id: str
     title: str = "新对话"
     kb_id: str | None = None
+    default_skill_ids: list[str] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     messages: list[dict[str, Any]] = field(default_factory=list)
@@ -53,6 +54,7 @@ class ConversationSession:
             "id": self.id,
             "title": self.title,
             "kb_id": self.kb_id,
+            "default_skill_ids": list(self.default_skill_ids),
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -75,22 +77,35 @@ class SessionManager:
     def _path(self, session_id: str) -> Path:
         return self.sessions_dir / f"{session_id}.jsonl"
 
-    def create(self, title: str = "新对话", kb_id: str | None = None, session_id: str | None = None) -> ConversationSession:
+    def create(
+        self,
+        title: str = "新对话",
+        kb_id: str | None = None,
+        session_id: str | None = None,
+        default_skill_ids: list[str] | None = None,
+    ) -> ConversationSession:
         now = datetime.now().isoformat()
         return ConversationSession(
             id=session_id or str(uuid.uuid4()),
             title=title or "新对话",
             kb_id=kb_id,
+            default_skill_ids=list(default_skill_ids or []),
             created_at=now,
             updated_at=now,
             messages=[],
         )
 
-    def get_or_create(self, session_id: str, title: str = "新对话", kb_id: str | None = None) -> ConversationSession:
+    def get_or_create(
+        self,
+        session_id: str,
+        title: str = "新对话",
+        kb_id: str | None = None,
+        default_skill_ids: list[str] | None = None,
+    ) -> ConversationSession:
         session = self.get(session_id)
         if session:
             return session
-        return self.create(title=title, kb_id=kb_id, session_id=session_id)
+        return self.create(title=title, kb_id=kb_id, session_id=session_id, default_skill_ids=default_skill_ids)
 
     def get(self, session_id: str) -> ConversationSession | None:
         path = self._path(session_id)
@@ -119,6 +134,7 @@ class SessionManager:
                 "id": session.id,
                 "title": session.title,
                 "kb_id": session.kb_id,
+                "default_skill_ids": list(session.default_skill_ids),
                 "created_at": session.created_at,
                 "updated_at": session.updated_at,
             }
@@ -163,6 +179,7 @@ class SessionManager:
                         "id": session.id,
                         "title": session.title,
                         "kb_id": session.kb_id,
+                        "default_skill_ids": list(session.default_skill_ids),
                         "created_at": session.created_at,
                         "updated_at": session.updated_at,
                         "message_count": len(session.messages),
@@ -208,6 +225,7 @@ class SessionManager:
             "id": session_id,
             "title": "新对话",
             "kb_id": None,
+            "default_skill_ids": [],
             "created_at": now,
             "updated_at": now,
         }
@@ -220,6 +238,9 @@ class SessionManager:
                     meta["id"] = first.get("id") or session_id
                     meta["title"] = first.get("title") or "新对话"
                     meta["kb_id"] = first.get("kb_id")
+                    default_skills = first.get("default_skill_ids")
+                    if isinstance(default_skills, list):
+                        meta["default_skill_ids"] = [str(item).strip() for item in default_skills if str(item).strip()]
                     meta["created_at"] = first.get("created_at") or now
                     meta["updated_at"] = first.get("updated_at") or meta["created_at"]
                 else:
@@ -228,6 +249,9 @@ class SessionManager:
                     meta["id"] = first.get("id") or session_id
                     meta["title"] = legacy.get("title") or first.get("title") or "新对话"
                     meta["kb_id"] = legacy.get("kb_id")
+                    legacy_skills = legacy.get("default_skill_ids")
+                    if isinstance(legacy_skills, list):
+                        meta["default_skill_ids"] = [str(item).strip() for item in legacy_skills if str(item).strip()]
                     meta["created_at"] = first.get("created_at") or now
                     meta["updated_at"] = first.get("updated_at") or meta["created_at"]
                 start_idx = 1
@@ -266,6 +290,7 @@ class SessionManager:
             id=meta["id"],
             title=meta["title"],
             kb_id=meta["kb_id"],
+            default_skill_ids=meta["default_skill_ids"],
             created_at=meta["created_at"],
             updated_at=meta["updated_at"],
             messages=messages,

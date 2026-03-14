@@ -28,6 +28,7 @@ from src.retrieval import HybridRetrievalService
 from src.retrieval.common import estimate_tokens
 from src.services.llm import get_llm_client
 from src.services.llm.config import get_llm_config
+from src.skills import resolve_skill_chain, run_research_skill_chain
 
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -44,6 +45,19 @@ class OrchestratorService:
         self.co_writer_agent = CoWriterAgent()
         self.metrics_file = DATA_DIR / "metrics" / "orchestrator_runs.jsonl"
         self.metrics_file.parent.mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def _agent_for_step(mode: str, step: str) -> str:
+        if mode != "chat_research":
+            return step
+        mapping = {
+            "plan": "question_planner",
+            "retrieve": "literature_retriever",
+            "synthesize": "method_comparer",
+            "critique": "citation_validator",
+            "finalize": "academic_writer",
+        }
+        return mapping.get(step, step)
 
     def create_run(self, mode: OrchestratorMode, payload: dict[str, Any]) -> dict[str, Any]:
         run = self.run_store.create_run(mode=mode, payload=payload)
@@ -110,6 +124,10 @@ class OrchestratorService:
             "citation_missing_fix": 0,
             "source_count": 0,
             "evidence_status": "unknown",
+            "citation_coverage": 0.0,
+            "paper_hit_rate": 0.0,
+            "skill_success_rate": 0.0,
+            "inference_ratio": 0.0,
             "model_calls": [],
             "model_cost": {"provider": get_llm_config().provider, "model": get_llm_config().model, "estimated_usd": 0.0},
         }
@@ -127,7 +145,13 @@ class OrchestratorService:
             for attempt in range(1, 4):
                 total_attempts += 1
                 t0 = time.time()
-                yield build_step_event(step=step, status="working", attempt=attempt, trace_id=run.trace_id)
+                yield build_step_event(
+                    step=step,
+                    status="working",
+                    attempt=attempt,
+                    trace_id=run.trace_id,
+                    agent_id=self._agent_for_step(run.mode, step),
+                )
                 try:
                     if step == "plan":
                         for ev in self._step_plan(ctx):
@@ -153,6 +177,7 @@ class OrchestratorService:
                         duration_ms=duration_ms,
                         confidence=ctx.confidence,
                         trace_id=run.trace_id,
+                        agent_id=self._agent_for_step(run.mode, step),
                     )
                     self.run_store.append_metric(
                         run.run_id,
@@ -166,13 +191,34 @@ class OrchestratorService:
                 except Exception as exc:
                     retryable = attempt < 3
                     run_metrics["failure_count"] += 1
-                    yield build_error_event(str(exc), step=step, retryable=retryable, attempt=attempt, trace_id=run.trace_id)
+                    yield build_error_event(
+                        str(exc),
+                        step=step,
+                        retryable=retryable,
+                        attempt=attempt,
+                        trace_id=run.trace_id,
+                        agent_id=self._agent_for_step(run.mode, step),
+                    )
                     if retryable:
                         run_metrics["retry_count"] += 1
-                        yield build_step_event(step=step, status="retry", attempt=attempt, message="retrying", trace_id=run.trace_id)
+                        yield build_step_event(
+                            step=step,
+                            status="retry",
+                            attempt=attempt,
+                            message="retrying",
+                            trace_id=run.trace_id,
+                            agent_id=self._agent_for_step(run.mode, step),
+                        )
                         continue
                     if not critical:
-                        yield build_step_event(step=step, status="skipped", attempt=attempt, message="non-critical skipped", trace_id=run.trace_id)
+                        yield build_step_event(
+                            step=step,
+                            status="skipped",
+                            attempt=attempt,
+                            message="non-critical skipped",
+                            trace_id=run.trace_id,
+                            agent_id=self._agent_for_step(run.mode, step),
+                        )
                         run_metrics["attempts"][step] = attempt
                         step_ok = True
                         break
@@ -214,6 +260,10 @@ class OrchestratorService:
         run_metrics["citation_missing_fix"] = ctx.metadata.get("citation_missing_fix", 0)
         run_metrics["source_count"] = len(ctx.sources)
         run_metrics["evidence_status"] = ctx.metadata.get("evidence_status", "unknown")
+        run_metrics["citation_coverage"] = float(ctx.metadata.get("citation_coverage", 0.0) or 0.0)
+        run_metrics["paper_hit_rate"] = float(ctx.metadata.get("paper_hit_rate", 0.0) or 0.0)
+        run_metrics["skill_success_rate"] = float(ctx.metadata.get("skill_success_rate", 0.0) or 0.0)
+        run_metrics["inference_ratio"] = float(ctx.metadata.get("inference_ratio", 0.0) or 0.0)
         run_metrics["model_calls"] = ctx.metadata.get("model_calls", [])
         run_metrics["model_cost"] = self._summarize_model_cost(run_metrics["model_calls"])
         ctx.metadata["run_metrics"] = run_metrics
@@ -226,6 +276,11 @@ class OrchestratorService:
             mode=run.mode,
             plan=ctx.plan,
             metrics=run_metrics,
+            meta={
+                "selected_skill_ids": ctx.selected_skill_ids,
+                "skill_runs": ctx.metadata.get("skill_runs", []),
+                "paper_hits": ctx.metadata.get("paper_hits", 0),
+            },
         )
         self.run_store.set_result(
             run.run_id,
@@ -261,7 +316,38 @@ class OrchestratorService:
             yield {"type": "chunk", "content": f"## 研究计划\n\n{plan}\n\n"}
             ctx.run.result["plan"] = plan
             ctx.confidence = 0.75
-        else:
+            return
+
+        if mode == "chat_research":
+            message = str(payload.get("message") or "").strip()
+            history = payload.get("history", [])
+            if not isinstance(history, list):
+                history = []
+            normalized_history: list[dict[str, str]] = []
+            for row in history[-12:]:
+                if not isinstance(row, dict):
+                    continue
+                role = str(row.get("role") or "").strip()
+                content = str(row.get("content") or "").strip()
+                if role in ("user", "assistant") and content:
+                    normalized_history.append({"role": role, "content": content})
+            skill_ids = payload.get("skill_ids", [])
+            if not isinstance(skill_ids, list):
+                skill_ids = []
+            clean_skill_ids = [str(item).strip() for item in skill_ids if str(item).strip().startswith("/")]
+
+            ctx.message = message
+            ctx.chat_history = normalized_history
+            ctx.selected_skill_ids = clean_skill_ids
+            ctx.sub_questions = self.hybrid.split_sub_questions(message[:1200] if message else "")
+            ctx.plan = "chat_research"
+            ctx.metadata["question"] = message
+            ctx.metadata["selected_skill_ids"] = clean_skill_ids
+            ctx.confidence = 0.72
+            return
+
+        # writing mode
+        if mode == "writing":
             action = payload.get("action", "rewrite")
             instruction = payload.get("instruction", "")
             ctx.metadata["action"] = action
@@ -295,6 +381,8 @@ class OrchestratorService:
         mode = ctx.run.mode
         if mode == "research":
             query = ctx.metadata.get("topic") or payload.get("topic", "")
+        elif mode == "chat_research":
+            query = ctx.message or payload.get("message", "")
         else:
             query = payload.get("text", "")[:1200]
 
@@ -305,12 +393,22 @@ class OrchestratorService:
             token_budget=6000,
         )
         ctx.context = bundle["context"]
-        ctx.sources = bundle["sources"]
-        ctx.evidence = bundle["sources"]
+        normalized_sources = self._normalize_paper_sources(bundle["sources"])
+        ctx.sources = normalized_sources
+        ctx.evidence = normalized_sources
         ctx.metadata["retrieval_buckets"] = bundle["buckets"]
         ctx.metadata["evidence_status"] = self._infer_evidence_status(bundle)
         empty_evidence_rate = 0.0 if ctx.sources else 1.0
         ctx.metadata["empty_evidence_rate"] = empty_evidence_rate
+        paper_hits = {
+            str(src.get("paper_id") or src.get("file_id") or src.get("source") or "").strip()
+            for src in ctx.sources
+            if isinstance(src, dict)
+        }
+        paper_hits.discard("")
+        ctx.metadata["paper_hits"] = len(paper_hits)
+        if mode == "chat_research":
+            ctx.metadata["paper_hit_rate"] = round(len(paper_hits) / max(1, len(ctx.sub_questions)), 4)
         self.run_store.append_metric(ctx.run.run_id, {"name": "empty_evidence_rate", "value": empty_evidence_rate})
         yield {"type": "sources", "data": ctx.sources}
         yield build_metric_event("empty_evidence_rate", empty_evidence_rate, trace_id=ctx.run.trace_id)
@@ -338,6 +436,52 @@ class OrchestratorService:
             ctx.generated_text = self._ensure_inference_tag(full)
             self._record_model_call(ctx, stage="synthesize", messages=messages, output=ctx.generated_text)
             ctx.confidence = 0.8
+            return
+
+        if mode == "chat_research":
+            question = ctx.message or str(payload.get("message") or "").strip()
+            skill_chain = resolve_skill_chain(ctx.selected_skill_ids, domain="research")
+            skill_instructions, skill_runs, skill_metrics = run_research_skill_chain(
+                skills=skill_chain,
+                has_kb=bool(payload.get("kb_id")),
+                sources=ctx.sources,
+            )
+            ctx.metadata["skill_runs"] = skill_runs
+            ctx.metadata["skill_success_rate"] = skill_metrics.get("skill_success_rate", 0.0)
+            if skill_metrics.get("paper_hits") is not None:
+                ctx.metadata["paper_hits"] = int(skill_metrics["paper_hits"])
+
+            evidence_text = ctx.context or "(无本地论文证据)"
+            if not payload.get("kb_id"):
+                evidence_text = "(未选择本地论文库，仅基于通用知识回答)"
+            skill_directive = "\n".join(f"- {item}" for item in skill_instructions if item)
+            if not skill_directive:
+                skill_directive = "- 回答需要围绕论文阅读与科研写作，尽量给出可验证依据。"
+
+            prompt = (
+                f"用户问题：{question}\n\n"
+                f"可用证据：\n{evidence_text}\n\n"
+                "写作要求：\n"
+                "- 回答聚焦学术论文场景。\n"
+                "- 有证据时优先引用[1][2]，无证据请明确标注（推断）。\n"
+                "- 给出简明、结构化输出。\n"
+                f"- Skills指令：\n{skill_directive}"
+            )
+            messages = self._build_messages(
+                "你是智能论文助手，面向科研工作者提供论文检索、方法分析和写作支持。",
+                prompt,
+                ctx.chat_history,
+            )
+
+            full = ""
+            for chunk in client.chat_stream(messages=messages, temperature=0.5, max_tokens=2200):
+                full += chunk
+                yield {"type": "chunk", "content": chunk}
+
+            ctx.generated_text = full.strip()
+            self._record_model_call(ctx, stage="synthesize", messages=messages, output=ctx.generated_text)
+            yield {"type": "sources", "data": ctx.sources}
+            ctx.confidence = 0.82 if ctx.sources else 0.7
             return
 
         # writing mode
@@ -374,6 +518,12 @@ class OrchestratorService:
             ctx.critique = "empty"
             return
 
+        parts = [p.strip() for p in text.split("\n\n") if p.strip()]
+        cited_parts = sum(1 for part in parts if re.search(r"\[[0-9]+\]", part))
+        inference_parts = sum(1 for part in parts if "（推断）" in part or "(推断)" in part)
+        ctx.metadata["citation_coverage"] = round(cited_parts / max(1, len(parts)), 4)
+        ctx.metadata["inference_ratio"] = round(inference_parts / max(1, len(parts)), 4)
+
         missing_citation = len(re.findall(r"\[[0-9]+\]", text)) == 0 and bool(ctx.sources)
         if missing_citation:
             ctx.generated_text = self._ensure_inference_tag(text)
@@ -384,6 +534,10 @@ class OrchestratorService:
             ctx.critique = "ok"
             ctx.metadata["citation_missing_fix"] = 0
             yield build_metric_event("citation_missing_fix", 0, trace_id=ctx.run.trace_id)
+
+        if ctx.run.mode == "chat_research" and not ctx.sources:
+            # Ensure explicit uncertainty marker when no local-paper evidence is available.
+            ctx.generated_text = self._ensure_inference_tag(ctx.generated_text)
 
     def _step_finalize(self, ctx: RunExecutionContext) -> Generator[dict[str, Any], None, None]:
         ctx.metadata["finalized_at"] = datetime.now().isoformat()
@@ -403,6 +557,43 @@ class OrchestratorService:
             embedding_model=kb.get("embedding_model", "sentence-transformers/all-mpnet-base-v2"),
             embedding_provider=kb.get("embedding_provider", "sentence-transformers"),
         )
+
+    @staticmethod
+    def _normalize_paper_sources(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        normalized: list[dict[str, Any]] = []
+        for item in sources or []:
+            if not isinstance(item, dict):
+                continue
+            source = str(item.get("source") or "Unknown")
+            file_id = item.get("file_id")
+            paper_id = item.get("paper_id") or file_id or item.get("id") or source
+            title = item.get("title") or source
+            authors = item.get("authors")
+            if authors is None:
+                authors = []
+            year = item.get("year")
+            venue = item.get("venue")
+            doi = item.get("doi")
+            section = item.get("section") or "unknown"
+            chunk_type = item.get("chunk_type") or "paragraph"
+            score = float(item.get("score", 0.0) or 0.0)
+            metadata_incomplete = not bool(item.get("title")) or not bool(item.get("paper_id"))
+            normalized.append(
+                {
+                    **item,
+                    "paper_id": str(paper_id),
+                    "title": str(title),
+                    "authors": authors if isinstance(authors, list) else [str(authors)],
+                    "year": year,
+                    "venue": venue,
+                    "doi": doi,
+                    "section": section,
+                    "chunk_type": chunk_type,
+                    "score": score,
+                    "metadata_incomplete": metadata_incomplete,
+                }
+            )
+        return normalized
 
     @staticmethod
     def _build_messages(system: str, user: str, history: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -556,6 +747,10 @@ class OrchestratorService:
             "citation_missing_fix": 0,
             "source_count": len((run.result or {}).get("sources", []) or []),
             "evidence_status": (run.result or {}).get("evidence_status", "unknown"),
+            "citation_coverage": 0.0,
+            "paper_hit_rate": 0.0,
+            "skill_success_rate": 0.0,
+            "inference_ratio": 0.0,
             "model_calls": [],
             "model_cost": {"provider": get_llm_config().provider, "model": get_llm_config().model, "estimated_usd": 0.0},
         }

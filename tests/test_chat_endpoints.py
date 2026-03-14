@@ -7,73 +7,68 @@ import src.api.routers.chat as chat_router
 from src.session import SessionManager
 
 
-class _FakeKBManager:
-    def __init__(self, *args, **kwargs):
-        pass
+class _FakeChatOrchestrator:
+    def __init__(self):
+        self.sync_calls: list[dict] = []
+        self.stream_calls: list[dict] = []
+        self._runs: dict[str, dict] = {}
 
-    def get_kb(self, kb_id: str):
-        if kb_id == "kb-1":
-            return {
-                "collection_name": "col-1",
-                "embedding_model": "fake-model",
-                "embedding_provider": "fake-provider",
-            }
-        return None
-
-    def get_vector_store_path(self, kb_id: str):
-        return "/tmp/fake-vector-store"
-
-
-class _FakeVectorStore:
-    def __init__(self, *args, **kwargs):
-        pass
-
-
-class _FakeRAGEngine:
-    def __init__(self, vector_store):
-        self.vector_store = vector_store
-        self.history = []
-
-    def query(self, message: str, use_history: bool = True):
+    def execute_sync(self, mode: str, payload: dict):
+        assert mode == "chat_research"
+        self.sync_calls.append(payload)
+        has_kb = bool(payload.get("kb_id"))
+        sources = [{"source": "paper.pdf", "page": 1, "paper_id": "p-1", "title": "Paper 1", "score": 0.9}] if has_kb else []
         return {
-            "answer": f"RAG:{message}",
-            "sources": [{"source": "paper.pdf", "page": 1, "score": 0.9}],
+            "run_id": f"sync-{len(self.sync_calls)}",
+            "trace_id": "trace-sync",
+            "output": "RAG:answer" if has_kb else "LLM:answer",
+            "sources": sources,
+            "metadata": {
+                "run_id": f"sync-{len(self.sync_calls)}",
+                "trace_id": "trace-sync",
+                "meta": {"paper_hits": 1 if has_kb else 0},
+            },
         }
 
-    def query_stream(self, message: str, use_history: bool = True):
-        yield "RAG"
-        yield "-STREAM"
-        return {"sources": [{"source": "paper.pdf", "page": 2, "score": 0.88}]}
+    def create_run(self, mode: str, payload: dict):
+        assert mode == "chat_research"
+        run_id = f"run-{len(self.stream_calls) + 1}"
+        trace_id = f"trace-{len(self.stream_calls) + 1}"
+        self._runs[run_id] = payload
+        self.stream_calls.append({"run_id": run_id, "trace_id": trace_id, "payload": payload})
+        return {"run_id": run_id, "trace_id": trace_id}
 
-
-class _FakeLLMClient:
-    def __init__(self):
-        self.calls = []
-
-    def chat(self, messages, temperature=0.7, max_tokens=2000, **kwargs):
-        self.calls.append(messages)
-        return "LLM:answer"
-
-    def chat_stream(self, messages, temperature=0.7, max_tokens=2000, **kwargs):
-        self.calls.append(messages)
-        yield "LLM"
-        yield "-STREAM"
+    def stream_run(self, run_id: str):
+        payload = self._runs[run_id]
+        has_kb = bool(payload.get("kb_id"))
+        prefix = "RAG" if has_kb else "LLM"
+        sources = [{"source": "paper.pdf", "page": 2, "paper_id": "p-1", "title": "Paper 1", "score": 0.88}] if has_kb else []
+        yield {"type": "init", "run_id": run_id, "trace_id": f"trace-{run_id}", "mode": "chat_research"}
+        yield {"type": "step", "step": "plan", "status": "done"}
+        yield {"type": "chunk", "content": prefix}
+        yield {"type": "chunk", "content": "-STREAM"}
+        yield {"type": "sources", "data": sources}
+        yield {
+            "type": "done",
+            "run_id": run_id,
+            "trace_id": f"trace-{run_id}",
+            "output": f"{prefix}-STREAM",
+            "sources": sources,
+            "meta": {"paper_hits": 1 if has_kb else 0},
+        }
 
 
 def _build_client(monkeypatch, tmp_path):
     session_manager = SessionManager(tmp_path / "sessions")
-    fake_llm = _FakeLLMClient()
+    fake_orchestrator = _FakeChatOrchestrator()
 
     chat_router._reset_runtime_state_for_tests()
     monkeypatch.setattr(chat_router, "get_session_manager", lambda: session_manager)
-    monkeypatch.setattr(chat_router, "KnowledgeBaseManager", _FakeKBManager)
-    monkeypatch.setattr(chat_router, "VectorStore", _FakeVectorStore)
-    monkeypatch.setattr(chat_router, "RAGEngine", _FakeRAGEngine)
-    monkeypatch.setattr(chat_router, "get_llm_client", lambda: fake_llm)
+    monkeypatch.setattr(chat_router, "get_orchestrator_service", lambda: fake_orchestrator)
 
     app = FastAPI()
     app.include_router(chat_router.router, prefix="/api")
-    return TestClient(app), session_manager, fake_llm
+    return TestClient(app), session_manager, fake_orchestrator
 
 
 def test_empty_draft_not_persisted_and_message_persists(monkeypatch, tmp_path):
@@ -84,7 +79,6 @@ def test_empty_draft_not_persisted_and_message_persists(monkeypatch, tmp_path):
     created = create_resp.json()["data"]
     conv_id = created["id"]
 
-    # Empty draft should not be stored.
     list_resp = client.get("/api/conversations")
     assert list_resp.status_code == 200
     rows = list_resp.json()["data"]
@@ -93,7 +87,6 @@ def test_empty_draft_not_persisted_and_message_persists(monkeypatch, tmp_path):
     get_resp = client.get(f"/api/conversations/{conv_id}")
     assert get_resp.status_code == 404
 
-    # Once message is sent with the same conversation_id, it becomes persistent.
     chat_resp = client.post("/api/chat", json={"message": "开始", "conversation_id": conv_id, "kb_id": "kb-1"})
     assert chat_resp.status_code == 200
     assert chat_resp.json()["data"]["conversation_id"] == conv_id
@@ -118,7 +111,7 @@ def test_chat_non_stream_with_kb_persists_sources(monkeypatch, tmp_path):
 
     body = resp.json()["data"]
     conv_id = body["conversation_id"]
-    assert body["message"]["content"].startswith("RAG:")
+    assert body["message"]["content"] == "RAG:answer"
     assert body["sources"] and body["sources"][0]["source"] == "paper.pdf"
 
     detail_resp = client.get(f"/api/conversations/{conv_id}")
@@ -129,8 +122,8 @@ def test_chat_non_stream_with_kb_persists_sources(monkeypatch, tmp_path):
     assert detail["messages"][1]["sources"][0]["source"] == "paper.pdf"
 
 
-def test_chat_non_stream_without_kb_uses_llm_with_history(monkeypatch, tmp_path):
-    client, _, fake_llm = _build_client(monkeypatch, tmp_path)
+def test_chat_non_stream_without_kb_passes_history_to_orchestrator(monkeypatch, tmp_path):
+    client, _, fake_orch = _build_client(monkeypatch, tmp_path)
 
     first = client.post("/api/chat", json={"message": "你好"})
     assert first.status_code == 200
@@ -140,15 +133,15 @@ def test_chat_non_stream_without_kb_uses_llm_with_history(monkeypatch, tmp_path)
     second = client.post("/api/chat", json={"message": "继续", "conversation_id": conv_id})
     assert second.status_code == 200
 
-    assert len(fake_llm.calls) == 2
-    first_call = fake_llm.calls[0]
-    second_call = fake_llm.calls[1]
+    assert len(fake_orch.sync_calls) == 2
+    first_call = fake_orch.sync_calls[0]
+    second_call = fake_orch.sync_calls[1]
 
-    assert len(first_call) == 2  # system + user
-    assert first_call[-1]["content"] == "你好"
-
-    assert len(second_call) == 4  # system + history(user,assistant) + new user
-    assert any(msg["role"] == "assistant" and msg["content"] == "LLM:answer" for msg in second_call)
+    assert first_call["history"] == []
+    assert len(second_call["history"]) == 2
+    assert second_call["history"][0]["role"] == "user"
+    assert second_call["history"][1]["role"] == "assistant"
+    assert second_call["history"][1]["content"] == "LLM:answer"
 
 
 def test_chat_non_stream_idempotency_replay(monkeypatch, tmp_path):
@@ -251,3 +244,17 @@ def test_chat_rate_limit(monkeypatch, tmp_path):
     assert first.status_code == 200
     second = client.post("/api/chat", json={"message": "second", "kb_id": "kb-1"})
     assert second.status_code == 429
+
+
+def test_chat_skill_ids_persist_to_session_default(monkeypatch, tmp_path):
+    client, _, _ = _build_client(monkeypatch, tmp_path)
+    resp = client.post(
+        "/api/chat",
+        json={"message": "帮我总结方法", "kb_id": "kb-1", "skill_ids": ["/paper-summary", "/citation-check"]},
+    )
+    assert resp.status_code == 200
+    conv_id = resp.json()["data"]["conversation_id"]
+
+    detail = client.get(f"/api/conversations/{conv_id}").json()["data"]
+    assert detail["default_skill_ids"] == ["/paper-summary", "/citation-check"]
+    assert detail["messages"][0]["metadata"]["selected_skill_ids"] == ["/paper-summary", "/citation-check"]

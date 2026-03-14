@@ -19,6 +19,7 @@ from pydantic import BaseModel
 
 from src.knowledge.kb_manager import KnowledgeBaseManager
 from src.knowledge.vector_store import VectorStore
+from src.orchestrator.service import get_orchestrator_service
 from src.rag.engine import RAGEngine
 from src.services.llm import get_llm_client
 from src.session import ConversationSession, SessionManager
@@ -74,6 +75,7 @@ _STREAM_END = object()
 class ConversationCreateRequest(BaseModel):
     title: str | None = None
     kb_id: str | None = None
+    default_skill_ids: list[str] | None = None
 
 
 class ChatRequest(BaseModel):
@@ -82,6 +84,7 @@ class ChatRequest(BaseModel):
     kb_id: str | None = None
     title: str | None = None
     idempotency_key: str | None = None
+    skill_ids: list[str] | None = None
 
 
 def get_session_manager() -> SessionManager:
@@ -246,22 +249,52 @@ def _normalize_idempotency_key(raw: str | None) -> str | None:
     return key[:256]
 
 
+def _normalize_skill_ids(raw: list[str] | None) -> list[str]:
+    if not raw:
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        skill_id = str(item or "").strip()
+        if not skill_id.startswith("/"):
+            continue
+        if skill_id in seen:
+            continue
+        seen.add(skill_id)
+        out.append(skill_id)
+    return out
+
+
 def _resolve_session(req: ChatRequest) -> ConversationSession:
     manager = get_session_manager()
+    normalized_skill_ids = _normalize_skill_ids(req.skill_ids)
     if req.conversation_id:
         session = manager.get(req.conversation_id)
         if not session:
             title = req.title or _auto_title(req.message)
-            session = manager.get_or_create(req.conversation_id, title=title, kb_id=req.kb_id)
+            session = manager.get_or_create(
+                req.conversation_id,
+                title=title,
+                kb_id=req.kb_id,
+                default_skill_ids=normalized_skill_ids,
+            )
     else:
         title = req.title or _auto_title(req.message)
-        session = manager.create(title=title, kb_id=req.kb_id, session_id=str(uuid.uuid4()))
+        session = manager.create(
+            title=title,
+            kb_id=req.kb_id,
+            session_id=str(uuid.uuid4()),
+            default_skill_ids=normalized_skill_ids,
+        )
 
     if req.kb_id is not None:
         session.kb_id = req.kb_id
 
     if not session.messages and (not session.title or session.title == "新对话"):
         session.title = req.title or _auto_title(req.message)
+
+    if req.skill_ids is not None:
+        session.default_skill_ids = normalized_skill_ids
 
     return session
 
@@ -301,7 +334,30 @@ def _chat_with_llm(
     return answer or "", []
 
 
-def _call_with_timeout(fn: Callable[[], tuple[str, list[dict]]], timeout_seconds: float) -> tuple[str, list[dict]]:
+def _chat_with_orchestrator_sync(
+    history: list[dict[str, str]],
+    message: str,
+    kb_id: str | None,
+    skill_ids: list[str],
+) -> tuple[str, list[dict], dict]:
+    payload = {
+        "message": message,
+        "kb_id": kb_id,
+        "history": history,
+        "skill_ids": skill_ids,
+    }
+    result = get_orchestrator_service().execute_sync(mode="chat_research", payload=payload)
+    output = str(result.get("output") or "")
+    sources = result.get("sources") or []
+    metadata = result.get("metadata") or {}
+    if not isinstance(sources, list):
+        sources = []
+    if not isinstance(metadata, dict):
+        metadata = {}
+    return output, sources, metadata
+
+
+def _call_with_timeout(fn: Callable[[], object], timeout_seconds: float) -> object:
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="chat-timeout")
     future = pool.submit(fn)
     try:
@@ -315,10 +371,10 @@ def _call_with_timeout(fn: Callable[[], tuple[str, list[dict]]], timeout_seconds
 
 def _execute_with_retry(
     label: str,
-    fn: Callable[[], tuple[str, list[dict]]],
+    fn: Callable[[], object],
     timeout_seconds: float,
     max_attempts: int,
-) -> tuple[str, list[dict]]:
+) -> object:
     last_exc: Exception | None = None
     for attempt in range(1, max_attempts + 1):
         try:
@@ -393,6 +449,8 @@ def _make_message_meta(
     channel: str,
     mode: str,
     request_message: str,
+    selected_skill_ids: list[str] | None = None,
+    extra: dict | None = None,
 ) -> dict:
     payload = {
         "request_id": request_id,
@@ -402,6 +460,10 @@ def _make_message_meta(
     }
     if idempotency_key:
         payload["idempotency_key"] = idempotency_key
+    if selected_skill_ids:
+        payload["selected_skill_ids"] = list(selected_skill_ids)
+    if isinstance(extra, dict):
+        payload.update(extra)
     return payload
 
 
@@ -512,6 +574,86 @@ def _stream_llm_with_retry(
     raise RuntimeError(f"stream llm failed: {last_exc}")
 
 
+def _stream_orchestrator_with_retry(
+    history: list[dict[str, str]],
+    message: str,
+    kb_id: str | None,
+    skill_ids: list[str],
+    emit_chunk: Callable[[str, dict | None], None],
+) -> tuple[str, list[dict], dict]:
+    last_exc: Exception | None = None
+    for attempt in range(1, _STREAM_INIT_RETRY_ATTEMPTS + 1):
+        full_response = ""
+        try:
+            service = get_orchestrator_service()
+            run_data = service.create_run(
+                mode="chat_research",
+                payload={
+                    "message": message,
+                    "kb_id": kb_id,
+                    "history": history,
+                    "skill_ids": skill_ids,
+                },
+            )
+            run_id = str(run_data.get("run_id") or "")
+            trace_id = str(run_data.get("trace_id") or "")
+            if not run_id:
+                raise RuntimeError("orchestrator run_id missing")
+
+            sources: list[dict] = []
+            done_event: dict = {}
+            current_agent = ""
+            for event in service.stream_run(run_id):
+                if event.get("type") == "chunk":
+                    chunk = str(event.get("content") or "")
+                    full_response += chunk
+                    if chunk:
+                        emit_chunk(chunk, {"agent_id": current_agent} if current_agent else None)
+                elif event.get("type") == "step":
+                    if event.get("status") == "working":
+                        current_agent = str(event.get("agent_id") or "")
+                elif event.get("type") == "sources":
+                    data = event.get("data")
+                    if isinstance(data, list):
+                        sources = data
+                elif event.get("type") == "done":
+                    done_event = event
+                    output = str(event.get("output") or "")
+                    if output and output != full_response:
+                        full_response = output
+                    ev_sources = event.get("sources")
+                    if isinstance(ev_sources, list):
+                        sources = ev_sources
+                elif event.get("type") == "error":
+                    raise RuntimeError(str(event.get("error") or "orchestrator stream failed"))
+
+            return full_response, sources, {
+                "run_id": run_id,
+                "trace_id": trace_id,
+                "done": done_event,
+            }
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            _inc_metric("retries_total", 1)
+            retryable = attempt < _STREAM_INIT_RETRY_ATTEMPTS and full_response == ""
+            _append_chat_audit(
+                "stream_retry",
+                {
+                    "mode": "chat_research",
+                    "attempt": attempt,
+                    "max_attempts": _STREAM_INIT_RETRY_ATTEMPTS,
+                    "retryable": retryable,
+                    "error": str(exc),
+                },
+            )
+            if retryable:
+                time.sleep(_RETRY_BACKOFF_SECONDS * attempt)
+                continue
+            raise
+
+    raise RuntimeError(f"stream orchestrator failed: {last_exc}")
+
+
 def _sse_data(event: dict, event_id: int) -> str:
     return f"id: {event_id}\ndata: {json.dumps(event, ensure_ascii=False)}\n\n"
 
@@ -552,7 +694,11 @@ async def list_conversations():
 @router.post("/conversations")
 async def create_conversation(req: ConversationCreateRequest):
     manager = get_session_manager()
-    session = manager.create(title=req.title or "新对话", kb_id=req.kb_id)
+    session = manager.create(
+        title=req.title or "新对话",
+        kb_id=req.kb_id,
+        default_skill_ids=_normalize_skill_ids(req.default_skill_ids),
+    )
     return {"success": True, "data": session.to_dict(include_messages=True)}
 
 
@@ -625,20 +771,19 @@ async def chat(
         raise HTTPException(status_code=409, detail="Request with same idempotency key is in progress")
 
     request_id = str(uuid.uuid4())
-    mode = "rag" if session.kb_id else "llm"
+    mode = "chat_research"
+    selected_skill_ids = _normalize_skill_ids(req.skill_ids) if req.skill_ids is not None else list(session.default_skill_ids)
 
     try:
         history_snapshot = _history_messages(session)
-        append_user_message = True
-        rag_history = history_snapshot
+        effective_history = history_snapshot
         if (
             pending_user_exists
             and history_snapshot
             and history_snapshot[-1].get("role") == "user"
             and history_snapshot[-1].get("content") == message
         ):
-            append_user_message = False
-            rag_history = history_snapshot[:-1]
+            effective_history = history_snapshot[:-1]
 
         if not pending_user_exists:
             user_meta = _make_message_meta(
@@ -647,24 +792,28 @@ async def chat(
                 channel="sync",
                 mode=mode,
                 request_message=message,
+                selected_skill_ids=selected_skill_ids,
             )
             session.add_message("user", message, metadata=user_meta)
             get_session_manager().save(session)
 
-        if session.kb_id:
-            answer, sources = _execute_with_retry(
-                label="sync_rag",
-                fn=lambda: _chat_with_rag(rag_history, message, session.kb_id or ""),
-                timeout_seconds=_NON_STREAM_TIMEOUT_SECONDS,
-                max_attempts=_NON_STREAM_RETRY_ATTEMPTS,
-            )
-        else:
-            answer, sources = _execute_with_retry(
-                label="sync_llm",
-                fn=lambda: _chat_with_llm(history_snapshot, message, append_user_message=append_user_message),
-                timeout_seconds=_NON_STREAM_TIMEOUT_SECONDS,
-                max_attempts=_NON_STREAM_RETRY_ATTEMPTS,
-            )
+        answer, sources, orchestrator_meta = _execute_with_retry(
+            label="sync_chat_research",
+            fn=lambda: _chat_with_orchestrator_sync(
+                history=effective_history,
+                message=message,
+                kb_id=session.kb_id,
+                skill_ids=selected_skill_ids,
+            ),
+            timeout_seconds=_NON_STREAM_TIMEOUT_SECONDS,
+            max_attempts=_NON_STREAM_RETRY_ATTEMPTS,
+        )
+        if not isinstance(answer, str):
+            answer = str(answer or "")
+        if not isinstance(sources, list):
+            sources = []
+        if not isinstance(orchestrator_meta, dict):
+            orchestrator_meta = {}
 
         assistant_meta = _make_message_meta(
             request_id=request_id,
@@ -672,6 +821,12 @@ async def chat(
             channel="sync",
             mode=mode,
             request_message=message,
+            selected_skill_ids=selected_skill_ids,
+            extra={
+                "orchestrator_run_id": orchestrator_meta.get("run_id"),
+                "orchestrator_trace_id": orchestrator_meta.get("trace_id"),
+                "orchestrator_meta": orchestrator_meta.get("meta"),
+            },
         )
         assistant_msg = session.add_message("assistant", answer, sources=sources, metadata=assistant_meta)
         get_session_manager().save(session)
@@ -683,8 +838,12 @@ async def chat(
                 "conversation_id": session.id,
                 "mode": mode,
                 "idempotency_key": idempotency_key,
+                "selected_skill_ids": selected_skill_ids,
                 "answer_chars": len(answer or ""),
                 "source_count": len(sources),
+                "paper_hits": orchestrator_meta.get("meta", {}).get("paper_hits")
+                if isinstance(orchestrator_meta.get("meta"), dict)
+                else None,
             },
         )
 
@@ -694,6 +853,7 @@ async def chat(
                 "conversation_id": session.id,
                 "message": assistant_msg,
                 "sources": sources,
+                "meta": orchestrator_meta.get("meta") if isinstance(orchestrator_meta.get("meta"), dict) else {},
             },
         }
     except HTTPException:
@@ -771,14 +931,16 @@ async def chat_stream(
 
     def generate() -> Generator[str, None, None]:
         event_queue: queue.Queue[dict | object] = queue.Queue()
-        mode = "rag" if session.kb_id else "llm"
+        mode = "chat_research"
         request_id = str(uuid.uuid4())
+        selected_skill_ids = _normalize_skill_ids(req.skill_ids) if req.skill_ids is not None else list(session.default_skill_ids)
         finished = False
 
         def worker() -> None:
             nonlocal finished
             try:
                 history = _history_messages(session)
+                effective_history = history
 
                 if not pending_user_exists:
                     user_meta = _make_message_meta(
@@ -787,26 +949,26 @@ async def chat_stream(
                         channel="stream",
                         mode=mode,
                         request_message=message,
+                        selected_skill_ids=selected_skill_ids,
                     )
                     session.add_message("user", message, metadata=user_meta)
                     get_session_manager().save(session)
+                elif history and history[-1].get("role") == "user" and history[-1].get("content") == message:
+                    effective_history = history[:-1]
 
-                def emit_chunk(chunk: str) -> None:
-                    event_queue.put({"type": "chunk", "content": chunk})
+                def emit_chunk(chunk: str, meta: dict | None = None) -> None:
+                    payload = {"type": "chunk", "content": chunk}
+                    if isinstance(meta, dict) and meta:
+                        payload["meta"] = meta
+                    event_queue.put(payload)
 
-                if mode == "rag":
-                    full_response, sources = _stream_rag_with_retry(
-                        history=history,
-                        kb_id=session.kb_id or "",
-                        message=message,
-                        emit_chunk=emit_chunk,
-                    )
-                else:
-                    full_response, sources = _stream_llm_with_retry(
-                        history=history,
-                        message=message,
-                        emit_chunk=emit_chunk,
-                    )
+                full_response, sources, orchestrator_meta = _stream_orchestrator_with_retry(
+                    history=effective_history,
+                    kb_id=session.kb_id,
+                    skill_ids=selected_skill_ids,
+                    message=message,
+                    emit_chunk=emit_chunk,
+                )
 
                 assistant_meta = _make_message_meta(
                     request_id=request_id,
@@ -814,6 +976,14 @@ async def chat_stream(
                     channel="stream",
                     mode=mode,
                     request_message=message,
+                    selected_skill_ids=selected_skill_ids,
+                    extra={
+                        "orchestrator_run_id": orchestrator_meta.get("run_id"),
+                        "orchestrator_trace_id": orchestrator_meta.get("trace_id"),
+                        "orchestrator_meta": orchestrator_meta.get("done", {}).get("meta")
+                        if isinstance(orchestrator_meta.get("done"), dict)
+                        else None,
+                    },
                 )
                 session.add_message("assistant", full_response, sources=sources, metadata=assistant_meta)
                 get_session_manager().save(session)
@@ -825,13 +995,23 @@ async def chat_stream(
                         "conversation_id": session.id,
                         "mode": mode,
                         "idempotency_key": idempotency_key,
+                        "selected_skill_ids": selected_skill_ids,
                         "answer_chars": len(full_response),
                         "source_count": len(sources),
+                        "paper_hits": orchestrator_meta.get("done", {}).get("meta", {}).get("paper_hits")
+                        if isinstance(orchestrator_meta.get("done"), dict)
+                        and isinstance(orchestrator_meta.get("done", {}).get("meta"), dict)
+                        else None,
                     },
                 )
 
-                event_queue.put({"type": "sources", "data": sources})
-                event_queue.put({"type": "done", "conversation_id": session.id})
+                done_meta = {}
+                if isinstance(orchestrator_meta.get("done"), dict):
+                    meta = orchestrator_meta.get("done", {}).get("meta")
+                    if isinstance(meta, dict):
+                        done_meta = meta
+                event_queue.put({"type": "sources", "data": sources, "meta": {"paper_hits": done_meta.get("paper_hits", 0)}})
+                event_queue.put({"type": "done", "conversation_id": session.id, "meta": done_meta})
             except Exception as exc:  # noqa: BLE001
                 _inc_metric("errors_total", 1)
                 _record_failure(scope)

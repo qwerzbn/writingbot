@@ -59,6 +59,11 @@ def get_agents_config() -> dict[str, Any]:
     return load_config("agents.yaml")
 
 
+def get_skills_config() -> dict[str, Any]:
+    """Load the skills configuration."""
+    return load_config("skills.yaml")
+
+
 def clear_config_cache():
     """Clear the configuration cache (useful for testing)."""
     _config_cache.clear()

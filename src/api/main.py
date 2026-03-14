@@ -30,6 +30,7 @@ from src.api.routers import (
     retrieval,
     evaluation,
     fastwrite_bridge,
+    skills,
 )
 from src.services.config import get_main_config
 
@@ -86,6 +87,7 @@ app.include_router(orchestrator.router, prefix="/api", tags=["orchestrator"])
 app.include_router(retrieval.router, prefix="/api", tags=["retrieval"])
 app.include_router(evaluation.router, prefix="/api", tags=["evaluation"])
 app.include_router(fastwrite_bridge.router, prefix="/api", tags=["fastwrite"])
+app.include_router(skills.router, prefix="/api", tags=["skills"])
 
 
 @app.get("/")

@@ -1,0 +1,72 @@
+skills:
+  - id: /paper-find
+    name: Paper Find
+    description: Locate relevant papers and anchor evidence snippets.
+    domain: research
+    enabled: true
+    requires_kb: true
+    critical: false
+    timeout_ms: 2000
+
+  - id: /paper-summary
+    name: Paper Summary
+    description: Summarize key claims, methods, and findings from cited papers.
+    domain: research
+    enabled: true
+    requires_kb: true
+    critical: false
+    timeout_ms: 2000
+
+  - id: /paper-compare
+    name: Paper Compare
+    description: Compare methods, assumptions, and outcomes across papers.
+    domain: research
+    enabled: true
+    requires_kb: true
+    critical: false
+    timeout_ms: 2000
+
+  - id: /method-explain
+    name: Method Explain
+    description: Explain methods with implementation-oriented detail.
+    domain: research
+    enabled: true
+    requires_kb: false
+    critical: false
+    timeout_ms: 2000
+
+  - id: /related-work
+    name: Related Work
+    description: Organize related work by themes and gaps.
+    domain: research
+    enabled: true
+    requires_kb: true
+    critical: false
+    timeout_ms: 2000
+
+  - id: /citation-check
+    name: Citation Check
+    description: Enforce citation coverage and flag unsupported claims.
+    domain: research
+    enabled: true
+    requires_kb: false
+    critical: true
+    timeout_ms: 2000
+
+  - id: /limitations
+    name: Limitations
+    description: Highlight limitations, threats to validity, and uncertainty.
+    domain: research
+    enabled: true
+    requires_kb: false
+    critical: false
+    timeout_ms: 2000
+
+  - id: /experiment-ideas
+    name: Experiment Ideas
+    description: Propose follow-up experiments and evaluation plans.
+    domain: research
+    enabled: true
+    requires_kb: false
+    critical: false
+    timeout_ms: 2000

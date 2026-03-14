@@ -1,4 +1,4 @@
-export type OrchestratorMode = 'research' | 'writing';
+export type OrchestratorMode = 'research' | 'writing' | 'chat_research';
 
 export interface OrchestratorRunMetrics {
   stage_timings_ms?: Partial<Record<'plan' | 'retrieve' | 'synthesize' | 'critique' | 'finalize', number>>;
@@ -11,6 +11,10 @@ export interface OrchestratorRunMetrics {
   citation_missing_fix?: number;
   source_count?: number;
   evidence_status?: 'unknown' | 'ok' | 'no_kb' | 'kb_unavailable' | 'no_match' | 'filtered_out';
+  citation_coverage?: number;
+  paper_hit_rate?: number;
+  skill_success_rate?: number;
+  inference_ratio?: number;
   model_calls?: Array<{
     stage?: string;
     provider?: string;
@@ -49,6 +53,7 @@ export interface OrchestratorStepEvent extends OrchestratorBaseEvent {
   message?: string;
   duration_ms?: number;
   confidence?: number;
+  agent_id?: string;
 }
 
 export interface OrchestratorChunkEvent extends OrchestratorBaseEvent {
@@ -91,6 +96,17 @@ export interface OrchestratorDoneEvent extends OrchestratorBaseEvent {
   total_ms?: number;
   plan?: string;
   metrics?: OrchestratorRunMetrics;
+  meta?: {
+    selected_skill_ids?: string[];
+    skill_runs?: Array<{
+      skill_id: string;
+      status: string;
+      critical?: boolean;
+      error?: string;
+      duration_ms?: number;
+    }>;
+    paper_hits?: number;
+  };
 }
 
 export interface OrchestratorRunDetail {

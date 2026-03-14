@@ -143,6 +143,12 @@ def test_orchestrator_run_and_stream_endpoints(monkeypatch):
     detail = detail_resp.json()["data"]
     assert detail["metrics"]["source_count"] == 1
 
+    chat_resp = client.post(
+        "/api/orchestrator/run",
+        json={"mode": "chat_research", "payload": {"message": "解释这篇论文", "kb_id": "kb-1"}},
+    )
+    assert chat_resp.status_code == 200
+
 
 def test_retrieval_hybrid_endpoint(monkeypatch):
     monkeypatch.setattr(retrieval_router, "KnowledgeBaseManager", _FakeKBManager)

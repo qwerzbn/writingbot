@@ -5,8 +5,9 @@ import { Bot, Loader2, MessageCircle, Plus, Send, Trash2, User } from 'lucide-re
 
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { useAppContext } from '@/context/AppContext';
-import { ApiError, getConversation, listConversations, removeConversation, streamChat } from '@/lib/chat';
+import { ApiError, getConversation, listConversations, listSkills, removeConversation, streamChat } from '@/lib/chat';
 import type { ChatMessage, ConversationDetail, ConversationSummary } from '@/types/chat';
+import type { SkillItem } from '@/lib/chat';
 
 const DRAFT_ID = '__draft__';
 
@@ -27,6 +28,7 @@ function buildDraftConversation(kbId: string | null): ConversationDetail {
     id: DRAFT_ID,
     title: '新聊天',
     kb_id: kbId,
+    default_skill_ids: [],
     created_at: now,
     updated_at: now,
     messages: [],
@@ -48,6 +50,12 @@ function normalizeConversations(rows: ConversationSummary[]): ConversationSummar
   );
 }
 
+function parseSlashQuery(text: string): string | null {
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith('/')) return null;
+  return trimmed.slice(1).toLowerCase();
+}
+
 export default function ChatPage() {
   const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
 
@@ -61,10 +69,21 @@ export default function ChatPage() {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [streamAgent, setStreamAgent] = useState<string>('');
+  const [lastPaperHits, setLastPaperHits] = useState<number>(0);
+  const [skills, setSkills] = useState<SkillItem[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+  const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const messages = useMemo(() => activeConversation.messages || [], [activeConversation]);
+  const slashQuery = useMemo(() => parseSlashQuery(input), [input]);
+  const visibleSkills = useMemo(() => {
+    if (slashQuery === null) return [];
+    if (!slashQuery) return skills;
+    return skills.filter((skill) => skill.id.slice(1).toLowerCase().includes(slashQuery));
+  }, [slashQuery, skills]);
 
   const refreshConversations = useCallback(async () => {
     const rows = await listConversations();
@@ -80,6 +99,7 @@ export default function ChatPage() {
   const openDraftConversation = useCallback(() => {
     setActiveConversationId(null);
     setActiveConversation(buildDraftConversation(selectedKbId || null));
+    setSelectedSkillIds([]);
     setPageError(null);
   }, [selectedKbId]);
 
@@ -99,6 +119,7 @@ export default function ChatPage() {
         setActiveConversation(detail);
         setActiveConversationId(convId);
         setSelectedKbId(detail.kb_id || null);
+        setSelectedSkillIds(detail.default_skill_ids || []);
         setPageError(null);
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
@@ -131,6 +152,21 @@ export default function ChatPage() {
 
     void run();
   }, [refreshConversations]);
+
+  useEffect(() => {
+    const run = async () => {
+      setLoadingSkills(true);
+      try {
+        const rows = await listSkills('research');
+        setSkills(rows);
+      } catch {
+        setSkills([]);
+      } finally {
+        setLoadingSkills(false);
+      }
+    };
+    void run();
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -203,9 +239,17 @@ export default function ChatPage() {
     appendAssistantChunk(`\n\n> ${error}`);
   };
 
+  const toggleSkill = (skillId: string) => {
+    setSelectedSkillIds((prev) => (prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]));
+  };
+
   const handleSend = async () => {
     const text = input.trim();
     if (!text || sending) return;
+    if (text.startsWith('/')) {
+      setPageError('请先选择技能，再输入具体问题后发送。');
+      return;
+    }
 
     setInput('');
 
@@ -228,12 +272,15 @@ export default function ChatPage() {
       ...prev,
       title: prev.messages.length === 0 ? trimmedTitle || '新聊天' : prev.title,
       kb_id: selectedKbId ?? prev.kb_id,
+      default_skill_ids: selectedSkillIds,
       updated_at: now,
       messages: [...prev.messages, userMessage, assistantPlaceholder],
     }));
 
     setSending(true);
     setPageError(null);
+    setStreamAgent('');
+    setLastPaperHits(0);
 
     let finalConversationId = activeConversationId || undefined;
     const idempotencyKey = createIdempotencyKey(activeConversationId || DRAFT_ID);
@@ -246,6 +293,7 @@ export default function ChatPage() {
           kb_id: selectedKbId || undefined,
           title: activeConversation.messages.length === 0 ? trimmedTitle : undefined,
           idempotency_key: idempotencyKey,
+          skill_ids: selectedSkillIds,
         },
         {
           onChunk: appendAssistantChunk,
@@ -254,9 +302,17 @@ export default function ChatPage() {
             if (event.conversation_id) {
               finalConversationId = event.conversation_id;
             }
+            setLastPaperHits(event.meta?.paper_hits || 0);
+            setStreamAgent('');
           },
           onError: (event) => {
             appendAssistantError(event.error || '请求失败');
+            setStreamAgent('');
+          },
+          onEvent: (event) => {
+            if (event.type === 'chunk' && event.meta?.agent_id) {
+              setStreamAgent(event.meta.agent_id);
+            }
           },
         }
       );
@@ -287,27 +343,27 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-full min-h-0 bg-slate-50 dark:bg-slate-900 p-3 md:p-4 transition-colors">
-      <div className="h-full min-h-0 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-3">
+    <div className="h-full min-h-0 bg-slate-50 dark:bg-slate-900 p-2 md:p-3 transition-colors">
+      <div className="h-full min-h-0 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2.5">
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
-          <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div className="p-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-sm">
               <MessageCircle size={15} /> 会话
             </div>
             <button
               onClick={handleCreateConversation}
-              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-blue-500 text-white text-xs hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500 text-white text-xs hover:bg-blue-600 transition-colors"
               type="button"
             >
               <Plus size={13} /> 新建
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2 min-h-0">
+          <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
             <button
               type="button"
               onClick={openDraftConversation}
-              className={`w-full text-left px-2.5 py-2 rounded-lg mb-1 border transition-colors ${
+              className={`w-full text-left px-2 py-1.5 rounded-lg mb-1 border transition-colors ${
                 activeConversationId === null
                   ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800'
                   : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/50'
@@ -331,7 +387,7 @@ export default function ChatPage() {
                 return (
                   <div
                     key={conv.id}
-                    className={`w-full text-left px-2.5 py-2 rounded-lg mb-1 border transition-colors ${
+                    className={`w-full text-left px-2 py-1.5 rounded-lg mb-1 border transition-colors ${
                       active
                         ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800'
                         : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/50'
@@ -375,20 +431,22 @@ export default function ChatPage() {
         </div>
 
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
-          <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h1 className="text-base font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+              <h1 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
                 <MessageCircle size={16} className="text-blue-500" />
                 {activeConversationId ? activeConversation.title || '智能对话' : '新聊天'}
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                 流式输出已开启，未发送内容不会保存为会话。
+                {streamAgent ? ` 当前阶段：${streamAgent}` : ''}
+                {lastPaperHits > 0 ? ` 命中论文：${lastPaperHits}` : ''}
               </p>
             </div>
             <select
               value={selectedKbId || ''}
               onChange={(e) => setSelectedKbId(e.target.value || null)}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">不使用知识库（纯 LLM）</option>
               {kbs.map((kb) => (
@@ -405,7 +463,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
             {loadingDetail ? (
               <div className="h-full flex items-center justify-center text-slate-400">
                 <Loader2 size={18} className="animate-spin" />
@@ -420,7 +478,7 @@ export default function ChatPage() {
                 return (
                   <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 border ${
+                      className={`max-w-[90%] rounded-2xl px-3 py-2 border ${
                         isUser
                           ? 'bg-blue-500 border-blue-500 text-white'
                           : 'bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'
@@ -444,7 +502,21 @@ export default function ChatPage() {
             <div ref={endRef} />
           </div>
 
-          <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
+          <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
+            {selectedSkillIds.length > 0 && (
+              <div className="mb-1.5 flex flex-wrap gap-1">
+                {selectedSkillIds.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => toggleSkill(id)}
+                    className="inline-flex items-center rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/25 px-1.5 py-0.5 text-[11px] text-blue-700 dark:text-blue-200"
+                  >
+                    {id}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2">
               <textarea
                 value={input}
@@ -456,8 +528,8 @@ export default function ChatPage() {
                   }
                 }}
                 rows={2}
-                placeholder="输入问题，回车发送（Shift+Enter 换行）"
-                className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                placeholder="输入问题，或输入 / 选择技能"
+                className="flex-1 px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
               />
               <button
                 onClick={() => void handleSend()}
@@ -469,6 +541,34 @@ export default function ChatPage() {
                 发送
               </button>
             </div>
+            {slashQuery !== null && (
+              <div className="mt-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 max-h-36 overflow-y-auto">
+                {loadingSkills ? (
+                  <div className="text-[11px] text-slate-400 px-1 py-1">加载技能中...</div>
+                ) : visibleSkills.length === 0 ? (
+                  <div className="text-[11px] text-slate-400 px-1 py-1">未找到可用科研技能</div>
+                ) : (
+                  visibleSkills.map((skill) => {
+                    const active = selectedSkillIds.includes(skill.id);
+                    return (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        onClick={() => toggleSkill(skill.id)}
+                        className={`w-full text-left px-2 py-1 rounded-md mb-1 text-[11px] border ${
+                          active
+                            ? 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-200'
+                            : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-200'
+                        }`}
+                      >
+                        <div className="font-medium">{skill.id}</div>
+                        <div className="opacity-75 truncate">{skill.description}</div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
