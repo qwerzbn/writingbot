@@ -86,6 +86,17 @@ function skillDesc(skill: SkillItem): string {
   return skill.description_cn || skill.description;
 }
 
+function formatAgentName(agentId: string): string {
+  const mapping: Record<string, string> = {
+    question_planner: '问题规划Agent',
+    literature_retriever: '文献检索Agent',
+    method_comparer: '方法对比Agent',
+    citation_validator: '引用校验Agent',
+    academic_writer: '学术写作Agent',
+  };
+  return mapping[agentId] || agentId;
+}
+
 export default function ChatPage() {
   const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
 
@@ -321,10 +332,15 @@ export default function ChatPage() {
     setSelectedSkillId(skillId);
     setInput((prev) => {
       const raw = prev.trimStart();
-      if (!raw.startsWith('/')) return prev;
+      const selected = skills.find((item) => item.id === skillId);
+      const label = selected ? skillLabel(selected) : skillId;
+      const prefix = `${label}：`;
+      if (!raw.startsWith('/')) {
+        return prev.startsWith(prefix) ? prev : `${prefix}${prev}`;
+      }
       const i = raw.indexOf(' ');
-      if (i < 0) return '';
-      return raw.slice(i + 1);
+      if (i < 0) return prefix;
+      return `${prefix}${raw.slice(i + 1)}`;
     });
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -337,13 +353,33 @@ export default function ChatPage() {
 
   const updateThinkingStep = (step: ThinkingStepKey, status: ThinkingStepStatus, agent?: string) => {
     setThinkingSteps((prev) =>
-      prev.map((item) => (item.key === step ? { ...item, status, agent: agent || item.agent } : item))
+      prev.map((item) => {
+        if (item.key !== step) return item;
+        if (item.status === 'error' && status !== 'error') return item;
+        if (item.status === 'skipped' && status === 'done') return item;
+        return { ...item, status, agent: agent || item.agent };
+      })
     );
   };
 
   const handleSend = async () => {
-    const text = input.trim();
-    if (!text || sending) return;
+    let text = input.trim();
+    if (sending) return;
+
+    if (selectedSkill && text) {
+      const prefix1 = `${skillLabel(selectedSkill)}：`;
+      const prefix2 = `${skillLabel(selectedSkill)}:`;
+      if (text.startsWith(prefix1)) {
+        text = text.slice(prefix1.length).trim();
+      } else if (text.startsWith(prefix2)) {
+        text = text.slice(prefix2.length).trim();
+      }
+    }
+
+    if (!text) {
+      if (!selectedSkill) return;
+      text = `请直接按“${skillLabel(selectedSkill)}”技能模板开始分析并给出结构化结果。`;
+    }
 
     setInput('');
 
@@ -438,7 +474,7 @@ export default function ChatPage() {
           onEvent: (event) => {
             if (event.type === 'chunk') {
               if (event.meta?.agent_id) {
-                setStreamAgent(event.meta.agent_id);
+                setStreamAgent(formatAgentName(event.meta.agent_id));
               }
               if (event.meta?.kind === 'progress') {
                 const step = event.meta.step as ThinkingStepKey | undefined;
@@ -768,7 +804,7 @@ export default function ChatPage() {
               />
               <button
                 onClick={() => void handleSend()}
-                disabled={sending || !input.trim()}
+                disabled={sending || (!input.trim() && !selectedSkill)}
                 className="px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 inline-flex items-center gap-1.5 transition-colors text-sm"
                 type="button"
               >

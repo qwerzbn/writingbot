@@ -161,7 +161,9 @@ export async function streamChat(
         handlers.onEvent?.(event);
 
         if (event.type === 'chunk') {
-          handlers.onChunk?.(event.content);
+          if ((event.content || '').length > 0) {
+            handlers.onChunk?.(event.content);
+          }
         } else if (event.type === 'sources') handlers.onSources?.(event.data || []);
         else if (event.type === 'done') {
           doneEvent = event;
