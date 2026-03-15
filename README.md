@@ -109,6 +109,31 @@ bash start_dev.sh
 2. 输入问题，AI 基于文献内容提供回答，附带来源引用
 3. 支持多轮对话，自动保存历史
 
+### Skills 规范（Anthropic 风格）
+
+项目技能已按官方 Skills 结构组织，放在 `skills/` 目录：
+
+```text
+skills/
+  paper-summary/
+    SKILL.md
+    agents/openai.yaml
+  experiment-compare/
+    SKILL.md
+    agents/openai.yaml
+  innovation-summary/
+    SKILL.md
+    agents/openai.yaml
+  research-gaps/
+    SKILL.md
+    agents/openai.yaml
+```
+
+- `SKILL.md`：使用 frontmatter 定义 `name/description`（必填）与运行 metadata（如 `id/domain/requires_kb`）。
+- `agents/openai.yaml`：定义 UI 展示信息（`display_name`、`short_description`、`default_prompt`）。
+- 后端技能注册优先读取 `skills/*/SKILL.md`，`config/skills.yaml` 作为兼容兜底。
+- 在交互中可通过技能 id 使用（如 `/paper-summary`），也可在支持 Skills 的 Agent 环境中显式引用 `$paper-summary`。
+
 ### LaTeX 编辑（FastWrite）
 
 1. 导入 LaTeX 项目

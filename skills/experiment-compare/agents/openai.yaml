@@ -1,0 +1,4 @@
+interface:
+  display_name: "实验对比"
+  short_description: "对比数据集、指标、结果与成本差异"
+  default_prompt: "Use $experiment-compare to compare experiments across selected papers."

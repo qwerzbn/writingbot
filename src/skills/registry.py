@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Research skills registry loaded from config/skills.yaml."""
+"""Research skills registry loaded from Anthropic-style skill folders."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from threading import RLock
 
-from src.services.config import get_skills_config
+import yaml
+
+from src.services.config import get_project_root, get_skills_config
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,8 @@ class SkillDefinition:
     requires_kb: bool = False
     critical: bool = False
     timeout_ms: int = 2000
+    sort_order: int = 1000
+    instruction: str = ""
 
     def to_dict(self) -> dict:
         return {
@@ -41,7 +46,31 @@ _LOCK = RLock()
 _CACHE: list[SkillDefinition] | None = None
 
 
-def _normalize_skill_row(row: dict) -> SkillDefinition | None:
+def _frontmatter(md: str) -> tuple[dict, str]:
+    clean = md.lstrip("\ufeff")
+    match = re.match(r"^---\s*\n(.*?)\n---\s*\n?", clean, re.DOTALL)
+    if not match:
+        return {}, clean
+    try:
+        meta = yaml.safe_load(match.group(1)) or {}
+    except Exception:  # noqa: BLE001
+        meta = {}
+    if not isinstance(meta, dict):
+        meta = {}
+    body = clean[match.end() :]
+    return meta, body
+
+
+def _meta_value(meta: dict, key: str, default=None):
+    if key in meta:
+        return meta[key]
+    alt = key.replace("_", "-")
+    if alt in meta:
+        return meta[alt]
+    return default
+
+
+def _normalize_skill_row(row: dict, index: int = 0) -> SkillDefinition | None:
     skill_id = str(row.get("id") or "").strip()
     if not skill_id.startswith("/"):
         return None
@@ -54,6 +83,8 @@ def _normalize_skill_row(row: dict) -> SkillDefinition | None:
     requires_kb = bool(row.get("requires_kb", False))
     critical = bool(row.get("critical", False))
     timeout_ms = int(row.get("timeout_ms", 2000) or 2000)
+    sort_order = int(row.get("order", index) or index)
+    instruction = str(row.get("instruction") or "").strip()
     return SkillDefinition(
         id=skill_id,
         name=name,
@@ -65,7 +96,101 @@ def _normalize_skill_row(row: dict) -> SkillDefinition | None:
         requires_kb=requires_kb,
         critical=critical,
         timeout_ms=max(1, timeout_ms),
+        sort_order=sort_order,
+        instruction=instruction,
     )
+
+
+def _load_from_skill_folders() -> list[SkillDefinition]:
+    root = get_project_root() / "skills"
+    if not root.exists():
+        return []
+
+    rows: list[SkillDefinition] = []
+    for index, skill_dir in enumerate(sorted(root.iterdir(), key=lambda p: p.name)):
+        if not skill_dir.is_dir():
+            continue
+        skill_md = skill_dir / "SKILL.md"
+        if not skill_md.exists():
+            continue
+
+        try:
+            content = skill_md.read_text(encoding="utf-8")
+        except Exception:  # noqa: BLE001
+            continue
+        fm, _body = _frontmatter(content)
+        if not fm:
+            continue
+
+        name = str(fm.get("name") or skill_dir.name).strip() or skill_dir.name
+        description = str(fm.get("description") or "").strip()
+        metadata = fm.get("metadata") if isinstance(fm.get("metadata"), dict) else {}
+
+        openai_yaml = skill_dir / "agents" / "openai.yaml"
+        interface = {}
+        if openai_yaml.exists():
+            try:
+                openai_meta = yaml.safe_load(openai_yaml.read_text(encoding="utf-8")) or {}
+                if isinstance(openai_meta, dict):
+                    interface = openai_meta.get("interface") if isinstance(openai_meta.get("interface"), dict) else {}
+            except Exception:  # noqa: BLE001
+                interface = {}
+
+        skill_id = str(_meta_value(metadata, "id", f"/{skill_dir.name}") or f"/{skill_dir.name}").strip()
+        if not skill_id.startswith("/"):
+            skill_id = f"/{skill_id.lstrip('/')}"
+
+        label_cn = str(
+            _meta_value(metadata, "label_cn", interface.get("display_name") or name) or interface.get("display_name") or name
+        ).strip()
+        description_cn = str(
+            _meta_value(
+                metadata,
+                "description_cn",
+                interface.get("short_description") or description,
+            )
+            or interface.get("short_description")
+            or description
+        ).strip()
+        domain = str(_meta_value(metadata, "domain", "research") or "research").strip() or "research"
+        enabled = bool(_meta_value(metadata, "enabled", True))
+        requires_kb = bool(_meta_value(metadata, "requires_kb", False))
+        critical = bool(_meta_value(metadata, "critical", False))
+        timeout_ms = int(_meta_value(metadata, "timeout_ms", 2000) or 2000)
+        order = int(_meta_value(metadata, "order", (index + 1) * 10) or (index + 1) * 10)
+        instruction = str(_meta_value(metadata, "instruction", "") or "").strip()
+
+        rows.append(
+            SkillDefinition(
+                id=skill_id,
+                name=name,
+                description=description,
+                label_cn=label_cn or name,
+                description_cn=description_cn or description,
+                domain=domain,
+                enabled=enabled,
+                requires_kb=requires_kb,
+                critical=critical,
+                timeout_ms=max(1, timeout_ms),
+                sort_order=order,
+                instruction=instruction,
+            )
+        )
+    return rows
+
+
+def _load_from_legacy_config() -> list[SkillDefinition]:
+    config = get_skills_config()
+    items = config.get("skills", []) if isinstance(config, dict) else []
+    rows: list[SkillDefinition] = []
+    if isinstance(items, list):
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                continue
+            normalized = _normalize_skill_row(item, index=index)
+            if normalized:
+                rows.append(normalized)
+    return rows
 
 
 def _load_all() -> list[SkillDefinition]:
@@ -73,16 +198,10 @@ def _load_all() -> list[SkillDefinition]:
     with _LOCK:
         if _CACHE is not None:
             return _CACHE
-        config = get_skills_config()
-        items = config.get("skills", []) if isinstance(config, dict) else []
-        rows: list[SkillDefinition] = []
-        if isinstance(items, list):
-            for item in items:
-                if not isinstance(item, dict):
-                    continue
-                normalized = _normalize_skill_row(item)
-                if normalized:
-                    rows.append(normalized)
+        rows = _load_from_skill_folders()
+        if not rows:
+            rows = _load_from_legacy_config()
+        rows = sorted(rows, key=lambda s: (s.sort_order, s.id))
         _CACHE = rows
         return rows
 

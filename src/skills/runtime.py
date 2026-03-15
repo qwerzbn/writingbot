@@ -9,14 +9,6 @@ from typing import Any
 from src.skills.registry import SkillDefinition
 
 
-_SKILL_INSTRUCTIONS: dict[str, str] = {
-    "/paper-summary": "按论文粒度总结：研究问题、方法、数据集、结论与局限。",
-    "/experiment-compare": "重点比较实验设置、指标定义、结果差异及可能原因。",
-    "/innovation-summary": "总结核心创新点、技术贡献和与现有工作的关键区别。",
-    "/research-gaps": "明确研究不足、适用边界、潜在偏差及可改进方向。",
-}
-
-
 def run_research_skill_chain(
     *,
     skills: list[SkillDefinition],
@@ -36,7 +28,7 @@ def run_research_skill_chain(
             if skill.requires_kb and not has_kb:
                 status = "skipped_requires_kb"
             else:
-                inst = _SKILL_INSTRUCTIONS.get(skill.id, "").strip()
+                inst = (skill.instruction or "").strip()
                 if inst:
                     instructions.append(inst)
                 success_count += 1
