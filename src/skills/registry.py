@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
+import logging
 import re
 from threading import RLock
 
@@ -44,6 +46,41 @@ class SkillDefinition:
 
 _LOCK = RLock()
 _CACHE: list[SkillDefinition] | None = None
+_REPORT_CACHE: dict | None = None
+_LOG = logging.getLogger(__name__)
+
+
+def _safe_bool(value, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "y", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "n", "off"}:
+            return False
+    return default
+
+
+def _strict_bool(value) -> tuple[bool, bool]:
+    if isinstance(value, bool):
+        return value, True
+    if isinstance(value, int):
+        return bool(value), True
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "y", "on"}:
+            return True, True
+        if normalized in {"false", "0", "no", "n", "off"}:
+            return False, True
+    return False, False
+
+
+def _add_reject(report: dict, skill_dir: str, reason: str) -> None:
+    report.setdefault("rejected", []).append({"skill_dir": skill_dir, "reason": reason})
+    _LOG.warning("skills: rejected %s: %s", skill_dir, reason)
 
 
 def _frontmatter(md: str) -> tuple[dict, str]:
@@ -79,9 +116,9 @@ def _normalize_skill_row(row: dict, index: int = 0) -> SkillDefinition | None:
     label_cn = str(row.get("label_cn") or name).strip() or name
     description_cn = str(row.get("description_cn") or description).strip() or description
     domain = str(row.get("domain") or "research").strip() or "research"
-    enabled = bool(row.get("enabled", True))
-    requires_kb = bool(row.get("requires_kb", False))
-    critical = bool(row.get("critical", False))
+    enabled = _safe_bool(row.get("enabled", True), True)
+    requires_kb = _safe_bool(row.get("requires_kb", False), False)
+    critical = _safe_bool(row.get("critical", False), False)
     timeout_ms = int(row.get("timeout_ms", 2000) or 2000)
     sort_order = int(row.get("order", index) or index)
     instruction = str(row.get("instruction") or "").strip()
@@ -101,25 +138,37 @@ def _normalize_skill_row(row: dict, index: int = 0) -> SkillDefinition | None:
     )
 
 
-def _load_from_skill_folders() -> list[SkillDefinition]:
+def _load_from_skill_folders() -> tuple[list[SkillDefinition], dict]:
     root = get_project_root() / "skills"
+    report = {
+        "source": "skill_folders",
+        "root": str(root),
+        "found_skill_dirs": 0,
+        "loaded": 0,
+        "rejected": [],
+        "used_legacy_fallback": False,
+    }
     if not root.exists():
-        return []
+        return [], report
 
     rows: list[SkillDefinition] = []
-    for index, skill_dir in enumerate(sorted(root.iterdir(), key=lambda p: p.name)):
-        if not skill_dir.is_dir():
-            continue
+    discovered: list = []
+    for skill_dir in sorted(root.iterdir(), key=lambda p: p.name):
+        if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
+            discovered.append(skill_dir)
+    report["found_skill_dirs"] = len(discovered)
+
+    for index, skill_dir in enumerate(discovered):
         skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            continue
 
         try:
             content = skill_md.read_text(encoding="utf-8")
         except Exception:  # noqa: BLE001
+            _add_reject(report, skill_dir.name, "SKILL.md unreadable")
             continue
         fm, _body = _frontmatter(content)
         if not fm:
+            _add_reject(report, skill_dir.name, "frontmatter missing or invalid")
             continue
 
         name = str(fm.get("name") or skill_dir.name).strip() or skill_dir.name
@@ -136,14 +185,23 @@ def _load_from_skill_folders() -> list[SkillDefinition]:
             except Exception:  # noqa: BLE001
                 interface = {}
 
-        skill_id = str(_meta_value(metadata, "id", f"/{skill_dir.name}") or f"/{skill_dir.name}").strip()
-        if not skill_id.startswith("/"):
-            skill_id = f"/{skill_id.lstrip('/')}"
+        if not openai_yaml.exists():
+            _add_reject(report, skill_dir.name, "agents/openai.yaml missing")
+            continue
 
-        label_cn = str(
+        raw_id = _meta_value(metadata, "id", None)
+        if raw_id is None:
+            _add_reject(report, skill_dir.name, "metadata.id missing")
+            continue
+        skill_id = str(raw_id).strip()
+        if not skill_id.startswith("/"):
+            _add_reject(report, skill_dir.name, "metadata.id must start with '/'")
+            continue
+
+        label_cn_meta = str(
             _meta_value(metadata, "label_cn", interface.get("display_name") or name) or interface.get("display_name") or name
         ).strip()
-        description_cn = str(
+        description_cn_meta = str(
             _meta_value(
                 metadata,
                 "description_cn",
@@ -152,21 +210,59 @@ def _load_from_skill_folders() -> list[SkillDefinition]:
             or interface.get("short_description")
             or description
         ).strip()
-        domain = str(_meta_value(metadata, "domain", "research") or "research").strip() or "research"
-        enabled = bool(_meta_value(metadata, "enabled", True))
-        requires_kb = bool(_meta_value(metadata, "requires_kb", False))
-        critical = bool(_meta_value(metadata, "critical", False))
+        display_name = str(interface.get("display_name") or "").strip()
+        short_description = str(interface.get("short_description") or "").strip()
+        if not display_name:
+            _add_reject(report, skill_dir.name, "openai.yaml.interface.display_name missing")
+            continue
+        if not short_description:
+            _add_reject(report, skill_dir.name, "openai.yaml.interface.short_description missing")
+            continue
+        if label_cn_meta and display_name != label_cn_meta:
+            _add_reject(
+                report,
+                skill_dir.name,
+                "metadata.label_cn must equal openai.yaml.interface.display_name",
+            )
+            continue
+        if description_cn_meta and short_description != description_cn_meta:
+            _add_reject(
+                report,
+                skill_dir.name,
+                "metadata.description_cn must equal openai.yaml.interface.short_description",
+            )
+            continue
+
+        raw_domain = _meta_value(metadata, "domain", None)
+        if raw_domain is None:
+            _add_reject(report, skill_dir.name, "metadata.domain missing")
+            continue
+        domain = str(raw_domain).strip() or "research"
+        raw_enabled = _meta_value(metadata, "enabled", None)
+        if raw_enabled is None:
+            _add_reject(report, skill_dir.name, "metadata.enabled missing")
+            continue
+        enabled, bool_ok = _strict_bool(raw_enabled)
+        if not bool_ok:
+            _add_reject(report, skill_dir.name, "metadata.enabled must be a boolean")
+            continue
+        requires_kb = _safe_bool(_meta_value(metadata, "requires_kb", False), False)
+        critical = _safe_bool(_meta_value(metadata, "critical", False), False)
         timeout_ms = int(_meta_value(metadata, "timeout_ms", 2000) or 2000)
         order = int(_meta_value(metadata, "order", (index + 1) * 10) or (index + 1) * 10)
         instruction = str(_meta_value(metadata, "instruction", "") or "").strip()
+
+        if domain != "research":
+            _add_reject(report, skill_dir.name, "metadata.domain must be 'research'")
+            continue
 
         rows.append(
             SkillDefinition(
                 id=skill_id,
                 name=name,
                 description=description,
-                label_cn=label_cn or name,
-                description_cn=description_cn or description,
+                label_cn=display_name or name,
+                description_cn=short_description or description,
                 domain=domain,
                 enabled=enabled,
                 requires_kb=requires_kb,
@@ -176,7 +272,8 @@ def _load_from_skill_folders() -> list[SkillDefinition]:
                 instruction=instruction,
             )
         )
-    return rows
+    report["loaded"] = len(rows)
+    return rows, report
 
 
 def _load_from_legacy_config() -> list[SkillDefinition]:
@@ -195,21 +292,27 @@ def _load_from_legacy_config() -> list[SkillDefinition]:
 
 def _load_all() -> list[SkillDefinition]:
     global _CACHE
+    global _REPORT_CACHE
     with _LOCK:
         if _CACHE is not None:
             return _CACHE
-        rows = _load_from_skill_folders()
-        if not rows:
+        rows, report = _load_from_skill_folders()
+        if int(report.get("found_skill_dirs", 0)) == 0:
             rows = _load_from_legacy_config()
+            report["used_legacy_fallback"] = True
+            report["loaded"] = len(rows)
         rows = sorted(rows, key=lambda s: (s.sort_order, s.id))
         _CACHE = rows
+        _REPORT_CACHE = report
         return rows
 
 
 def clear_skills_cache() -> None:
     global _CACHE
+    global _REPORT_CACHE
     with _LOCK:
         _CACHE = None
+        _REPORT_CACHE = None
 
 
 def list_skills(domain: str = "research", enabled_only: bool = True) -> list[dict]:
@@ -249,3 +352,25 @@ def resolve_skill_chain(skill_ids: list[str], domain: str = "research") -> list[
             continue
         resolved.append(skill)
     return resolved
+
+
+def get_skills_registry_report() -> dict:
+    _load_all()
+    with _LOCK:
+        if _REPORT_CACHE is None:
+            return {
+                "source": "skill_folders",
+                "root": str(get_project_root() / "skills"),
+                "found_skill_dirs": 0,
+                "loaded": 0,
+                "rejected": [],
+                "used_legacy_fallback": False,
+            }
+        return copy.deepcopy(_REPORT_CACHE)
+
+
+def warmup_skills_registry() -> dict:
+    rows = _load_all()
+    report = get_skills_registry_report()
+    report["loaded"] = len(rows)
+    return report

@@ -9,6 +9,7 @@ Replaces the Flask-based server.py.
 
 import sys
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -33,6 +34,7 @@ from src.api.routers import (
     skills,
 )
 from src.services.config import get_main_config
+from src.skills import get_skills_registry_report, warmup_skills_registry
 
 
 @asynccontextmanager
@@ -54,6 +56,19 @@ async def lifespan(app: FastAPI):
         print(f"  LLM Enabled: {llm_config.is_enabled}")
     except Exception as e:
         print(f"  Warning: LLM init failed: {e}")
+
+    try:
+        skills_report = warmup_skills_registry()
+        print(
+            "  Skills: loaded=%s rejected=%s fallback=%s"
+            % (
+                skills_report.get("loaded", 0),
+                len(skills_report.get("rejected", [])),
+                skills_report.get("used_legacy_fallback", False),
+            )
+        )
+    except Exception as e:
+        print(f"  Warning: skills warmup failed: {e}")
 
     yield
     print("Application shutdown")
@@ -93,6 +108,23 @@ app.include_router(skills.router, prefix="/api", tags=["skills"])
 @app.get("/")
 async def root():
     return {"message": "Welcome to WritingBot API (FastAPI)"}
+
+
+@app.get("/api/health")
+async def health():
+    skills_report = get_skills_registry_report()
+    return {
+        "success": True,
+        "data": {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "skills": {
+                "loaded": skills_report.get("loaded", 0),
+                "rejected_count": len(skills_report.get("rejected", [])),
+                "used_legacy_fallback": skills_report.get("used_legacy_fallback", False),
+            },
+        },
+    }
 
 
 if __name__ == "__main__":

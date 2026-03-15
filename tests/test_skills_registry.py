@@ -51,3 +51,54 @@ metadata:
     assert item["critical"] is True
     assert item["timeout_ms"] == 3456
 
+
+def test_registry_rejects_dirty_skill_and_does_not_fallback_to_legacy(monkeypatch, tmp_path):
+    skill_dir = tmp_path / "skills" / "bad-skill"
+    _write(
+        skill_dir / "SKILL.md",
+        """---
+name: bad-skill
+description: broken metadata/openai mapping
+metadata:
+  id: /bad-skill
+  domain: research
+  enabled: true
+  label_cn: 技能甲
+  description_cn: 这是技能甲说明
+---
+""",
+    )
+    _write(
+        skill_dir / "agents" / "openai.yaml",
+        """interface:
+  display_name: "技能乙"
+  short_description: "这是技能乙说明"
+""",
+    )
+
+    monkeypatch.setattr(skills_registry, "get_project_root", lambda: tmp_path)
+    monkeypatch.setattr(
+        skills_registry,
+        "get_skills_config",
+        lambda: {
+            "skills": [
+                {
+                    "id": "/legacy",
+                    "name": "legacy",
+                    "description": "legacy",
+                    "domain": "research",
+                    "enabled": True,
+                }
+            ]
+        },
+    )
+    skills_registry.clear_skills_cache()
+
+    rows = skills_registry.list_skills(domain="research", enabled_only=True)
+    assert rows == []
+
+    report = skills_registry.get_skills_registry_report()
+    assert report["found_skill_dirs"] == 1
+    assert report["used_legacy_fallback"] is False
+    assert len(report["rejected"]) == 1
+    assert "label_cn" in report["rejected"][0]["reason"]

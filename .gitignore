@@ -10,3 +10,7 @@ web/.turbo/
 
 data/metrics/
 data/evaluation/reports/
+data/logs/
+data/sessions/
+web/test-results/
+web/playwright-report/

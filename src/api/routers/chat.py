@@ -917,6 +917,15 @@ async def chat(
                 "paper_hits": orchestrator_meta.get("meta", {}).get("paper_hits")
                 if isinstance(orchestrator_meta.get("meta"), dict)
                 else None,
+                "citation_coverage": orchestrator_meta.get("meta", {}).get("citation_coverage")
+                if isinstance(orchestrator_meta.get("meta"), dict)
+                else None,
+                "skill_success_rate": orchestrator_meta.get("meta", {}).get("skill_success_rate")
+                if isinstance(orchestrator_meta.get("meta"), dict)
+                else None,
+                "inference_ratio": orchestrator_meta.get("meta", {}).get("inference_ratio")
+                if isinstance(orchestrator_meta.get("meta"), dict)
+                else None,
             },
         )
 
@@ -1209,6 +1218,24 @@ async def chat_stream(
                         "progress_event_count": int(done_meta.get("progress_event_count") or 0) + heartbeat_progress_count,
                         "stream_idle_max_s": round(max(float(done_meta.get("stream_idle_max_s") or 0.0), stream_idle_max_s), 3),
                     }
+                    _append_chat_audit(
+                        "stream_diag",
+                        {
+                            "conversation_id": session.id,
+                            "mode": mode,
+                            "idempotency_key": idempotency_key,
+                            "selected_skill_ids": selected_skill_ids,
+                            "time_to_first_progress_ms": item["meta"].get("time_to_first_progress_ms"),
+                            "time_to_first_content_ms": item["meta"].get("time_to_first_content_ms"),
+                            "progress_event_count": item["meta"].get("progress_event_count"),
+                            "fallback_chunk_used": item["meta"].get("fallback_chunk_used"),
+                            "stream_idle_max_s": item["meta"].get("stream_idle_max_s"),
+                            "paper_hits": item["meta"].get("paper_hits"),
+                            "citation_coverage": item["meta"].get("citation_coverage"),
+                            "skill_success_rate": item["meta"].get("skill_success_rate"),
+                            "inference_ratio": item["meta"].get("inference_ratio"),
+                        },
+                    )
 
                 event_id += 1
                 yield _sse_data(item, event_id)

@@ -189,6 +189,51 @@ test('发送后 1 秒内进度可见且会变化', async ({ page }) => {
   expect(value).toBeGreaterThan(0);
 });
 
+test('聊天页全屏布局：无外围留白', async ({ page }) => {
+  await installApiMocks(page);
+  await page.goto('/chat');
+
+  const root = page.getByTestId('chat-page-root');
+  const grid = page.getByTestId('chat-grid');
+  await expect(root).toBeVisible();
+  await expect(grid).toBeVisible();
+
+  const rootStyle = await root.evaluate((el) => {
+    const s = window.getComputedStyle(el);
+    return {
+      paddingTop: s.paddingTop,
+      paddingRight: s.paddingRight,
+      paddingBottom: s.paddingBottom,
+      paddingLeft: s.paddingLeft,
+      marginTop: s.marginTop,
+      marginRight: s.marginRight,
+      marginBottom: s.marginBottom,
+      marginLeft: s.marginLeft,
+      maxWidth: s.maxWidth,
+    };
+  });
+  expect(rootStyle.paddingTop).toBe('0px');
+  expect(rootStyle.paddingRight).toBe('0px');
+  expect(rootStyle.paddingBottom).toBe('0px');
+  expect(rootStyle.paddingLeft).toBe('0px');
+  expect(rootStyle.marginTop).toBe('0px');
+  expect(rootStyle.marginRight).toBe('0px');
+  expect(rootStyle.marginBottom).toBe('0px');
+  expect(rootStyle.marginLeft).toBe('0px');
+  expect(rootStyle.maxWidth).toBe('none');
+
+  const mainBox = await page.locator('main').boundingBox();
+  const rootBox = await root.boundingBox();
+  expect(mainBox).not.toBeNull();
+  expect(rootBox).not.toBeNull();
+  if (mainBox && rootBox) {
+    expect(Math.abs(rootBox.x - mainBox.x)).toBeLessThan(1);
+    expect(Math.abs(rootBox.y - mainBox.y)).toBeLessThan(1);
+    expect(Math.abs(rootBox.width - mainBox.width)).toBeLessThan(1);
+    expect(Math.abs(rootBox.height - mainBox.height)).toBeLessThan(1);
+  }
+});
+
 test('长等待期间不会静默卡死（30 秒）', async ({ page }) => {
   test.setTimeout(120000);
   await installApiMocks(page, {
@@ -244,6 +289,10 @@ test('选中 skill 后空输入可直接发送', async ({ page }) => {
   await page.goto('/chat');
 
   await page.getByTestId('chat-input').fill('/');
+  await expect(page.getByTestId('skill-option-paper-summary')).toBeVisible();
+  await expect(page.getByTestId('skill-option-experiment-compare')).toBeVisible();
+  await expect(page.getByTestId('skill-option-innovation-summary')).toBeVisible();
+  await expect(page.getByTestId('skill-option-research-gaps')).toBeVisible();
   await page.getByTestId('skill-option-paper-summary').click();
   await expect(page.getByTestId('selected-skill-card')).toBeVisible();
   await expect(page.getByTestId('chat-input')).toHaveValue('');

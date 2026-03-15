@@ -17,10 +17,15 @@ interface MarkdownRendererProps {
 function preprocessMarkdownContent(raw: string): string {
     if (!raw) return '';
     let output = raw.replace(/\r\n?/g, '\n');
+    output = output.replace(/&lt;br\s*\/?&gt;/gi, '  \n');
     output = output.replace(/<br\s*\/?>/gi, '  \n');
     output = output.replace(/<\/?(?:p|div|section|article|header|footer|main)\b[^>]*>/gi, '\n');
     output = output.replace(/<\/?(?:span|font)\b[^>]*>/gi, '');
+    output = output.replace(/<\/?(?:ul|ol|li|table|thead|tbody|tr|th|td|blockquote)\b[^>]*>/gi, '\n');
+    output = output.replace(/<\/?(?:strong|b|em|i|u)\b[^>]*>/gi, '');
+    output = output.replace(/<[^>\n]+>/g, '');
     output = output.replace(/&nbsp;/gi, ' ');
+    output = output.replace(/&lt;(\/?)(?:p|div|span|br|section|article|table|tr|td|th)&gt;/gi, '');
     output = output.replace(/\n{3,}/g, '\n\n');
     return output.trim();
 }

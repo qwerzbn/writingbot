@@ -1,4 +1,4 @@
 interface:
   display_name: "研究不足"
-  short_description: "定位局限、偏差风险与改进方向"
+  short_description: "指出局限、潜在偏差、外推风险与后续改进方向。"
   default_prompt: "Use $research-gaps to identify limitations, risks, and actionable next steps."

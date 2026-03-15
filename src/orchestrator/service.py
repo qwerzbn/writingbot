@@ -280,6 +280,9 @@ class OrchestratorService:
                 "selected_skill_ids": ctx.selected_skill_ids,
                 "skill_runs": ctx.metadata.get("skill_runs", []),
                 "paper_hits": ctx.metadata.get("paper_hits", 0),
+                "citation_coverage": ctx.metadata.get("citation_coverage", 0.0),
+                "skill_success_rate": ctx.metadata.get("skill_success_rate", 0.0),
+                "inference_ratio": ctx.metadata.get("inference_ratio", 0.0),
             },
         )
         self.run_store.set_result(

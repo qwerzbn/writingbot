@@ -553,9 +553,12 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-full min-h-0 bg-slate-50 dark:bg-slate-900 p-2 md:p-3 transition-colors">
-      <div className="h-full min-h-0 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2.5">
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
+    <div data-testid="chat-page-root" className="h-full min-h-0 w-full bg-slate-100 dark:bg-slate-900 transition-colors">
+      <div
+        data-testid="chat-grid"
+        className="h-full min-h-0 w-full grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-0"
+      >
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur border-r border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden min-h-0">
           <div className="p-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-sm">
               <MessageCircle size={15} /> 会话
@@ -569,7 +572,7 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
+          <div className="flex-1 overflow-y-auto p-2 min-h-0">
             <button
               type="button"
               onClick={openDraftConversation}
@@ -640,7 +643,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col overflow-hidden min-h-0">
+        <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur flex flex-col overflow-hidden min-h-0">
           <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h1 className="text-sm font-semibold text-slate-800 dark:text-white flex items-center gap-2">
@@ -676,13 +679,13 @@ export default function ChatPage() {
           </div>
 
           {pageError && (
-            <div className="mx-4 mt-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+            <div className="mx-3 mt-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
               {pageError}
             </div>
           )}
 
           {thinkingVisible && (
-            <div className="mx-3 mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 px-2.5 py-2">
+            <div className="mx-2.5 mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60 px-2.5 py-2">
               <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                 <span>智能体思考过程</span>
                 <span data-testid="thinking-progress-value">
@@ -732,7 +735,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
+          <div className="flex-1 overflow-y-auto px-2.5 py-2.5 space-y-2 min-h-0">
             {loadingDetail ? (
               <div className="h-full flex items-center justify-center text-slate-400">
                 <Loader2 size={18} className="animate-spin" />
@@ -750,7 +753,7 @@ export default function ChatPage() {
                   <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
                       data-testid={`message-${msg.role}-${idx}`}
-                      className={`max-w-[90%] rounded-2xl px-3 py-2 border ${
+                      className={`max-w-[88%] rounded-2xl px-3 py-2 border ${
                         isUser
                           ? 'bg-blue-500 border-blue-500 text-white'
                           : 'bg-slate-50 dark:bg-slate-700/40 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'
@@ -780,7 +783,7 @@ export default function ChatPage() {
             <div ref={endRef} />
           </div>
 
-          <div className="px-3 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
+          <div className="px-2.5 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
             {selectedSkill && (
               <div data-testid="selected-skill-card" className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5">
                 <div className="min-w-0">
