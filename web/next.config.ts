@@ -1,14 +1,16 @@
 import path from "path";
+import { fileURLToPath } from "url";
 import type { NextConfig } from "next";
 
-const workspaceRoot = path.resolve(__dirname);
+const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   // Disable Next.js dev indicator (floating "N" button)
   devIndicators: false,
-  outputFileTracingRoot: workspaceRoot,
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+  outputFileTracingRoot: configDir,
   turbopack: {
-    root: workspaceRoot,
+    root: configDir,
   },
   // Allow larger file uploads (100MB) for Server Actions (if used)
   experimental: {

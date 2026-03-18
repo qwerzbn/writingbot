@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, Loader2, MessageCircle, Plus, Send, Trash2, User } from 'lucide-react';
+import { BookOpen, Bot, Loader2, MessageCircle, Plus, Send, Trash2, User } from 'lucide-react';
 
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { useAppContext } from '@/context/AppContext';
@@ -64,6 +64,11 @@ interface ThinkingStep {
   label: string;
   status: ThinkingStepStatus;
   agent?: string;
+}
+
+interface NotebookOption {
+  id: string;
+  name: string;
 }
 
 const THINKING_STEP_THRESHOLDS = [20, 40, 60, 80, 95];
@@ -138,6 +143,9 @@ export default function ChatPage() {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [notebooks, setNotebooks] = useState<NotebookOption[]>([]);
+  const [saveNotebookId, setSaveNotebookId] = useState<string>('');
+  const [savingMessageIdx, setSavingMessageIdx] = useState<number | null>(null);
   const [streamAgent, setStreamAgent] = useState<string>('');
   const [lastPaperHits, setLastPaperHits] = useState<number>(0);
   const [skills, setSkills] = useState<SkillItem[]>([]);
@@ -284,6 +292,24 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/notebooks');
+        const data = await res.json();
+        if (!data.success) return;
+        const rows = (data.data || []) as NotebookOption[];
+        setNotebooks(rows);
+        if (!saveNotebookId && rows.length > 0) {
+          setSaveNotebookId(rows[0].id);
+        }
+      } catch {
+        setNotebooks([]);
+      }
+    };
+    void run();
+  }, [saveNotebookId]);
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, sending]);
 
@@ -368,6 +394,42 @@ export default function ChatPage() {
 
   const appendAssistantError = (error: string) => {
     appendAssistantChunk(`\n\n> ${error}`);
+  };
+
+  const handleSaveAssistantToNotebook = async (msg: ChatMessage, idx: number) => {
+    if (!saveNotebookId) {
+      setPageError('请先选择保存目标笔记本。');
+      return;
+    }
+    if (!msg.content.trim()) return;
+
+    setSavingMessageIdx(idx);
+    try {
+      const firstLine = msg.content.split('\n').map((x) => x.trim()).find(Boolean) || '';
+      const title = (firstLine || '聊天笔记').slice(0, 80);
+      const tags = ['chat', ...(selectedSkill ? [selectedSkill.id.replace('/', '')] : [])];
+      const res = await fetch(`/api/notebooks/${saveNotebookId}/notes/from-sources`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          content: msg.content,
+          sources: msg.sources || [],
+          kb_id: selectedKbId || undefined,
+          origin_type: 'chat',
+          tags,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `保存失败(${res.status})`);
+      }
+      setPageError(null);
+    } catch (error) {
+      setPageError(error instanceof Error ? error.message : '保存到笔记本失败');
+    } finally {
+      setSavingMessageIdx(null);
+    }
   };
 
   const handleSelectSkill = (skillId: string) => {
@@ -775,6 +837,23 @@ export default function ChatPage() {
                       ) : (
                         <MarkdownRenderer content={msg.content} sources={msg.sources || []} className="text-sm" />
                       )}
+                      {!isUser && !isStreamingPlaceholder && (msg.content || '').trim() && (
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveAssistantToNotebook(msg, idx)}
+                            disabled={!saveNotebookId || savingMessageIdx === idx}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-300 dark:border-slate-600 px-2 py-1 text-[11px] text-slate-600 dark:text-slate-300 hover:border-blue-300 hover:text-blue-600 dark:hover:text-blue-300 disabled:opacity-50"
+                          >
+                            {savingMessageIdx === idx ? (
+                              <Loader2 size={11} className="animate-spin" />
+                            ) : (
+                              <BookOpen size={11} />
+                            )}
+                            保存为笔记
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -784,6 +863,24 @@ export default function ChatPage() {
           </div>
 
           <div className="px-2.5 py-2 border-t border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur">
+            {notebooks.length > 0 && (
+              <div className="mb-1.5 flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                <BookOpen size={12} />
+                <span>保存目标笔记本</span>
+                <select
+                  value={saveNotebookId}
+                  onChange={(e) => setSaveNotebookId(e.target.value)}
+                  className="ml-auto rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-2 py-1 text-[11px]"
+                >
+                  <option value="">请选择</option>
+                  {notebooks.map((nb) => (
+                    <option key={nb.id} value={nb.id}>
+                      {nb.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {selectedSkill && (
               <div data-testid="selected-skill-card" className="mb-1.5 flex items-center justify-between gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-1.5">
                 <div className="min-w-0">

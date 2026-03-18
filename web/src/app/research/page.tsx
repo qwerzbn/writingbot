@@ -1,24 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Search, Loader2, Send, FileText } from 'lucide-react';
+import { Search, Loader2, Send, FileText, BookOpen } from 'lucide-react';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const API_BASE = '';
+
+interface NotebookOption {
+    id: string;
+    name: string;
+}
 
 export default function ResearchPage() {
     const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
     const [topic, setTopic] = useState('');
     const [plan, setPlan] = useState('');
     const [report, setReport] = useState('');
+    const [sources, setSources] = useState<Array<Record<string, unknown>>>([]);
     const [loading, setLoading] = useState(false);
+    const [notebooks, setNotebooks] = useState<NotebookOption[]>([]);
+    const [saveNotebookId, setSaveNotebookId] = useState('');
+    const [savingNote, setSavingNote] = useState(false);
+
+    useEffect(() => {
+        const run = async () => {
+            try {
+                const res = await fetch('/api/notebooks');
+                const data = await res.json();
+                if (!data.success) return;
+                const rows = (data.data || []) as NotebookOption[];
+                setNotebooks(rows);
+                if (!saveNotebookId && rows.length > 0) {
+                    setSaveNotebookId(rows[0].id);
+                }
+            } catch {
+                setNotebooks([]);
+            }
+        };
+        void run();
+    }, [saveNotebookId]);
 
     const handleResearch = async () => {
         if (!topic.trim() || loading) return;
         setLoading(true);
         setPlan('');
         setReport('');
+        setSources([]);
 
         try {
             const res = await fetch(`${API_BASE}/api/research/stream`, {
@@ -51,6 +79,7 @@ export default function ResearchPage() {
                         if (data.type === 'plan') setPlan(data.content);
                         else if (data.type === 'chunk')
                             setReport((prev) => prev + data.content);
+                        else if (data.type === 'sources') setSources(data.data || []);
                     } catch { }
                 }
             }
@@ -59,6 +88,30 @@ export default function ResearchPage() {
             setReport('研究报告生成失败，请重试。');
         }
         setLoading(false);
+    };
+
+    const saveReportToNotebook = async () => {
+        if (!saveNotebookId || !report.trim() || savingNote) return;
+        setSavingNote(true);
+        try {
+            const title = topic.trim() ? `研究笔记：${topic.trim().slice(0, 48)}` : '研究笔记';
+            await fetch(`/api/notebooks/${saveNotebookId}/notes/from-sources`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    content: report,
+                    sources,
+                    kb_id: selectedKbId || undefined,
+                    origin_type: 'research',
+                    tags: ['research'],
+                }),
+            });
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSavingNote(false);
+        }
     };
 
     return (
@@ -91,6 +144,18 @@ export default function ResearchPage() {
                             {kbs.map((kb) => (
                                 <option key={kb.id} value={kb.id}>
                                     {kb.name}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            value={saveNotebookId}
+                            onChange={(e) => setSaveNotebookId(e.target.value)}
+                            className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">不保存到笔记本</option>
+                            {notebooks.map((nb) => (
+                                <option key={nb.id} value={nb.id}>
+                                    {nb.name}
                                 </option>
                             ))}
                         </select>
@@ -133,9 +198,19 @@ export default function ResearchPage() {
                 {/* Report */}
                 {report && (
                     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                        <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4 flex items-center gap-2">
-                            <FileText size={16} /> 研究报告
-                        </h3>
+                        <div className="mb-4 flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                <FileText size={16} /> 研究报告
+                            </h3>
+                            <button
+                                onClick={saveReportToNotebook}
+                                disabled={!saveNotebookId || savingNote}
+                                className="px-3 py-1.5 rounded-md bg-slate-100 dark:bg-slate-700 text-xs hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 inline-flex items-center gap-1.5"
+                            >
+                                {savingNote ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
+                                保存为笔记
+                            </button>
+                        </div>
                         <MarkdownRenderer content={report} />
                     </div>
                 )}

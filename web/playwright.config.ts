@@ -13,7 +13,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npm run build && npm run start -- --port 3005',
+    command: 'NEXT_DIST_DIR=.next-playwright npm run build && NEXT_DIST_DIR=.next-playwright npm run start -- --port 3005',
     cwd: __dirname,
     url: 'http://127.0.0.1:3005/chat',
     timeout: 180000,

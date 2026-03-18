@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
+import AppFrame from "@/components/AppFrame";
 import { AppProvider } from "@/context/AppContext";
 
 const inter = Inter({
@@ -23,12 +23,7 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <AppProvider>
-          <div className="flex h-screen bg-slate-100 dark:bg-slate-900 overflow-hidden transition-colors">
-            <Sidebar />
-            <main className="flex-1 min-h-0 overflow-hidden">
-              {children}
-            </main>
-          </div>
+          <AppFrame>{children}</AppFrame>
         </AppProvider>
       </body>
     </html>

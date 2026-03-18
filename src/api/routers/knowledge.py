@@ -242,6 +242,15 @@ async def ingest_file(
         }
         kb_manager.add_file(kb_id, file_info)
 
+        # Trigger notebook auto-import jobs if enabled on any notebook bound to this KB.
+        try:
+            from src.services.notebook import get_notebook_manager
+
+            get_notebook_manager().trigger_auto_import_for_kb_file(kb_id, file_id)
+        except Exception:
+            # Auto-import should never break ingest success path.
+            pass
+
         return {"success": True, "data": file_info}
 
     except Exception as e:
