@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { PenTool, Loader2, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 
 const FASTWRITE_URL = 'http://localhost:3002';
 
@@ -53,31 +53,8 @@ export default function CoWriterPage() {
     };
 
     return (
-        <div className="h-screen w-full flex flex-col bg-slate-50 dark:bg-slate-900">
-            {/* Minimal header bar */}
-            <div className="h-10 px-4 flex items-center justify-between bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shrink-0">
-                <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-rose-500 to-pink-400 flex items-center justify-center text-white">
-                        <PenTool size={13} />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                        协同写作
-                    </span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">FastWrite</span>
-                </div>
-                <a
-                    href={FASTWRITE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 flex items-center gap-1 transition-colors"
-                    title="在新窗口中打开"
-                >
-                    <ExternalLink size={12} />
-                </a>
-            </div>
-
-            {/* Content area */}
-            <div className="flex-1 relative">
+        <div className="h-screen w-full bg-slate-50 dark:bg-slate-900">
+            <div className="relative h-full w-full">
                 {/* Loading state */}
                 {status === 'loading' && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 z-10">
@@ -115,7 +92,7 @@ export default function CoWriterPage() {
                     <iframe
                         ref={iframeRef}
                         src={FASTWRITE_URL}
-                        className="w-full h-full border-0"
+                        className="h-full w-full border-0"
                         title="FastWrite - 协同写作"
                         allow="clipboard-read; clipboard-write"
                     />

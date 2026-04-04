@@ -1,0 +1,76 @@
+name: Architecture Guard Monthly Drill
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"
+  workflow_dispatch:
+
+jobs:
+  monthly-architecture-guard-drill:
+    name: Monthly Architecture Guard Drill
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare artifacts dir
+        run: mkdir -p artifacts
+
+      - name: Run monthly drill (success + failure loop)
+        run: |
+          set -o pipefail
+          bash scripts/rehearse_arch_guard_pr.sh artifacts/monthly-architecture-guard \
+            | tee artifacts/monthly-architecture-guard-run.log
+
+      - name: Run monthly dependency guard drill
+        run: |
+          set -o pipefail
+          bash scripts/simulate_dependency_guard_ci.sh | tee artifacts/monthly-dependency-guard.log
+
+      - name: Generate structure drift dashboard
+        run: |
+          set -o pipefail
+          bash scripts/generate_structure_drift_dashboard.sh artifacts/structure-drift-dashboard.md \
+            | tee artifacts/structure-drift-dashboard.log
+
+      - name: Add monthly drill summary
+        if: always()
+        run: |
+          {
+            echo "### Monthly Architecture Guard Drill"
+            echo ""
+            if [[ -f artifacts/monthly-architecture-guard/summary.md ]]; then
+              cat artifacts/monthly-architecture-guard/summary.md
+            else
+              echo "_summary not found: artifacts/monthly-architecture-guard/summary.md_"
+            fi
+            echo ""
+            echo "#### Dependency Guard Drill Log (tail)"
+            if [[ -f artifacts/monthly-dependency-guard.log ]]; then
+              echo '```text'
+              tail -n 40 artifacts/monthly-dependency-guard.log
+              echo '```'
+            else
+              echo "_log not found: artifacts/monthly-dependency-guard.log_"
+            fi
+            echo ""
+            echo "#### Structure Drift Dashboard"
+            if [[ -f artifacts/structure-drift-dashboard.md ]]; then
+              cat artifacts/structure-drift-dashboard.md
+            else
+              echo "_dashboard not found: artifacts/structure-drift-dashboard.md_"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload monthly drill artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-architecture-guard
+          path: |
+            artifacts/monthly-architecture-guard
+            artifacts/monthly-architecture-guard-run.log
+            artifacts/monthly-dependency-guard.log
+            artifacts/structure-drift-dashboard.md
+            artifacts/structure-drift-dashboard.log
+          if-no-files-found: warn

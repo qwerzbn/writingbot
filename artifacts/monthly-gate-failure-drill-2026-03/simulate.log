@@ -1,0 +1,5 @@
+[simulate-arch-guard] success path
+[simulate-arch-guard] success path notice verified
+[simulate-arch-guard] failure path
+[simulate-arch-guard] failure path error annotation verified
+[simulate-arch-guard] passed

@@ -1,0 +1,65 @@
+{
+  "updated_at": "2026-03-18T14:43:25.968208",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+  "coverage": {
+    "papers_with_notes": 3,
+    "total_papers": 3,
+    "coverage_rate": 1.0
+  },
+  "mastery": {
+    "note_count": 4,
+    "avg_score": 72.08
+  },
+  "weak_topics_top_n": [],
+  "high_value_review_notes": [
+    {
+      "id": "5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "title": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：",
+      "mastery_score": 64.58,
+      "updated_at": "2026-03-17T18:36:05.374648",
+      "urgency": 25.63
+    },
+    {
+      "id": "dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "title": "阅读卡片：METAGPT: META PROGRAMMING FOR A MULTI-AGENT COLLABORATIVE FRAMEWORK",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.882507",
+      "urgency": 18.63
+    },
+    {
+      "id": "05589c42-19d7-469a-8dde-8086fb374c8f",
+      "title": "阅读卡片：HiconAgent: History Context-aware Policy Optimization for GUI Agents",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.885244",
+      "urgency": 18.63
+    },
+    {
+      "id": "7e97465f-809d-48e5-958d-2154ad657d74",
+      "title": "阅读卡片：The Landscape of Agentic Reinforcement Learning for LLMs: A Survey",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.877321",
+      "urgency": 18.63
+    }
+  ],
+  "coverage_trend": [
+    {
+      "date": "2026-03-16",
+      "coverage_rate": 1.0,
+      "papers_with_notes": 3,
+      "total_papers": 3
+    },
+    {
+      "date": "2026-03-17",
+      "coverage_rate": 0.0,
+      "papers_with_notes": 3,
+      "total_papers": 0
+    },
+    {
+      "date": "2026-03-18",
+      "coverage_rate": 1.0,
+      "papers_with_notes": 3,
+      "total_papers": 3
+    }
+  ]
+}

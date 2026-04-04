@@ -1,0 +1,6 @@
+[verify-arch-chat] validating code anchors
+[verify-arch-chat] arch_doc=/var/folders/6x/r1zsj0h94kd1s9cgmyh88pt40000gn/T/tmp.VAYmjTKbjY
+[verify-arch-chat] total_checks=11
+[verify-arch-chat] FAIL doc missing file reference: src/api/main.py (chat router mounted)
+[verify-arch-chat] summary: passed=0 failed=1 total=11
+::error title=Architecture Guard::doc missing file reference: src/api/main.py (chat router mounted)

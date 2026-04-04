@@ -1,0 +1,83 @@
+{
+  "id": "5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "title": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：",
+  "content": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：\n\n---\n\n### **研究不足分析（结构化）**\n\n| 维度             | 具体表现                                                                 | 支持证据/依据                     |\n|------------------|--------------------------------------------------------------------------|--------------------------------------|\n| **研究不足**     | **缺乏统一、可复现的评估基准以衡量RL驱动的LLM智能体在真实工具交互中的泛化能力**；现有工作多依赖定制化任务（如单轨迹训练[1]、特定GUI/API环境[2]），未建立跨平台、状态感知、带长期依赖的标准化测试协议。 | [1] SimpleVLA-RL（单轨迹）、[2] ToolSandbox（虽为基准但仅聚焦“状态感知对话式工具使用”，未覆盖多步规划与失败恢复） |\n|                  | **奖励建模高度任务特异化，难以迁移**：多数RL方法（如R1-Searcher[1]、PilotRL[2]、Time-R1[3]）依赖人工设计的稀疏/规则型奖励函数，缺乏对隐式用户意图、多目标权衡或动态环境变化的鲁棒建模能力。 | [1] R1-searcher（rule-based reward）、[2] PilotRL（global planning-guided reward）、[3] Time-R1（dynamic rule-based reward） |\n|                  | **策略-奖励耦合僵化，忽视二者协同演化机制**：当前RLHF/RLAIF范式常将奖励模型（RM）视为静态监督信号，未建模RM与策略模型在训练过程中的相互影响与漂移风险。 | [2] It takes two[2]（明确指出reward-policy seamlessness问题，但尚未提出系统性解耦/联合优化框架） |\n| **适用边界**     | **主要适用于中低复杂度、高自动验证率的任务域**（如代码生成[5]、简单Web/API调用[2]、时间序列问答[3]）；在需长程因果推理、非符号化环境建模（如物理仿真、开放世界机器人）或弱监督场景下性能骤降。 | [5] RL for SWE（强自动评测支持）、[6] SWiRL（依赖step-wise verification）、[3] Agent models（限定“autonomous & efficient decision-making”，未覆盖不确定性决策） |\n|                  | **严重依赖高质量SFT初始化与领域特定提示工程**：几乎所有RL增强工作（如Ladder[1]、Agentic Reasoning[1]、RLoT[6]）均以SFT微调模型为起点，脱离该前提则RL训练易发散或陷入局部最优。 | [1] Ladder（recursive decomposition on SFT-initialized LLM）、[6] RLoT（lightweight navigator trained *on top of* base LLM） |\n| **潜在偏差**     | **评估偏差**：多数工作在封闭、可控的合成数据集（如ToolSandbox[2]、R1-Code-Interpreter[5]）上报告SOTA，但未报告在真实用户交互日志、跨领域迁移或对抗性扰动下的鲁棒性，存在“benchmark overfitting”。 | [2] ToolSandbox（stateful & conversational，但未声明真实用户采样比例）、[5] 表5中所有方法均未报告零样本跨任务泛化指标 |\n|                  | **架构偏差**：主流方案（如SimpleVLA-RL[1]、UI-R1[2]）默认采用“LLM as policy + 外部工具调用”范式，隐含假设工具API语义稳定、错误可逆；忽略工具不可用、响应延迟、状态不一致等现实约束，导致部署失配。 | [1] SimpleVLA-RL（online RL with *only one trajectory* → 无容错重试机制）、[2] UI-R1（GUI action prediction without uncertainty quantification） |\n| **可改进方向**   | ▶ 构建**动态演化的多粒度评估基准**：融合ToolSandbox[2]的状态感知性 + SWiRL[6]的step-wise verification + 真实用户交互轨迹（如GitHub Actions日志），支持失败归因与策略修复追踪。<br>▶ 发展**奖励-策略协同学习框架**：借鉴It takes two[2]洞见，设计reward-policy双更新机制（如交替优化、梯度对齐正则化），缓解reward hacking与分布偏移。<br>▶ 探索**轻量级、可插拔的RL适配器**：摆脱对SFT基座的强依赖（如RLoT[6]思路延伸），支持冻结LLM主干、仅微调少量参数实现跨任务RL迁移。 | [2] ToolSandbox、[6] SWiRL & RLoT、[2] It takes two |\n\n--- \n\n> 注：未在证据[1]–[6]中直接支持的判断（如“真实用户采样比例未知”“部署失配”）已标注为**推断**，符合写作要求。所有结论均锚定论文方法论层面，避免泛化至技术伦理或社会影响等非本模板范畴。",
+  "tags": [],
+  "source": {
+    "type": "knowledge_base",
+    "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+    "file_id": null,
+    "file_name": "2509.02547v4.pdf",
+    "page": 77,
+    "evidence_links": [
+      {
+        "id": "945251fca19cec7759b5a3f51786348d",
+        "source": "2509.02547v4.pdf",
+        "page": 77,
+        "content": "on and pattern recognition, pp. 19615–19625,\n2024.\n\nToby Simonds and Akira Yoshiyama. Ladder: Self-improving llms through recursive problem decomposition,\n2025. URL https://arxiv.org/abs/2503.00735.\n\nSimpleVLA-RL Team. S"
+      },
+      {
+        "id": "47f33bb0cb0a40340d7a823ad6d44b17",
+        "source": "2509.02547v4.pdf",
+        "page": 70,
+        "content": "yu Li, Guoli Yin, Zirui Wang, and Ruoming Pang. Toolsandbox: A stateful, conversational,\ninteractive evaluation benchmark for llm tool use capabilities, 2025b. URL https://arxiv.org/abs/\n2408.04682.\n\nKeer Lu, Chong Chen,"
+      },
+      {
+        "id": "8c98356e658d25255581f28375844e31",
+        "source": "2509.02547v4.pdf",
+        "page": 38,
+        "content": "ts indicate qualitative dependency levels: • Core,\n◦Supporting, – Minimal. The heatmap provides a navigation aid linking the capability taxonomy (Section 3)\nwith the application domains (Section 4).\n\nTime Series.\nTime-R1"
+      },
+      {
+        "id": "42f53460a6438bcd5446b78333799d0c",
+        "source": "2509.02547v4.pdf",
+        "page": 49,
+        "content": ", Xipeng Qiu,\nMingxuan Wang, and Lingpeng Kong. Polaris: A post-training recipe for scaling reinforcement learning on\nadvanced reasoning models, 2025. URL https://hkunlp.github.io/blog/2025/Polaris.\n\nHuan ang Gao, Jiayi "
+      },
+      {
+        "id": "a20c7a9b43fae9a427c957b9a8169c93",
+        "source": "2509.02547v4.pdf",
+        "page": 25,
+        "content": "uct, Gemma-2-9B-Instruct, Llama-3-8B-Instruct, Mistral-\n7B-Instruct-v0.3\n\nFocused-DPO (Zhang et al., 2025o)\nProcess\nDeepSeek-Coder-6.7B-Base/Instruct, Magicoder-S-DS-6.7B, Qwen2.5-Coder-7B-\nInstruct\n\nRe:Form (Yan et al.,"
+      },
+      {
+        "id": "9f616069c8310d29411364d7b87d0e02",
+        "source": "2509.02547v4.pdf",
+        "page": 28,
+        "content": "able feedback may generalize beyond informal mathematical tasks to any domain with reliable\nautomatic verification. To improve performance on complex problems, SWiRL (Goldie et al., 2025) synthesizes\nstep-wise tool use r"
+      }
+    ],
+    "citation_count": 6,
+    "last_used_at": "2026-03-17T18:35:27.143768",
+    "chunk_id": null,
+    "original_quote": null
+  },
+  "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+  "file_id": null,
+  "concepts": [
+    "rl",
+    "r1",
+    "reward",
+    "toolsandbox",
+    "llm",
+    "rlot",
+    "sft",
+    "simplevla",
+    "policy",
+    "takes",
+    "swirl",
+    "研究不足",
+    "api",
+    "two",
+    "it",
+    "verification",
+    "面向学术论文写作场景",
+    "输出结构化分析结果"
+  ],
+  "links_count": 10,
+  "template_completeness": 0.0,
+  "mastery_score": 64.55,
+  "created_at": "2026-03-17T18:35:27.143865",
+  "updated_at": "2026-03-17T18:36:05.374648"
+}

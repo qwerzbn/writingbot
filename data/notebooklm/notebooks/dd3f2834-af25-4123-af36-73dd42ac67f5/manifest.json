@@ -1,0 +1,11 @@
+{
+  "id": "dd3f2834-af25-4123-af36-73dd42ac67f5",
+  "name": "test01",
+  "description": "NotebookLM 风格智能笔记本",
+  "color": "#111827",
+  "icon": "book",
+  "created_at": "2026-03-18T16:34:51.544984",
+  "updated_at": "2026-03-19T00:56:19.064847",
+  "default_kb_id": null,
+  "auto_import_enabled": false
+}

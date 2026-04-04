@@ -1,0 +1,53 @@
+{
+  "related_notes": [
+    {
+      "id": "2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.55
+    },
+    {
+      "id": "44362366-153b-4ac6-a430-8beb6e3c1003",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.55
+    },
+    {
+      "id": "070aea05-d636-40e4-91b0-d1344c2247e4",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.55
+    },
+    {
+      "id": "906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.55
+    },
+    {
+      "id": "4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.55
+    },
+    {
+      "id": "95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "新笔记",
+      "score": 0.545
+    },
+    {
+      "id": "5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：",
+      "score": 0.1479
+    },
+    {
+      "id": "dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "title": "阅读卡片：METAGPT: META PROGRAMMING FOR A MULTI-AGENT COLLABORATIVE FRAMEWORK",
+      "score": 0.1479
+    }
+  ],
+  "updated_at": "2026-03-18T14:43:25.948625"
+}

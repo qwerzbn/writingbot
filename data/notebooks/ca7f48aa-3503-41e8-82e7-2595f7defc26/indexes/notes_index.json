@@ -1,0 +1,218 @@
+{
+  "updated_at": "2026-03-18T14:43:25.936223",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "notes": [
+    {
+      "id": "2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 40.0,
+      "updated_at": "2026-03-18T14:43:23.619649"
+    },
+    {
+      "id": "44362366-153b-4ac6-a430-8beb6e3c1003",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 40.0,
+      "updated_at": "2026-03-18T14:43:15.354357"
+    },
+    {
+      "id": "070aea05-d636-40e4-91b0-d1344c2247e4",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 40.0,
+      "updated_at": "2026-03-18T14:43:24.678756"
+    },
+    {
+      "id": "95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 38.99,
+      "updated_at": "2026-03-16T14:25:32.011466"
+    },
+    {
+      "id": "5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "title": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：",
+      "tags": [],
+      "concepts": [
+        "rl",
+        "r1",
+        "reward",
+        "toolsandbox",
+        "llm",
+        "rlot",
+        "sft",
+        "simplevla",
+        "policy",
+        "takes",
+        "swirl",
+        "研究不足",
+        "api",
+        "two",
+        "it",
+        "verification",
+        "面向学术论文写作场景",
+        "输出结构化分析结果"
+      ],
+      "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+      "file_id": null,
+      "mastery_score": 64.58,
+      "updated_at": "2026-03-17T18:36:05.374648"
+    },
+    {
+      "id": "dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "title": "阅读卡片：METAGPT: META PROGRAMMING FOR A MULTI-AGENT COLLABORATIVE FRAMEWORK",
+      "tags": [
+        "待补充",
+        "暂无自动抽取结果",
+        "请手动补充"
+      ],
+      "concepts": [
+        "待补充",
+        "collaborative",
+        "programming",
+        "framework",
+        "metagpt",
+        "multi",
+        "agent",
+        "meta",
+        "暂无自动抽取结果",
+        "请手动补充",
+        "实验与证据",
+        "可复现线索",
+        "阅读卡片",
+        "论文信息",
+        "核心问题",
+        "方法概览",
+        "关键结论",
+        "我的思考"
+      ],
+      "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+      "file_id": "42a41d63-2036-490a-bdd8-d104d3059671",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.882507"
+    },
+    {
+      "id": "7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 40.0,
+      "updated_at": "2026-03-18T14:43:25.296846"
+    },
+    {
+      "id": "906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 15.0,
+      "updated_at": "2026-03-18T14:43:25.932642"
+    },
+    {
+      "id": "05589c42-19d7-469a-8dde-8086fb374c8f",
+      "title": "阅读卡片：HiconAgent: History Context-aware Policy Optimization for GUI Agents",
+      "tags": [
+        "待补充",
+        "暂无自动抽取结果",
+        "请手动补充"
+      ],
+      "concepts": [
+        "待补充",
+        "optimization",
+        "hiconagent",
+        "history",
+        "context",
+        "policy",
+        "agents",
+        "aware",
+        "gui",
+        "暂无自动抽取结果",
+        "请手动补充",
+        "实验与证据",
+        "可复现线索",
+        "阅读卡片",
+        "论文信息",
+        "核心问题",
+        "方法概览",
+        "关键结论"
+      ],
+      "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+      "file_id": "fd288b68-3f7b-43b1-a057-c5eda447b0a3",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.885244"
+    },
+    {
+      "id": "7e97465f-809d-48e5-958d-2154ad657d74",
+      "title": "阅读卡片：The Landscape of Agentic Reinforcement Learning for LLMs: A Survey",
+      "tags": [
+        "待补充",
+        "暂无自动抽取结果",
+        "请手动补充"
+      ],
+      "concepts": [
+        "待补充",
+        "reinforcement",
+        "landscape",
+        "learning",
+        "agentic",
+        "survey",
+        "llms",
+        "of",
+        "暂无自动抽取结果",
+        "请手动补充",
+        "实验与证据",
+        "可复现线索",
+        "阅读卡片",
+        "论文信息",
+        "核心问题",
+        "方法概览",
+        "关键结论",
+        "我的思考"
+      ],
+      "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+      "file_id": "b54f089e-a6ba-4a2a-9abc-7dc73b241b0f",
+      "mastery_score": 74.58,
+      "updated_at": "2026-03-17T18:34:20.877321"
+    },
+    {
+      "id": "4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "title": "新笔记",
+      "tags": [],
+      "concepts": [
+        "新笔记"
+      ],
+      "kb_id": null,
+      "file_id": null,
+      "mastery_score": 40.0,
+      "updated_at": "2026-03-18T14:43:24.193418"
+    }
+  ]
+}

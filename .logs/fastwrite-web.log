@@ -1,0 +1,8 @@
+$ vite --host "0.0.0.0" --port "3002"
+
+  VITE v7.3.1  ready in 570 ms
+
+  ➜  Local:   http://localhost:3002/
+  ➜  Network: http://10.78.94.135:3002/
+  ➜  Network: http://198.18.0.1:3002/
+error: script "dev" was terminated by signal SIGKILL (Forced quit)

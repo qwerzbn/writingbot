@@ -1,0 +1,27 @@
+{
+  "skill_name": "innovation-summary",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "这篇论文号称提出了一种全新的注意力机制，你帮我看看它的创新点到底在哪，和之前的FlashAttention有什么本质区别？",
+      "expected_output": "包含创新点清单和与已有工作差异分析的中文回复，评估创新可信度。",
+      "assertions": [
+        "The output must be written entirely in Chinese.",
+        "The output must explicitly list the innovations.",
+        "The output must explain the difference between the proposed mechanism and FlashAttention.",
+        "The output must include a credibility assessment."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "帮我评估下这篇文章的新颖度，它里面的改动感觉很微小，有充分的实验支撑吗？",
+      "expected_output": "客观的创新性评估，指明哪些是强证据创新，哪些可能是营销表述。",
+      "assertions": [
+        "The output must address whether the experiments provided adequate support.",
+        "The output must provide a judgment on novelty/innovation credibility."
+      ],
+      "files": []
+    }
+  ]
+}

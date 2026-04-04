@@ -1,6 +1,6 @@
 ---
 name: experiment-compare
-description: Use this skill when the user asks to compare experiments across papers or methods, especially datasets, metrics, baselines, and result differences.
+description: How to compare experiments across different academic papers and methods. Make sure to use this skill whenever the user asks to compare methods A and B, asks for experimental differences across papers, or wants to know the reasons why results differ between different approaches. 
 metadata:
   id: /experiment-compare
   domain: research
@@ -14,31 +14,52 @@ metadata:
   instruction: 比较不同论文或方法在数据集、指标、结果和成本上的差异，先给对比表再解释原因，并标注证据引用。
 ---
 
-# 实验对比
+# 实验对比 (Experiment Compare)
 
-当用户要求“方法A和B对比/多篇论文实验差异/结果差异原因”时使用。
+This skill is designed to help users quickly grasp the empirical differences between multiple academic papers or methods by structuring the comparison into a clear table followed by an analysis.
 
-## 输出要求
+## Output Guidelines & Philosophy
 
-- 仅使用 Markdown，禁止输出 HTML 标签。
-- 先给对比表，再给差异解释。
-- 有证据必须标注引用 `[1][2]`，无证据需标注“（推断）”。
+When structuring your comparison, follow these guidelines to maximize utility for the user:
 
-## 输出模板
+- **Format in Markdown:** Please use Markdown exclusively for your output (especially for tables and headings). This avoids rendering issues caused by raw HTML tags.
+- **Respond completely in Chinese (中文):** Even though these instructions and section titles are written in English (to help you understand the logical structure better), your FINAL output MUST be written entirely in Chinese, including the table headers. You may keep English technical terms if appropriate.
+- **Provide a High-Level Table First:** Users usually want a quick birds-eye view before diving into the details. Provide a comparison table first, and then follow up with a detailed explanation of the differences.
+- **Evidence-Based Explanations:** When discussing why two methods perform differently, quote evidence from the text if available (using bracketed citations like `[1]`). If you are inferring the cause of a performance difference based on your own knowledge, kindly mark it with "（推断）" (Inference) so the user knows it's an educated guess rather than a verified claim from the authors.
 
-### 1. 对比范围
-- 对比对象与前提（任务、数据、版本）。
+## Expected Report Structure
+
+ALWAYS structure your answer using the following sections:
+
+### 1. 对比范围 (Scope of Comparison)
+- State what is being compared and the underlying premise (e.g., the specific task, datasets involved, or model versions).
+
+### 2. 关键对比表 (Key Comparison Table)
+Provide a table outlining the differences. Use this template:
+
+| 维度 (Dimension) | 方法A (Method A) | 方法B (Method B) | 差异结论 (Conclusion of Difference) |
+| --- | --- | --- | --- |
+| 数据集 (Datasets) |  |  |  |
+| 指标 (Metrics) |  |  |  |
+| 结果 (Results) |  |  |  |
+| 资源成本 (Resource Cost) |  |  |  |
+
+### 3. 差异原因分析 (Analysis of Differences)
+- Explain the possible reasons for the differences in the table. Provide a logical chain of evidence.
+
+### 4. 选型建议 (Selection Recommendation)
+- Provide recommendations on which method to choose under different constraints (e.g., accuracy vs. cost vs. latency).
+
+## 参考样例 (Example Output)
+
+Here is an illustrative example of the expected table and analysis:
 
 ### 2. 关键对比表
-| 维度 | 方法A | 方法B | 差异结论 |
+
+| 维度 | FlashAttention-2 | PagedAttention | 差异结论 |
 | --- | --- | --- | --- |
-| 数据集 |  |  |  |
-| 指标 |  |  |  |
-| 结果 |  |  |  |
-| 资源成本 |  |  |  |
+| **内存池化** | 无，固定尺寸切块 | 有，非连续内存分页 | 显存利用率 PagedAttention 显著更高 |
+| **IO 成本** | 极低（SRAM优化） | 中等（需管理页表） | 加密/计算密集场合适用 FlashAttention-2 |
 
 ### 3. 差异原因分析
-- 可能原因与证据链。
-
-### 4. 选型建议
-- 在不同约束（精度/成本/时延）下的推荐方案。
+- PagedAttention 在应对不定长请求时极大地缓解了显存碎片问题，从而实现了高达 40% 的吞吐量提升 [2]。这主要得益于其将操作系统中的虚拟内存分页思想引入了 KV Cache 管理。

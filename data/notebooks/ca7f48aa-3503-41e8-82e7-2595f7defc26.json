@@ -1,0 +1,18 @@
+{
+  "id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "name": "01",
+  "description": "",
+  "color": "#3B82F6",
+  "icon": "book",
+  "records": [],
+  "created_at": "2026-03-16T14:25:30.430364",
+  "updated_at": "2026-03-18T14:43:25.955592",
+  "schema_version": 2,
+  "default_kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+  "auto_import_enabled": true,
+  "migration": {
+    "records_to_notes_done": true,
+    "records_to_notes_at": "2026-03-16T14:25:37.284960",
+    "records_to_notes_count": 0
+  }
+}

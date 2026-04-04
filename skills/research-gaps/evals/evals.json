@@ -1,0 +1,26 @@
+{
+  "skill_name": "research-gaps",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "作者在文中说他们的方法达到了SOTA，但我感觉他们在特定长尾分布下刻意没报数据。你帮我诊断下这篇论文的局限性和潜在偏差。",
+      "expected_output": "指出文章潜在偏差和影响范围的中文Markdown，提供针对性的改进建议。",
+      "assertions": [
+        "The output must be written entirely in Chinese.",
+        "The output must identify potential biases or issues with long-tail data evaluation.",
+        "The output must include actionable advice for improvement."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "这篇做医疗图像分割的论文，如果我想在真实的门诊数据上用，会有哪些外推风险？下一步我该怎么改进？",
+      "expected_output": "具体关联医疗场景的外推性判断，以及短中长期的改进路线图。",
+      "assertions": [
+        "The output must explicitly discuss extrapolation/generalization risks in the context of real clinical data.",
+        "The output must include a roadmap with short, medium, or long term improvement suggestions."
+      ],
+      "files": []
+    }
+  ]
+}

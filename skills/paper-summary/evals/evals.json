@@ -1,0 +1,27 @@
+{
+  "skill_name": "paper-summary",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我总结一下这篇关于大模型长文本处理的论文的核心贡献和实验结论。",
+      "expected_output": "Markdown格式的论文总结，包含研究问题、方法、实验设置等6个部分，并且全部为中文。",
+      "assertions": [
+        "The output must be written entirely in Chinese.",
+        "The output must use Markdown formatting.",
+        "The output must contain a section titled either '1. 研究问题' or '1. 研究问题 (Research Question)'.",
+        "The output must contain a section titled either '4. 核心结果' or '4. 核心结果 (Core Results)'."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我现在拿到了这篇CVPR 2024的最新工作，我没时间全看，你能提炼一下它的主要方法和局限性吗？",
+      "expected_output": "结构化的中文总结，重点突出方法和局限性部分。",
+      "assertions": [
+        "The output must clearly list the limitations of the paper.",
+        "The output must be formatted with Markdown bullet points or numbered lists."
+      ],
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,1555 @@
+{
+  "updated_at": "2026-03-18T14:43:25.950877",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "nodes": [
+    {
+      "id": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 40.0
+    },
+    {
+      "id": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 40.0
+    },
+    {
+      "id": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 40.0
+    },
+    {
+      "id": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 38.99
+    },
+    {
+      "id": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "note",
+      "label": "以下严格依据“研究不足”技能模板，结合所提供证据（优先引用[1][2]，其余标注推断），面向学术论文写作场景，输出结构化分析结果：",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 64.58
+    },
+    {
+      "id": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "note",
+      "label": "阅读卡片：METAGPT: META PROGRAMMING FOR A MULTI-AGENT COLLABORATIVE FRAMEWORK",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 74.58
+    },
+    {
+      "id": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 40.0
+    },
+    {
+      "id": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 15.0
+    },
+    {
+      "id": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "note",
+      "label": "阅读卡片：HiconAgent: History Context-aware Policy Optimization for GUI Agents",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 74.58
+    },
+    {
+      "id": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "note",
+      "label": "阅读卡片：The Landscape of Agentic Reinforcement Learning for LLMs: A Survey",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 74.58
+    },
+    {
+      "id": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "note",
+      "label": "新笔记",
+      "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+      "mastery_score": 40.0
+    },
+    {
+      "id": "concept:新笔记",
+      "type": "concept",
+      "label": "新笔记",
+      "weight": 7
+    },
+    {
+      "id": "concept:rl",
+      "type": "concept",
+      "label": "rl",
+      "weight": 1
+    },
+    {
+      "id": "concept:r1",
+      "type": "concept",
+      "label": "r1",
+      "weight": 1
+    },
+    {
+      "id": "concept:reward",
+      "type": "concept",
+      "label": "reward",
+      "weight": 1
+    },
+    {
+      "id": "concept:toolsandbox",
+      "type": "concept",
+      "label": "toolsandbox",
+      "weight": 1
+    },
+    {
+      "id": "concept:llm",
+      "type": "concept",
+      "label": "llm",
+      "weight": 1
+    },
+    {
+      "id": "concept:rlot",
+      "type": "concept",
+      "label": "rlot",
+      "weight": 1
+    },
+    {
+      "id": "concept:sft",
+      "type": "concept",
+      "label": "sft",
+      "weight": 1
+    },
+    {
+      "id": "concept:simplevla",
+      "type": "concept",
+      "label": "simplevla",
+      "weight": 1
+    },
+    {
+      "id": "concept:policy",
+      "type": "concept",
+      "label": "policy",
+      "weight": 2
+    },
+    {
+      "id": "concept:takes",
+      "type": "concept",
+      "label": "takes",
+      "weight": 1
+    },
+    {
+      "id": "concept:swirl",
+      "type": "concept",
+      "label": "swirl",
+      "weight": 1
+    },
+    {
+      "id": "concept:研究不足",
+      "type": "concept",
+      "label": "研究不足",
+      "weight": 1
+    },
+    {
+      "id": "concept:api",
+      "type": "concept",
+      "label": "api",
+      "weight": 1
+    },
+    {
+      "id": "concept:two",
+      "type": "concept",
+      "label": "two",
+      "weight": 1
+    },
+    {
+      "id": "concept:it",
+      "type": "concept",
+      "label": "it",
+      "weight": 1
+    },
+    {
+      "id": "concept:verification",
+      "type": "concept",
+      "label": "verification",
+      "weight": 1
+    },
+    {
+      "id": "concept:面向学术论文写作场景",
+      "type": "concept",
+      "label": "面向学术论文写作场景",
+      "weight": 1
+    },
+    {
+      "id": "concept:输出结构化分析结果",
+      "type": "concept",
+      "label": "输出结构化分析结果",
+      "weight": 1
+    },
+    {
+      "id": "concept:待补充",
+      "type": "concept",
+      "label": "待补充",
+      "weight": 3
+    },
+    {
+      "id": "concept:collaborative",
+      "type": "concept",
+      "label": "collaborative",
+      "weight": 1
+    },
+    {
+      "id": "concept:programming",
+      "type": "concept",
+      "label": "programming",
+      "weight": 1
+    },
+    {
+      "id": "concept:framework",
+      "type": "concept",
+      "label": "framework",
+      "weight": 1
+    },
+    {
+      "id": "concept:metagpt",
+      "type": "concept",
+      "label": "metagpt",
+      "weight": 1
+    },
+    {
+      "id": "concept:multi",
+      "type": "concept",
+      "label": "multi",
+      "weight": 1
+    },
+    {
+      "id": "concept:agent",
+      "type": "concept",
+      "label": "agent",
+      "weight": 1
+    },
+    {
+      "id": "concept:meta",
+      "type": "concept",
+      "label": "meta",
+      "weight": 1
+    },
+    {
+      "id": "concept:暂无自动抽取结果",
+      "type": "concept",
+      "label": "暂无自动抽取结果",
+      "weight": 3
+    },
+    {
+      "id": "concept:请手动补充",
+      "type": "concept",
+      "label": "请手动补充",
+      "weight": 3
+    },
+    {
+      "id": "concept:实验与证据",
+      "type": "concept",
+      "label": "实验与证据",
+      "weight": 3
+    },
+    {
+      "id": "concept:可复现线索",
+      "type": "concept",
+      "label": "可复现线索",
+      "weight": 3
+    },
+    {
+      "id": "concept:阅读卡片",
+      "type": "concept",
+      "label": "阅读卡片",
+      "weight": 3
+    },
+    {
+      "id": "concept:论文信息",
+      "type": "concept",
+      "label": "论文信息",
+      "weight": 3
+    },
+    {
+      "id": "concept:核心问题",
+      "type": "concept",
+      "label": "核心问题",
+      "weight": 3
+    },
+    {
+      "id": "concept:方法概览",
+      "type": "concept",
+      "label": "方法概览",
+      "weight": 3
+    },
+    {
+      "id": "concept:关键结论",
+      "type": "concept",
+      "label": "关键结论",
+      "weight": 3
+    },
+    {
+      "id": "concept:我的思考",
+      "type": "concept",
+      "label": "我的思考",
+      "weight": 2
+    },
+    {
+      "id": "concept:optimization",
+      "type": "concept",
+      "label": "optimization",
+      "weight": 1
+    },
+    {
+      "id": "concept:hiconagent",
+      "type": "concept",
+      "label": "hiconagent",
+      "weight": 1
+    },
+    {
+      "id": "concept:history",
+      "type": "concept",
+      "label": "history",
+      "weight": 1
+    },
+    {
+      "id": "concept:context",
+      "type": "concept",
+      "label": "context",
+      "weight": 1
+    },
+    {
+      "id": "concept:agents",
+      "type": "concept",
+      "label": "agents",
+      "weight": 1
+    },
+    {
+      "id": "concept:aware",
+      "type": "concept",
+      "label": "aware",
+      "weight": 1
+    },
+    {
+      "id": "concept:gui",
+      "type": "concept",
+      "label": "gui",
+      "weight": 1
+    },
+    {
+      "id": "concept:reinforcement",
+      "type": "concept",
+      "label": "reinforcement",
+      "weight": 1
+    },
+    {
+      "id": "concept:landscape",
+      "type": "concept",
+      "label": "landscape",
+      "weight": 1
+    },
+    {
+      "id": "concept:learning",
+      "type": "concept",
+      "label": "learning",
+      "weight": 1
+    },
+    {
+      "id": "concept:agentic",
+      "type": "concept",
+      "label": "agentic",
+      "weight": 1
+    },
+    {
+      "id": "concept:survey",
+      "type": "concept",
+      "label": "survey",
+      "weight": 1
+    },
+    {
+      "id": "concept:llms",
+      "type": "concept",
+      "label": "llms",
+      "weight": 1
+    },
+    {
+      "id": "concept:of",
+      "type": "concept",
+      "label": "of",
+      "weight": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": "c2n:新笔记:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:rl:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:rl",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:r1:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:r1",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:reward:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:reward",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:toolsandbox:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:toolsandbox",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:llm:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:llm",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:rlot:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:rlot",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:sft:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:sft",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:simplevla:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:simplevla",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:policy:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:policy",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:takes:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:takes",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:swirl:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:swirl",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:研究不足:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:研究不足",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:api:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:api",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:two:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:two",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:it:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:it",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:verification:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:verification",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:面向学术论文写作场景:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:面向学术论文写作场景",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:输出结构化分析结果:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "mentions",
+      "source": "concept:输出结构化分析结果",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:待补充:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:待补充",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:collaborative:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:collaborative",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:programming:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:programming",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:framework:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:framework",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:metagpt:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:metagpt",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:multi:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:multi",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:agent:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:agent",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:meta:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:meta",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:暂无自动抽取结果:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:暂无自动抽取结果",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:请手动补充:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:请手动补充",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:实验与证据:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:实验与证据",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:可复现线索:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:可复现线索",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:阅读卡片:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:阅读卡片",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:论文信息:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:论文信息",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:核心问题:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:核心问题",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:方法概览:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:方法概览",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:关键结论:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:关键结论",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:我的思考:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "mentions",
+      "source": "concept:我的思考",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:待补充:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:待补充",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:optimization:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:optimization",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:hiconagent:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:hiconagent",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:history:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:history",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:context:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:context",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:policy:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:policy",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:agents:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:agents",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:aware:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:aware",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:gui:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:gui",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:暂无自动抽取结果:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:暂无自动抽取结果",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:请手动补充:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:请手动补充",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:实验与证据:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:实验与证据",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:可复现线索:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:可复现线索",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:阅读卡片:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:阅读卡片",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:论文信息:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:论文信息",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:核心问题:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:核心问题",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:方法概览:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:方法概览",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:关键结论:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "mentions",
+      "source": "concept:关键结论",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:待补充:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:待补充",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:reinforcement:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:reinforcement",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:landscape:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:landscape",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:learning:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:learning",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:agentic:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:agentic",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:survey:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:survey",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:llms:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:llms",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:of:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:of",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:暂无自动抽取结果:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:暂无自动抽取结果",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:请手动补充:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:请手动补充",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:实验与证据:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:实验与证据",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:可复现线索:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:可复现线索",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:阅读卡片:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:阅读卡片",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:论文信息:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:论文信息",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:核心问题:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:核心问题",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:方法概览:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:方法概览",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:关键结论:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:关键结论",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:我的思考:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "mentions",
+      "source": "concept:我的思考",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 1.0
+    },
+    {
+      "id": "c2n:新笔记:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "mentions",
+      "source": "concept:新笔记",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 1.0
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:2f78a53d-d7f4-4c87-b55b-0a857ba7e340:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:44362366-153b-4ac6-a430-8beb6e3c1003:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:44362366-153b-4ac6-a430-8beb6e3c1003",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:070aea05-d636-40e4-91b0-d1344c2247e4:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:070aea05-d636-40e4-91b0-d1344c2247e4",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "score": 0.1429,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9525
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 0.1429,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9525
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1429,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9525
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1429,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9525
+    },
+    {
+      "id": "n2n:95f99309-aa7a-4ce8-979f-2d1d83291eb5:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:95f99309-aa7a-4ce8-979f-2d1d83291eb5",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.545,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.9665
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "score": 0.1458,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1572,
+      "concept_overlap": 0.0286,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1458,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:5c8f026c-3472-44cb-b39f-5ee5a82b1d0c",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "type": "related",
+      "source": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "target": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.5496,
+      "concept_overlap": 0.3846,
+      "tag_overlap": 1.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.5718,
+      "concept_overlap": 0.44,
+      "tag_overlap": 1.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:7aea5d3e-c011-4239-bfb1-585eb255687f:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "type": "related",
+      "source": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "target": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:7aea5d3e-c011-4239-bfb1-585eb255687f:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:7aea5d3e-c011-4239-bfb1-585eb255687f:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:7aea5d3e-c011-4239-bfb1-585eb255687f:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:7aea5d3e-c011-4239-bfb1-585eb255687f",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:906f8dcf-5ef8-408e-b330-b1fa98d6f774:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "type": "related",
+      "source": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "target": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:906f8dcf-5ef8-408e-b330-b1fa98d6f774:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:906f8dcf-5ef8-408e-b330-b1fa98d6f774:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:906f8dcf-5ef8-408e-b330-b1fa98d6f774",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.55,
+      "concept_overlap": 1.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 1.0
+    },
+    {
+      "id": "n2n:05589c42-19d7-469a-8dde-8086fb374c8f:7e97465f-809d-48e5-958d-2154ad657d74",
+      "type": "related",
+      "source": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "target": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "score": 0.5496,
+      "concept_overlap": 0.3846,
+      "tag_overlap": 1.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.972
+    },
+    {
+      "id": "n2n:05589c42-19d7-469a-8dde-8086fb374c8f:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:05589c42-19d7-469a-8dde-8086fb374c8f",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    },
+    {
+      "id": "n2n:7e97465f-809d-48e5-958d-2154ad657d74:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "type": "related",
+      "source": "note:7e97465f-809d-48e5-958d-2154ad657d74",
+      "target": "note:4e7fe81f-7c54-4926-93c5-d9079b618f57",
+      "score": 0.1479,
+      "concept_overlap": 0.0,
+      "tag_overlap": 0.0,
+      "same_file_bonus": 0.0,
+      "recency_bonus": 0.986
+    }
+  ],
+  "metrics": {
+    "note_count": 11,
+    "concept_count": 51,
+    "edge_count": 134,
+    "note_relation_count": 55
+  }
+}

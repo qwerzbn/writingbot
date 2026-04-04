@@ -1,0 +1,29 @@
+{
+  "id": "2f78a53d-d7f4-4c87-b55b-0a857ba7e340",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "title": "新笔记",
+  "content": "",
+  "tags": [],
+  "source": {
+    "type": "manual",
+    "kb_id": null,
+    "file_id": null,
+    "file_name": null,
+    "page": null,
+    "chunk_id": null,
+    "original_quote": null,
+    "evidence_links": [],
+    "citation_count": 0,
+    "last_used_at": "2026-03-18T14:43:23.619678"
+  },
+  "kb_id": null,
+  "file_id": null,
+  "concepts": [
+    "新笔记"
+  ],
+  "links_count": 10,
+  "template_completeness": 0.0,
+  "mastery_score": 39.97,
+  "created_at": "2026-03-18T14:43:23.619649",
+  "updated_at": "2026-03-18T14:43:23.619649"
+}

@@ -1,0 +1,28 @@
+{
+  "skill_name": "experiment-compare",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "对比一下DeepSeek-V3和Llama-3-70B这两篇技术报告里的实验设置，重点说一下训练数据量和评估指标的差异。",
+      "expected_output": "包含对比表格的中文Markdown，后面跟上差异分析和选型建议。",
+      "assertions": [
+        "The output must be written entirely in Chinese.",
+        "The output must contain a Markdown table.",
+        "The Markdown table must include columns explicitly comparing DeepSeek-V3 and Llama-3-70B.",
+        "The output must discuss differences in training data amount and evaluation metrics."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "这三篇做视觉Agent的论文在评测集上差别很大，能帮我把他们用的评测集和最终准确率拉个表对比下吗？",
+      "expected_output": "包含三篇论文对比表格的中文回复，明确列出数据集和准确率，并分析差异。",
+      "assertions": [
+        "The output must contain a Markdown table.",
+        "The table must include a row or column specifically for datasets/evaluation sets.",
+        "The table must include a row or column specifically for accuracy metrics."
+      ],
+      "files": []
+    }
+  ]
+}

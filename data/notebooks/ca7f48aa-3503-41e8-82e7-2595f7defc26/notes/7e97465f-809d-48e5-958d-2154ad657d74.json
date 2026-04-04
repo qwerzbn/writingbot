@@ -1,0 +1,52 @@
+{
+  "id": "7e97465f-809d-48e5-958d-2154ad657d74",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "title": "阅读卡片：The Landscape of Agentic Reinforcement Learning for LLMs: A Survey",
+  "content": "## 论文信息\n- 文件：The Landscape of Agentic Reinforcement Learning for LLMs: A Survey\n\n## 核心问题\n- 待补充\n\n## 方法概览\n- 待补充\n\n## 关键结论\n- 暂无自动抽取结果，请手动补充。\n\n## 实验与证据\n- 待补充\n\n## 局限性\n- 待补充\n\n## 可复现线索\n- 待补充\n\n## 我的思考\n- ",
+  "tags": [
+    "待补充",
+    "暂无自动抽取结果",
+    "请手动补充"
+  ],
+  "source": {
+    "type": "knowledge_base",
+    "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+    "file_id": "b54f089e-a6ba-4a2a-9abc-7dc73b241b0f",
+    "file_name": "The Landscape of Agentic Reinforcement Learning for LLMs: A Survey",
+    "page": null,
+    "evidence_links": [],
+    "citation_count": 0,
+    "last_used_at": "2026-03-17T18:34:20.876329",
+    "auto_import": true,
+    "import_job_id": "3551c3f1-b33f-4426-ac09-b0876214ff28",
+    "chunk_id": null,
+    "original_quote": null
+  },
+  "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+  "file_id": "b54f089e-a6ba-4a2a-9abc-7dc73b241b0f",
+  "concepts": [
+    "待补充",
+    "reinforcement",
+    "landscape",
+    "learning",
+    "agentic",
+    "survey",
+    "llms",
+    "of",
+    "暂无自动抽取结果",
+    "请手动补充",
+    "实验与证据",
+    "可复现线索",
+    "阅读卡片",
+    "论文信息",
+    "核心问题",
+    "方法概览",
+    "关键结论",
+    "我的思考"
+  ],
+  "links_count": 10,
+  "template_completeness": 1.0,
+  "mastery_score": 74.55,
+  "created_at": "2026-03-16T14:25:38.387289",
+  "updated_at": "2026-03-17T18:34:20.877321"
+}

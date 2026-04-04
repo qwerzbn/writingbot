@@ -34,6 +34,20 @@ WritingBot/
 └── start_dev.sh            # 一键启动脚本
 ```
 
+## 🧭 架构文档导航
+
+- `docs/upgrade/repo-structure-overview.md`：仓库级双层视图（目录层 + 运行时主链路）
+- `docs/upgrade/project-structure-brief.md`：一页式项目结构速览（目录职责 + 主链路 + 入口）
+- `docs/upgrade/architecture-onboarding.md`：新人速览版双层架构图（目录结构 + `api/chat` 运行时链路）
+- `docs/upgrade/module-dependency-graph.md`：跨模块依赖可视化与循环依赖状态
+- `docs/upgrade/architecture-ownership-sla.md`：关键模块 owner 与治理 SLA
+- `docs/upgrade/structure-drift-dashboard.md`：结构漂移看板（由脚本/工作流生成）
+- `docs/upgrade/monthly-gate-failure-postmortem-2026-03.md`：月度门禁失败演练复盘样例
+- `docs/upgrade/repo-structure-snapshot.md`：最新结构快照（由脚本生成）
+- `docs/upgrade/architecture.md`：`api/chat` 子模块深度架构（文件级调用流、依赖关系、关键时序、异常分支）
+- `scripts/verify_architecture_chat_refs.sh`：`architecture.md` 与 `api/chat` 关键代码锚点一致性校验脚本
+- `scripts/print_repo_structure.sh`：输出仓库目录层快照 + 运行时主链路摘要 + 关键锚点检查（支持 `--markdown`、`--depth`、`--exclude-open-notebook`）
+
 ## 🚀 快速开始
 
 ### 环境要求
@@ -173,12 +187,39 @@ python main.py
 本项目提供企业级基础门禁：
 
 - CI 工作流：`.github/workflows/quality-gate.yml`
+- 月度演练工作流：`.github/workflows/architecture-guard-monthly.yml`
+- PR checklist 模板：`.github/pull_request_template.md`
 - 本地一键门禁脚本：`scripts/quality_gate.sh`
+- 架构门禁（pre-merge）：`scripts/verify_architecture_chat_refs.sh`（已接入 `quality-gate.yml` 的 `architecture-guard` job）
+- 依赖守卫（pre-merge）：`scripts/generate_module_dependency_graph.py`（按 `config/dependency-cycles-baseline.txt` 对“新增循环依赖”阻断）
+- CI 等价本地演练：`scripts/simulate_arch_guard_ci.sh`（验证通过路径 `::notice` 与失败路径 `::error` + 非零退出码）
+- 依赖守卫本地演练：`scripts/simulate_dependency_guard_ci.sh`（验证新增循环依赖触发 `::error` + 非零退出码）
+- 全链路守卫演练：`scripts/simulate_full_guard_ci.sh`（一次性验证架构锚点 + 依赖循环两类守卫）
+- 漂移看板生成：`scripts/generate_structure_drift_dashboard.sh`（输出 drift dashboard）
+- 本地 PR 演练包装脚本：`scripts/rehearse_arch_guard_pr.sh`（输出可归档的 snapshot/log/summary）
+- PR 演练说明：`docs/upgrade/architecture-guard-pr-drill.md`
+- 最近演练报告：`docs/upgrade/architecture-guard-drill-report.md`
+- 最近月度复盘：`docs/upgrade/monthly-gate-failure-postmortem-2026-03.md`
 
 本地执行：
 
 ```bash
 bash scripts/quality_gate.sh
+```
+
+## 🎤 答辩演示
+
+演示相关文档与脚本：
+
+- `docs/upgrade/demo-script.md`：8 分钟逐段台本（操作+话术）
+- `docs/upgrade/demo-rehearsal-checklist.md`：彩排与验收清单
+- `docs/upgrade/demo-risk-playbook.md`：现场应急预案
+- `scripts/demo_readiness_check.sh`：一键检查演示环境就绪度
+
+演示前检查：
+
+```bash
+bash scripts/demo_readiness_check.sh
 ```
 
 ## 📄 License

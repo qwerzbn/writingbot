@@ -1,0 +1,24 @@
+{
+  "id": "3551c3f1-b33f-4426-ac09-b0876214ff28",
+  "notebook_id": "ca7f48aa-3503-41e8-82e7-2595f7defc26",
+  "kb_id": "8313fac1-b7a8-4391-b8c8-46c0f75b8725",
+  "file_ids": [
+    "b54f089e-a6ba-4a2a-9abc-7dc73b241b0f",
+    "42a41d63-2036-490a-bdd8-d104d3059671",
+    "fd288b68-3f7b-43b1-a057-c5eda447b0a3"
+  ],
+  "status": "done",
+  "trigger_mode": "manual",
+  "progress": 1.0,
+  "processed": 3,
+  "total": 3,
+  "note_ids": [
+    "7e97465f-809d-48e5-958d-2154ad657d74",
+    "dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1",
+    "05589c42-19d7-469a-8dde-8086fb374c8f"
+  ],
+  "errors": [],
+  "created_at": "2026-03-17T18:34:20.852204",
+  "updated_at": "2026-03-17T18:34:20.895340",
+  "finished_at": "2026-03-17T18:34:20.895340"
+}

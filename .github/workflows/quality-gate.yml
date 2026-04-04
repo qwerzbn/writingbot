@@ -8,6 +8,118 @@ on:
   pull_request:
 
 jobs:
+  architecture-guard:
+    name: Architecture Guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare artifacts dir
+        run: mkdir -p artifacts
+
+      - name: Verify api/chat architecture anchors (blocking)
+        run: |
+          set -o pipefail
+          bash scripts/verify_architecture_chat_refs.sh | tee artifacts/architecture-guard.log
+
+      - name: Generate structure snapshot (markdown)
+        run: |
+          bash scripts/print_repo_structure.sh --markdown > artifacts/repo-structure-snapshot.md
+          echo "Generated artifacts/repo-structure-snapshot.md"
+
+      - name: Generate module dependency graph + cycle check (block on new cycles)
+        run: |
+          set -o pipefail
+          python scripts/generate_module_dependency_graph.py \
+            --output artifacts/module-dependency-graph.md \
+            --baseline config/dependency-cycles-baseline.txt \
+            | tee artifacts/dependency-guard.log
+
+      - name: Add architecture guard summary
+        if: always()
+        run: |
+          {
+            echo "### Architecture Guard"
+            echo ""
+            if [[ -f artifacts/architecture-guard.log ]]; then
+              echo '```text'
+              tail -n 40 artifacts/architecture-guard.log
+              echo '```'
+            else
+              echo "_architecture-guard.log not found_"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Add dependency guard summary
+        if: always()
+        run: |
+          {
+            echo "### Dependency Guard"
+            echo ""
+            if [[ -f artifacts/dependency-guard.log ]]; then
+              echo '```text'
+              tail -n 40 artifacts/dependency-guard.log
+              echo '```'
+            else
+              echo "_dependency-guard.log not found_"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload architecture snapshot artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-structure-snapshot
+          path: |
+            artifacts/architecture-guard.log
+            artifacts/dependency-guard.log
+            artifacts/module-dependency-graph.md
+            artifacts/repo-structure-snapshot.md
+          if-no-files-found: warn
+
+  architecture-guard-drill:
+    name: Architecture Guard Drill
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[arch-drill]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare artifacts dir
+        run: mkdir -p artifacts
+
+      - name: Run drill (success+failure simulation)
+        run: |
+          set -o pipefail
+          {
+            bash scripts/simulate_arch_guard_ci.sh
+            bash scripts/simulate_dependency_guard_ci.sh
+          } | tee artifacts/architecture-guard-drill.log
+
+      - name: Add drill summary
+        if: always()
+        run: |
+          {
+            echo "### Architecture Guard Drill"
+            echo ""
+            if [[ -f artifacts/architecture-guard-drill.log ]]; then
+              echo '```text'
+              tail -n 60 artifacts/architecture-guard-drill.log
+              echo '```'
+            else
+              echo "_architecture-guard-drill.log not found_"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload drill artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-guard-drill
+          path: artifacts/architecture-guard-drill.log
+          if-no-files-found: warn
+
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest

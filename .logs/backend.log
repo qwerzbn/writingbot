@@ -1,0 +1,86 @@
+INFO:     Started server process [19191]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:5001 (Press CTRL+C to quit)
+
+============================================================
+  WritingBot API Server (FastAPI)
+  Backend: http://localhost:5001
+  Frontend: http://localhost:3000 (run: npm run dev)
+============================================================
+
+  LLM: openai / qwen-plus
+  Base URL: https://dashscope.aliyuncs.com/compatible-mode/v1
+  LLM Enabled: True
+  Skills: loaded=4 rejected=0 fallback=False
+INFO:     127.0.0.1:53689 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53837 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53838 - "GET /api/settings/llm HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53839 - "GET /api/evaluation/reports?limit=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53840 - "GET /api/evaluation/report/latest HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53856 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53857 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53858 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53859 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53860 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53868 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53869 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53870 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53871 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54154 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54155 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54156 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54198 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54223 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54224 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54225 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54229 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54230 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54235 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54236 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54237 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54238 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54244 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54247 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54250 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54263 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54264 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54278 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54281 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54284 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54287 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54718 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/dbdd9c5c-96c6-48fa-bea5-0eef46ab42e1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54726 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54729 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=44362366-153b-4ac6-a430-8beb6e3c1003 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54759 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54762 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=2f78a53d-d7f4-4c87-b55b-0a857ba7e340 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54765 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54768 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=4e7fe81f-7c54-4926-93c5-d9079b618f57 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54772 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54775 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=070aea05-d636-40e4-91b0-d1344c2247e4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54778 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54781 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=7aea5d3e-c011-4239-bfb1-585eb255687f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54785 - "POST /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54788 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace?active_note_id=906f8dcf-5ef8-408e-b330-b1fa98d6f774 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54793 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/95f99309-aa7a-4ce8-979f-2d1d83291eb5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54797 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/44362366-153b-4ac6-a430-8beb6e3c1003 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54800 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/2f78a53d-d7f4-4c87-b55b-0a857ba7e340 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57332 - "GET /api/notebooks HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57333 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57334 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57335 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57336 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57337 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/notes/05589c42-19d7-469a-8dde-8086fb374c8f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49370 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49371 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49372 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49375 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49376 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49471 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49472 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49473 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49474 - "GET /api/kbs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50077 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50078 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50150 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50152 - "GET /api/notebooks/ca7f48aa-3503-41e8-82e7-2595f7defc26/workspace HTTP/1.1" 200 OK
