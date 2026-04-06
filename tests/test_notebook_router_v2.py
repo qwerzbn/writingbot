@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from pathlib import Path
+import json
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -78,6 +79,7 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     assert workspace["notebook"]["id"] == notebook_id
     assert len(workspace["sources"]) == 2
     assert workspace["ui_defaults"]["selected_source_ids"] == [kb_source_resp.json()["data"]["id"]]
+    assert workspace["ui_defaults"]["active_note_id"] is None
 
     chat_resp = client.post(
         f"/api/notebooks/{notebook_id}/chat/stream",
@@ -139,9 +141,180 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     assert notes_resp.status_code == 200
     notes = notes_resp.json()["data"]
     assert len(notes) == 2
+    active_note = notes[0]["id"]
+
+    filtered_workspace_resp = client.get(
+        f"/api/notebooks/{notebook_id}/workspace",
+        params={"search": "research", "tag": "research", "active_note_id": active_note},
+    )
+    assert filtered_workspace_resp.status_code == 200
+    filtered_workspace = filtered_workspace_resp.json()["data"]
+    assert len(filtered_workspace["notes_summary"]) == 1
+    assert filtered_workspace["ui_defaults"]["active_note_id"] == active_note
 
     note_detail_resp = client.get(f"/api/notebooks/{notebook_id}/notes/{save_studio_note_resp.json()['data']['id']}")
     assert note_detail_resp.status_code == 200
 
+    graph_view_resp = client.get(f"/api/notebooks/{notebook_id}/graph-view")
+    assert graph_view_resp.status_code == 200
+    graph_view = graph_view_resp.json()["data"]
+    assert graph_view["notebook_id"] == notebook_id
+    assert "nodes" in graph_view and "edges" in graph_view
+
+    graph_alias_resp = client.get(f"/api/notebooks/{notebook_id}/graph")
+    assert graph_alias_resp.status_code == 200
+
+    insights_resp = client.get(f"/api/notebooks/{notebook_id}/insights")
+    assert insights_resp.status_code == 200
+    assert "coverage" in insights_resp.json()["data"]
+
+    related_resp = client.get(
+        f"/api/notebooks/{notebook_id}/notes/{save_studio_note_resp.json()['data']['id']}/related"
+    )
+    assert related_resp.status_code == 200
+    assert isinstance(related_resp.json()["data"], list)
+
+    meta_resp = client.get(
+        f"/api/notebooks/{notebook_id}/notes/{save_studio_note_resp.json()['data']['id']}/meta"
+    )
+    assert meta_resp.status_code == 200
+    assert "summary" in meta_resp.json()["data"]
+
+    update_meta_resp = client.put(
+        f"/api/notebooks/{notebook_id}/notes/{save_studio_note_resp.json()['data']['id']}/meta",
+        json={"summary": "updated summary"},
+    )
+    assert update_meta_resp.status_code == 200
+    assert update_meta_resp.json()["data"]["summary"] == "updated summary"
+
+    extract_resp = client.post(
+        f"/api/notebooks/{notebook_id}/notes/{save_studio_note_resp.json()['data']['id']}/extract"
+    )
+    assert extract_resp.status_code == 200
+    assert extract_resp.json()["data"]["job_id"]
+    assert "meta" in extract_resp.json()["data"]
+
+    migrate_resp = client.post(f"/api/notebooks/{notebook_id}/migrate-records")
+    assert migrate_resp.status_code == 200
+    assert "migrated_count" in migrate_resp.json()["data"]
+
+    import_resp = client.post(
+        f"/api/notebooks/{notebook_id}/imports/kb",
+        json={"kb_id": kb_id, "trigger_mode": "manual", "run_async": False},
+    )
+    assert import_resp.status_code == 200
+    assert import_resp.json()["data"]["status"] in ("done", "partial_failed")
+
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events") as events_resp:
+        assert events_resp.status_code == 200
+        chunks: list[str] = []
+        for chunk in events_resp.iter_text():
+            chunks.append(chunk)
+            if '"type": "job_patch"' in chunk or ": ping" in chunk:
+                break
+        payload = "".join(chunks)
+        assert '"type": "job_patch"' in payload or ": ping" in payload
+
     delete_source_resp = client.delete(f"/api/notebooks/{notebook_id}/sources/{source['id']}")
     assert delete_source_resp.status_code == 200
+
+
+def test_update_note_conflict_returns_latest(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    monkeypatch.setattr(notebook_router, "get_notebook_manager", lambda: manager)
+
+    app = FastAPI()
+    app.include_router(notebook_router.router, prefix="/api")
+    client = TestClient(app)
+
+    notebook_id = client.post("/api/notebooks", json={"name": "conflict"}).json()["data"]["id"]
+    created_note = client.post(
+        f"/api/notebooks/{notebook_id}/notes",
+        json={"title": "v1", "content": "body"},
+    ).json()["data"]
+
+    ok_resp = client.put(
+        f"/api/notebooks/{notebook_id}/notes/{created_note['id']}",
+        json={"title": "v2", "expected_updated_at": created_note["updated_at"]},
+    )
+    assert ok_resp.status_code == 200
+    latest = ok_resp.json()["data"]
+
+    conflict_resp = client.put(
+        f"/api/notebooks/{notebook_id}/notes/{created_note['id']}",
+        json={"title": "stale write", "expected_updated_at": created_note["updated_at"]},
+    )
+    assert conflict_resp.status_code == 409
+    detail = conflict_resp.json()["detail"]
+    assert detail["latest"]["id"] == created_note["id"]
+    assert detail["latest"]["title"] == latest["title"]
+
+
+def test_notebook_events_support_cursor_resume(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    monkeypatch.setattr(notebook_router, "get_notebook_manager", lambda: manager)
+
+    app = FastAPI()
+    app.include_router(notebook_router.router, prefix="/api")
+    client = TestClient(app)
+
+    notebook_id = client.post("/api/notebooks", json={"name": "cursor"}).json()["data"]["id"]
+    notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "pending"})
+
+    first_cursor = 0
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0") as resp:
+        assert resp.status_code == 200
+        for chunk in resp.iter_text():
+            if not chunk.startswith("data: "):
+                continue
+            data = json.loads(chunk[6:].strip())
+            first_cursor = int(data["cursor"])
+            break
+    assert first_cursor > 0
+
+    notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "running"})
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor={first_cursor}") as resp:
+        assert resp.status_code == 200
+        for chunk in resp.iter_text():
+            if not chunk.startswith("data: "):
+                continue
+            data = json.loads(chunk[6:].strip())
+            assert int(data["cursor"]) > first_cursor
+            break
+
+
+def test_notebook_events_support_last_event_id_resume(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    monkeypatch.setattr(notebook_router, "get_notebook_manager", lambda: manager)
+
+    app = FastAPI()
+    app.include_router(notebook_router.router, prefix="/api")
+    client = TestClient(app)
+
+    notebook_id = client.post("/api/notebooks", json={"name": "last-event-id"}).json()["data"]["id"]
+    notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "pending"})
+
+    first_cursor = 0
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0") as resp:
+        assert resp.status_code == 200
+        for chunk in resp.iter_text():
+            if not chunk.startswith("data: "):
+                continue
+            data = json.loads(chunk[6:].strip())
+            first_cursor = int(data["cursor"])
+            break
+    assert first_cursor > 0
+
+    notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "running"})
+    with client.stream(
+        "GET",
+        f"/api/notebooks/{notebook_id}/events",
+        headers={"Last-Event-ID": str(first_cursor)},
+    ) as resp:
+        assert resp.status_code == 200
+        for chunk in resp.iter_text():
+            if not chunk.startswith("data: "):
+                continue
+            data = json.loads(chunk[6:].strip())
+            assert int(data["cursor"]) > first_cursor
+            break

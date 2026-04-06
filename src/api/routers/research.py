@@ -32,6 +32,7 @@ async def research(req: ResearchRequest):
             "sources": result.get("sources", []),
             "run_id": result.get("run_id"),
             "trace_id": result.get("trace_id"),
+            "meta": (result.get("done") or {}).get("meta", {}),
         },
     }
 
@@ -60,12 +61,16 @@ async def research_stream(req: ResearchRequest):
                     continue
                 yield f"data: {json.dumps({'type': 'chunk', 'content': content}, ensure_ascii=False)}\n\n"
             elif etype == "sources":
-                yield f"data: {json.dumps({'type': 'sources', 'data': event.get('data', [])}, ensure_ascii=False)}\n\n"
+                yield (
+                    f"data: {json.dumps({'type': 'sources', 'data': event.get('data', []), 'meta': event.get('meta', {})}, ensure_ascii=False)}\n\n"
+                )
             elif etype == "done":
                 if not plan_sent and event.get("plan"):
                     yield f"data: {json.dumps({'type': 'plan', 'content': event.get('plan')}, ensure_ascii=False)}\n\n"
                     plan_sent = True
-                yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
+                yield (
+                    f"data: {json.dumps({'type': 'done', 'meta': event.get('meta', {})}, ensure_ascii=False)}\n\n"
+                )
             elif etype == "error":
                 yield f"data: {json.dumps({'type': 'error', 'error': event.get('error', 'unknown')}, ensure_ascii=False)}\n\n"
 

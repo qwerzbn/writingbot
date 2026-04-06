@@ -148,6 +148,8 @@ export default function ChatPage() {
   const [savingMessageIdx, setSavingMessageIdx] = useState<number | null>(null);
   const [streamAgent, setStreamAgent] = useState<string>('');
   const [lastPaperHits, setLastPaperHits] = useState<number>(0);
+  const [lastCitationCoverage, setLastCitationCoverage] = useState<number>(0);
+  const [lastInferenceRatio, setLastInferenceRatio] = useState<number>(0);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
@@ -206,6 +208,8 @@ export default function ChatPage() {
     setThinkingSteps(buildThinkingSteps());
     setStreamAgent('');
     setLastPaperHits(0);
+    setLastCitationCoverage(0);
+    setLastInferenceRatio(0);
     setStreamStartedAt(0);
     setElapsedSeconds(0);
     setStreamChars(0);
@@ -237,6 +241,8 @@ export default function ChatPage() {
           setThinkingSteps(buildThinkingSteps());
           setStreamAgent('');
           setLastPaperHits(0);
+          setLastCitationCoverage(0);
+          setLastInferenceRatio(0);
           setStreamStartedAt(0);
           setElapsedSeconds(0);
           setStreamChars(0);
@@ -508,6 +514,8 @@ export default function ChatPage() {
     setPageError(null);
     setStreamAgent('');
     setLastPaperHits(0);
+    setLastCitationCoverage(0);
+    setLastInferenceRatio(0);
     setStreamStartedAt(Date.now());
     setElapsedSeconds(0);
     setStreamChars(0);
@@ -551,6 +559,8 @@ export default function ChatPage() {
               setActiveConversation((prev) => ({ ...prev, id: event.conversation_id || prev.id }));
             }
             setLastPaperHits(event.meta?.paper_hits || 0);
+            setLastCitationCoverage(Number(event.meta?.citation_coverage || 0));
+            setLastInferenceRatio(Number(event.meta?.inference_ratio || 0));
             setStreamAgent('');
             setStreamStartedAt(0);
             setThinkingSteps((prev) =>
@@ -716,6 +726,8 @@ export default function ChatPage() {
                 流式输出已开启，未发送内容不会保存为会话。
                 {streamAgent ? ` 当前阶段：${streamAgent}` : ''}
                 {lastPaperHits > 0 ? ` 命中论文：${lastPaperHits}` : ''}
+                {lastCitationCoverage > 0 ? ` 证据覆盖：${Math.round(lastCitationCoverage * 100)}%` : ''}
+                {lastInferenceRatio > 0 ? ` 推理占比：${Math.round(lastInferenceRatio * 100)}%` : ''}
               </p>
               {sending && (
                 <div className="mt-1 inline-flex items-center gap-2 rounded-md border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 text-[11px] text-blue-700 dark:text-blue-200">

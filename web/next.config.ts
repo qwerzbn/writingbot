@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import type { NextConfig } from "next";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
+const apiBase = (process.env.WRITINGBOT_API_URL || "http://127.0.0.1:5001").replace(/\/+$/, "");
 
 const nextConfig: NextConfig = {
   // Disable Next.js dev indicator (floating "N" button)
@@ -27,7 +28,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5001/api/:path*',
+        destination: `${apiBase}/api/:path*`,
       },
     ];
   },

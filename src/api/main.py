@@ -7,6 +7,7 @@ FastAPI-based REST API for the WritingBot RAG system.
 Replaces the Flask-based server.py.
 """
 
+import os
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -83,10 +84,26 @@ app = FastAPI(
 )
 
 # Configure CORS
+cors_origins = [
+    item.strip()
+    for item in os.getenv(
+        "WRITINGBOT_CORS_ORIGINS",
+        "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:3005",
+    ).split(",")
+    if item.strip()
+]
+allow_credentials = os.getenv("WRITINGBOT_CORS_ALLOW_CREDENTIALS", "true").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+if "*" in cors_origins and allow_credentials:
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins or ["http://127.0.0.1:3000"],
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

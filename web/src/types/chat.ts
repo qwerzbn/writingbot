@@ -62,6 +62,8 @@ export interface ChatDoneEvent {
   conversation_id?: string;
   meta?: {
     paper_hits?: number;
+    citation_coverage?: number;
+    inference_ratio?: number;
     time_to_first_progress_ms?: number;
     time_to_first_content_ms?: number;
     progress_event_count?: number;

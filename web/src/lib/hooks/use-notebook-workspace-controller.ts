@@ -106,6 +106,7 @@ export function useNotebookWorkspaceController(notebookId: string) {
   const [migrating, setMigrating] = useState(false);
 
   const didBootstrapRef = useRef(false);
+  const eventCursorRef = useRef(0);
 
   const loadNoteDetail = useCallback(
     async (noteId: string, options?: { force?: boolean }) => {
@@ -272,6 +273,7 @@ export function useNotebookWorkspaceController(notebookId: string) {
 
   useEffect(() => {
     didBootstrapRef.current = false;
+    eventCursorRef.current = 0;
     void refreshWorkspace();
   }, [notebookId, refreshWorkspace]);
 
@@ -306,50 +308,75 @@ export function useNotebookWorkspaceController(notebookId: string) {
       return;
     }
 
-    setStreamStatus(notebookId, 'connecting');
-    const source = new EventSource(`/api/notebooks/${notebookId}/events`);
+    let source: EventSource | null = null;
+    let reconnectTimer: number | null = null;
+    let closed = false;
 
-    source.onopen = () => setStreamStatus(notebookId, 'open');
-    source.onmessage = (message) => {
-      try {
-        const payload = JSON.parse(message.data) as NotebookEvent;
-        handleNotebookEvent(payload);
-      } catch {
-        // Ignore malformed keep-alives.
+    const recoverByWorkspaceSnapshot = async () => {
+      const previousJobs = useNotebookJobsStore.getState().jobsByNotebook[notebookId] ?? EMPTY_JOBS;
+      if (!previousJobs.length) return;
+
+      const previousNoteIds = new Set(
+        (useNotebookNotesStore.getState().notesByNotebook[notebookId] ?? EMPTY_NOTES).map((note) => note.id)
+      );
+      const data = await refreshWorkspace({ silent: true });
+      if (data && data.active_jobs.length === 0) {
+        const recoveredJob = previousJobs[0];
+        const recoveredNoteIds = data.notes.map((note) => note.id).filter((noteId) => !previousNoteIds.has(noteId));
+        setLatestCompletedJob(notebookId, {
+          ...recoveredJob,
+          status: 'done',
+          progress: 1,
+          updated_at: data.generated_at,
+          message: recoveredJob.message || 'Job finished',
+          note_ids: recoveredNoteIds.length ? recoveredNoteIds : recoveredJob.note_ids,
+        });
+        setStreamStatus(notebookId, 'idle');
       }
     };
-    source.onerror = () => {
-      source.close();
-      setStreamStatus(notebookId, 'error');
-      void (async () => {
-        const previousJobs = useNotebookJobsStore.getState().jobsByNotebook[notebookId] ?? EMPTY_JOBS;
-        if (!previousJobs.length) return;
 
-        const previousNoteIds = new Set(
-          (useNotebookNotesStore.getState().notesByNotebook[notebookId] ?? EMPTY_NOTES).map(
-            (note) => note.id
-          )
-        );
-        const data = await refreshWorkspace({ silent: true });
-        if (data && data.active_jobs.length === 0) {
-          const recoveredJob = previousJobs[0];
-          const recoveredNoteIds = data.notes
-            .map((note) => note.id)
-            .filter((noteId) => !previousNoteIds.has(noteId));
-          setLatestCompletedJob(notebookId, {
-            ...recoveredJob,
-            status: 'done',
-            progress: 1,
-            updated_at: data.generated_at,
-            message: recoveredJob.message || 'Job finished',
-            note_ids: recoveredNoteIds.length ? recoveredNoteIds : recoveredJob.note_ids,
-          });
-          setStreamStatus(notebookId, 'idle');
+    const connect = () => {
+      if (closed) return;
+      setStreamStatus(notebookId, 'connecting');
+      const cursor = eventCursorRef.current;
+      const suffix = cursor > 0 ? `?cursor=${cursor}` : '';
+      source = new EventSource(`/api/notebooks/${notebookId}/events${suffix}`);
+
+      source.onopen = () => setStreamStatus(notebookId, 'open');
+      source.onmessage = (message) => {
+        try {
+          const payload = JSON.parse(message.data) as NotebookEvent & { cursor?: number };
+          if (typeof payload.cursor === 'number' && Number.isFinite(payload.cursor)) {
+            eventCursorRef.current = Math.max(eventCursorRef.current, payload.cursor);
+          }
+          handleNotebookEvent(payload);
+        } catch {
+          // Ignore malformed keep-alives.
         }
-      })();
+      };
+      source.onerror = () => {
+        if (source) {
+          source.close();
+          source = null;
+        }
+        if (closed) return;
+        setStreamStatus(notebookId, 'error');
+        void recoverByWorkspaceSnapshot();
+        reconnectTimer = window.setTimeout(connect, 1200);
+      };
     };
 
-    return () => source.close();
+    connect();
+
+    return () => {
+      closed = true;
+      if (reconnectTimer) {
+        window.clearTimeout(reconnectTimer);
+      }
+      if (source) {
+        source.close();
+      }
+    };
   }, [
     activeJobs,
     notebookId,

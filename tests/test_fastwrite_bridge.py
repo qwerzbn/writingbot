@@ -31,6 +31,7 @@ def test_fastwrite_handoff_and_callback_roundtrip():
     callback_token = body["callback_token"]
     assert session_id
     assert callback_token
+    assert body["fastwrite_url"].startswith("http://127.0.0.1:3002/")
 
     pending = client.get(f"/api/fastwrite/callback/{callback_token}")
     assert pending.status_code == 200
@@ -92,3 +93,26 @@ def test_fastwrite_callback_failed_status():
     body = failed.json()["data"]
     assert body["status"] == "failed"
     assert body["error"] == "render failed"
+
+
+def test_fastwrite_handoff_respects_env_url(monkeypatch):
+    monkeypatch.setenv("FASTWRITE_URL", "http://example-fastwrite:4321")
+    client = build_client()
+
+    handoff = client.post(
+        "/api/fastwrite/handoff",
+        json={"text": "draft text", "title": "Draft"},
+    )
+    assert handoff.status_code == 200
+    url = handoff.json()["data"]["fastwrite_url"]
+    assert url.startswith("http://example-fastwrite:4321/")
+
+
+def test_fastwrite_health_endpoint_reports_unavailable(monkeypatch):
+    monkeypatch.setenv("FASTWRITE_URL", "http://127.0.0.1:9")
+    client = build_client()
+    resp = client.get("/api/fastwrite/health")
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["url"] == "http://127.0.0.1:9"
+    assert data["available"] is False

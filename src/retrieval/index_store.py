@@ -101,6 +101,66 @@ class KnowledgeIndexStore:
         self._rebuild_concept_graph(kb_id, docs)
         return changed
 
+    def delete_by_file_id(self, kb_id: str, file_id: str) -> int:
+        if not file_id:
+            return 0
+        docs = self.load_docs(kb_id)
+        kept = [doc for doc in docs if str(doc.metadata.get("file_id", "")) != str(file_id)]
+        removed = len(docs) - len(kept)
+        docs_file = self._docs_file(kb_id)
+        with open(docs_file, "w", encoding="utf-8") as f:
+            for doc in kept:
+                f.write(
+                    json.dumps(
+                        {
+                            "doc_id": doc.doc_id,
+                            "content": doc.content,
+                            "metadata": doc.metadata,
+                            "tokens": doc.tokens,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        self._rebuild_bm25_stats(kb_id, kept)
+        self._rebuild_concept_graph(kb_id, kept)
+        return removed
+
+    def rebuild_from_chunks(self, kb_id: str, chunks: list[dict[str, Any]]) -> int:
+        docs: dict[str, IndexedDoc] = {}
+        for chunk in chunks:
+            content = str(chunk.get("content", ""))
+            metadata = dict(chunk.get("metadata", {}) or {})
+            tokens = tokenize(content)
+            if not tokens:
+                continue
+            doc_id = stable_doc_id(content, metadata)
+            docs[doc_id] = IndexedDoc(
+                doc_id=doc_id,
+                content=content,
+                metadata=metadata,
+                tokens=tokens,
+            )
+        docs_file = self._docs_file(kb_id)
+        with open(docs_file, "w", encoding="utf-8") as f:
+            for doc in docs.values():
+                f.write(
+                    json.dumps(
+                        {
+                            "doc_id": doc.doc_id,
+                            "content": doc.content,
+                            "metadata": doc.metadata,
+                            "tokens": doc.tokens,
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
+        doc_rows = list(docs.values())
+        self._rebuild_bm25_stats(kb_id, doc_rows)
+        self._rebuild_concept_graph(kb_id, doc_rows)
+        return len(doc_rows)
+
     def _rebuild_bm25_stats(self, kb_id: str, docs: list[IndexedDoc]) -> None:
         df: dict[str, int] = defaultdict(int)
         doc_lens: dict[str, int] = {}

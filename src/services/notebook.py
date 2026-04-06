@@ -139,6 +139,12 @@ class RetrievedChunk:
     kind: str = "text"
 
 
+class NotebookConflictError(ValueError):
+    def __init__(self, latest: dict[str, Any], message: str = "Note has been updated by another request") -> None:
+        super().__init__(message)
+        self.latest = latest
+
+
 class NotebookManager:
     STOPWORDS = {
         "the",
@@ -1200,10 +1206,31 @@ class NotebookManager:
             "citations": note.get("citations", []),
         }
 
-    def list_notes(self, notebook_id: str) -> list[dict[str, Any]]:
+    def list_notes(
+        self,
+        notebook_id: str,
+        search: str | None = None,
+        tag: str | None = None,
+    ) -> list[dict[str, Any]]:
         rows = self._iter_records(self._notes_dir(notebook_id, ensure=False))
         rows.sort(key=lambda row: str(row.get("updated_at") or ""), reverse=True)
-        return [self._note_summary(row) for row in rows]
+        summaries = [self._note_summary(row) for row in rows]
+        if search:
+            needle = search.strip().lower()
+            summaries = [
+                row
+                for row in summaries
+                if needle in str(row.get("title") or "").lower()
+                or needle in str(row.get("preview") or "").lower()
+            ]
+        if tag:
+            tag_lower = tag.strip().lower()
+            summaries = [
+                row
+                for row in summaries
+                if any(tag_lower in str(item).lower() for item in row.get("tags", []) or [])
+            ]
+        return summaries
 
     def create_note(
         self,
@@ -1244,6 +1271,9 @@ class NotebookManager:
         note = self._load_note(notebook_id, note_id)
         if not note:
             return None
+        expected_updated_at = patch.pop("expected_updated_at", None)
+        if expected_updated_at is not None and str(note.get("updated_at") or "") != str(expected_updated_at):
+            raise NotebookConflictError(note)
         for key in ("title", "kind", "origin"):
             if key in patch and patch[key] is not None:
                 note[key] = patch[key]
@@ -1328,15 +1358,25 @@ class NotebookManager:
     # Workspace view
     # ------------------------------------------------------------------ #
 
-    def build_workspace_view(self, notebook_id: str) -> dict[str, Any] | None:
+    def build_workspace_view(
+        self,
+        notebook_id: str,
+        active_note_id: str | None = None,
+        search: str | None = None,
+        tag: str | None = None,
+    ) -> dict[str, Any] | None:
         notebook_manifest = self._load_manifest(notebook_id)
         if not notebook_manifest:
             return None
         notebook = self._build_notebook_summary(notebook_manifest)
         sessions = self.list_chat_sessions(notebook_id)
         outputs = self.list_studio_outputs(notebook_id)
-        notes = self.list_notes(notebook_id)
+        notes = self.list_notes(notebook_id, search=search, tag=tag)
         sources = self.list_sources(notebook_id)
+        note_ids = [str(row.get("id") or "") for row in notes]
+        resolved_active_note_id = active_note_id if active_note_id and active_note_id in note_ids else None
+        if not resolved_active_note_id and note_ids:
+            resolved_active_note_id = note_ids[0]
         return {
             "generated_at": _now_iso(),
             "notebook": notebook,
@@ -1344,10 +1384,15 @@ class NotebookManager:
             "recent_sessions": sessions,
             "studio_outputs": outputs,
             "notes_summary": notes,
+            "filters": {
+                "search": search or "",
+                "tag": tag or "",
+            },
             "ui_defaults": {
                 "selected_source_ids": [row["id"] for row in sources if row.get("included")],
                 "active_session_id": sessions[0]["id"] if sessions else None,
                 "active_output_id": outputs[0]["id"] if outputs else None,
+                "active_note_id": resolved_active_note_id,
                 "note_drawer_open": False,
             },
         }

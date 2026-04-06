@@ -220,21 +220,30 @@ class KnowledgeBaseManager:
         with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
     
-    def remove_file(self, kb_id: str, file_id: str):
-        """Remove a file record from KB metadata."""
+    def remove_file(self, kb_id: str, file_id: str) -> dict[str, Any] | None:
+        """Remove a file record from KB metadata and return the removed row."""
         metadata_file = self.base_dir / kb_id / "metadata.json"
         
         if not metadata_file.exists():
-            return
+            return None
         
         with open(metadata_file, encoding="utf-8") as f:
             metadata = json.load(f)
-        
-        metadata["files"] = [f for f in metadata["files"] if f["id"] != file_id]
+
+        removed: dict[str, Any] | None = None
+        remaining: list[dict[str, Any]] = []
+        for row in metadata.get("files", []):
+            if str(row.get("id")) == str(file_id):
+                removed = row
+                continue
+            remaining.append(row)
+
+        metadata["files"] = remaining
         metadata["updated_at"] = datetime.now().isoformat()
         
         with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
+        return removed
     
     def get_kb_path(self, kb_id: str) -> Path:
         """Get the directory path for a KB."""

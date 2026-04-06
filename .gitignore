@@ -3,14 +3,24 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.DS_Store
 
 node_modules/
+node_modules
 web/.next/
+web/.next-playwright/
 web/.turbo/
 
+.env
+.env.*
+!.env.example
+
+.logs/
 data/metrics/
 data/evaluation/reports/
 data/logs/
 data/sessions/
+data/knowledge_bases/
+
 web/test-results/
 web/playwright-report/

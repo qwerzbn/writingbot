@@ -1,77 +1,156 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Function to kill child processes on exit
-cleanup() {
-    echo "Stopping all servers..."
-    kill $(jobs -p) 2>/dev/null
-    exit
+set -Eeuo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_DIR="${PROJECT_ROOT}/.logs"
+mkdir -p "${LOG_DIR}"
+
+WRITINGBOT_API_PORT="${WRITINGBOT_API_PORT:-5001}"
+WRITINGBOT_WEB_PORT="${WRITINGBOT_WEB_PORT:-3000}"
+FASTWRITE_WEB_PORT="${FASTWRITE_WEB_PORT:-3002}"
+FASTWRITE_API_PORT="${FASTWRITE_API_PORT:-3003}"
+
+export WRITINGBOT_API_URL="${WRITINGBOT_API_URL:-http://127.0.0.1:${WRITINGBOT_API_PORT}}"
+export FASTWRITE_URL="${FASTWRITE_URL:-http://127.0.0.1:${FASTWRITE_WEB_PORT}}"
+export NEXT_PUBLIC_FASTWRITE_URL="${NEXT_PUBLIC_FASTWRITE_URL:-${FASTWRITE_URL}}"
+
+declare -a PIDS=()
+FASTWRITE_MODE="disabled"
+
+log() {
+  printf "[start_dev] %s\n" "$*"
 }
 
-trap cleanup SIGINT SIGTERM
+warn() {
+  printf "[start_dev][warn] %s\n" "$*"
+}
 
+cleanup() {
+  log "Stopping background services..."
+  for pid in "${PIDS[@]:-}"; do
+    if kill -0 "${pid}" >/dev/null 2>&1; then
+      kill "${pid}" >/dev/null 2>&1 || true
+    fi
+  done
+}
 
-echo "Starting WritingBot + FastWrite..."
+trap cleanup INT TERM EXIT
 
-# Kill any existing processes on all used ports
-echo "Checking for existing processes..."
-lsof -ti:5001 | xargs kill -9 2>/dev/null
-lsof -ti:3000 | xargs kill -9 2>/dev/null
-lsof -ti:3002 | xargs kill -9 2>/dev/null
-lsof -ti:3003 | xargs kill -9 2>/dev/null
-sleep 1
+kill_port() {
+  local port="$1"
+  if ! command -v lsof >/dev/null 2>&1; then
+    return 0
+  fi
+  local pid_list
+  pid_list="$(lsof -ti ":${port}" || true)"
+  if [[ -n "${pid_list}" ]]; then
+    warn "Port ${port} is occupied, terminating stale process(es): ${pid_list}"
+    while IFS= read -r pid; do
+      [[ -z "${pid}" ]] && continue
+      kill "${pid}" >/dev/null 2>&1 || true
+    done <<< "${pid_list}"
+  fi
+}
 
-# Check if conda environment is active or available
-if [[ "$CONDA_DEFAULT_ENV" != "writingbot" ]]; then
-    echo "Activating conda environment 'writingbot'..."
-    # Try to source conda profile if available
-    source $(conda info --base)/etc/profile.d/conda.sh 2>/dev/null
-    conda activate writingbot
+wait_http() {
+  local name="$1"
+  local url="$2"
+  local max_retry="${3:-20}"
+  local i
+  for ((i = 1; i <= max_retry; i += 1)); do
+    if command -v curl >/dev/null 2>&1; then
+      if curl -sS -m 2 -o /dev/null "${url}" >/dev/null 2>&1; then
+        log "${name} is ready (${url})"
+        return 0
+      fi
+    else
+      return 0
+    fi
+    sleep 1
+  done
+  warn "${name} did not become ready in time (${url})"
+  return 1
+}
+
+log "Running dependency preflight check..."
+"${PROJECT_ROOT}/scripts/preflight_check.sh"
+
+log "Cleaning stale ports..."
+kill_port "${WRITINGBOT_API_PORT}"
+kill_port "${WRITINGBOT_WEB_PORT}"
+kill_port "${FASTWRITE_WEB_PORT}"
+kill_port "${FASTWRITE_API_PORT}"
+
+cd "${PROJECT_ROOT}"
+
+log "Starting WritingBot backend on :${WRITINGBOT_API_PORT}"
+python -m uvicorn src.api.main:app \
+  --host 0.0.0.0 \
+  --port "${WRITINGBOT_API_PORT}" \
+  --reload \
+  --reload-exclude "data/*" \
+  --reload-exclude "web/*" \
+  --reload-exclude ".git/*" \
+  --reload-exclude "FastWrite/*" \
+  --reload-exclude ".env" \
+  > "${LOG_DIR}/backend.log" 2>&1 &
+PIDS+=("$!")
+
+wait_http "WritingBot API" "${WRITINGBOT_API_URL}/api/health" 30 || true
+
+log "Starting WritingBot web on :${WRITINGBOT_WEB_PORT}"
+(
+  cd "${PROJECT_ROOT}/web"
+  npm run dev
+) > "${LOG_DIR}/web.log" 2>&1 &
+PIDS+=("$!")
+
+FASTWRITE_ROOT="${PROJECT_ROOT}/FastWrite"
+if [[ -d "${FASTWRITE_ROOT}" && -f "${FASTWRITE_ROOT}/package.json" ]]; then
+  if command -v bun >/dev/null 2>&1; then
+    FASTWRITE_MODE="enabled"
+    log "Starting FastWrite API on :${FASTWRITE_API_PORT}"
+    (
+      cd "${FASTWRITE_ROOT}"
+      PORT="${FASTWRITE_API_PORT}" bun run --watch src/server.ts
+    ) > "${LOG_DIR}/fastwrite-api.log" 2>&1 &
+    PIDS+=("$!")
+
+    if [[ -d "${FASTWRITE_ROOT}/web" ]]; then
+      log "Starting FastWrite web on :${FASTWRITE_WEB_PORT}"
+      (
+        cd "${FASTWRITE_ROOT}/web"
+        bun run dev --no-open --port "${FASTWRITE_WEB_PORT}"
+      ) > "${LOG_DIR}/fastwrite-web.log" 2>&1 &
+      PIDS+=("$!")
+    else
+      FASTWRITE_MODE="degraded"
+      warn "FastWrite web directory not found; co-writer will stay in degraded mode."
+    fi
+  else
+    FASTWRITE_MODE="degraded"
+    warn "bun not found; FastWrite skipped. Install bun to enable co-writer."
+  fi
+else
+  FASTWRITE_MODE="degraded"
+  warn "FastWrite project unavailable; co-writer page will show degraded mode."
 fi
 
-# Start WritingBot Backend (FastAPI)
-echo "Starting FastAPI Backend (Port 5001)..."
-python -m uvicorn src.api.main:app \
-    --host 0.0.0.0 --port 5001 --reload \
-    --reload-exclude "data/*" --reload-exclude "web/*" --reload-exclude ".git/*" --reload-exclude "FastWrite/*" --reload-exclude ".env" &
-BACKEND_PID=$!
-
-# Wait for backend to be ready
-sleep 3
-
-# Start WritingBot Frontend
-echo "Starting Next.js Frontend (Port 3000)..."
-cd web
-npm run dev &
-FRONTEND_PID=$!
-cd ..
-
-# Start FastWrite Backend
-echo "Starting FastWrite API Server (Port 3003)..."
-cd FastWrite
-PORT=3003 bun run --watch src/server.ts &
-FASTWRITE_BACKEND_PID=$!
-
-# Start FastWrite Frontend
-echo "Starting FastWrite Web UI (Port 3002)..."
-cd web
-bun run dev --no-open &
-FASTWRITE_FRONTEND_PID=$!
-cd ../..
-
-echo ""
+echo
 echo "=========================================="
-echo "  All services are running!"
+echo " WritingBot development services started"
 echo "=========================================="
-echo "  WritingBot Backend:  http://localhost:5001"
-echo "  WritingBot Frontend: http://localhost:3000"
-echo "  API Docs:            http://localhost:5001/docs"
-echo "  FastWrite API:       http://localhost:3003"
-echo "  FastWrite UI:        http://localhost:3002"
+echo " WritingBot API : ${WRITINGBOT_API_URL}"
+echo " WritingBot Web : http://127.0.0.1:${WRITINGBOT_WEB_PORT}"
+echo " FastWrite mode : ${FASTWRITE_MODE}"
+if [[ "${FASTWRITE_MODE}" == "enabled" ]]; then
+  echo " FastWrite API  : http://127.0.0.1:${FASTWRITE_API_PORT}"
+  echo " FastWrite Web  : ${FASTWRITE_URL}"
+fi
+echo " Logs directory : ${LOG_DIR}"
 echo "=========================================="
-echo "  Press Ctrl+C to stop all servers."
-echo ""
-
-# Auto-open WritingBot frontend
-open http://localhost:3000
+echo " Press Ctrl+C to stop all services."
+echo
 
 wait

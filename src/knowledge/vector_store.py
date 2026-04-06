@@ -11,6 +11,7 @@ Supports multiple embedding providers:
 """
 
 import os
+import json
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Callable
 
@@ -103,6 +104,30 @@ class VectorStore:
     """
     
     DEFAULT_COLLECTION = "writingbot_kb"
+
+    @staticmethod
+    def _flatten_metadata(meta: Dict[str, Any]) -> Dict[str, Any]:
+        flat_meta: Dict[str, Any] = {}
+        for key, value in (meta or {}).items():
+            if value is None:
+                continue
+            if isinstance(value, bool):
+                flat_meta[str(key)] = value
+                continue
+            if isinstance(value, int):
+                flat_meta[str(key)] = value
+                continue
+            if isinstance(value, float):
+                flat_meta[str(key)] = value
+                continue
+            if isinstance(value, str):
+                flat_meta[str(key)] = value
+                continue
+            if isinstance(value, (list, tuple, set, dict)):
+                flat_meta[str(key)] = json.dumps(value, ensure_ascii=False)
+                continue
+            flat_meta[str(key)] = str(value)
+        return flat_meta
     
     def __init__(self,
                  persist_dir: str,
@@ -177,13 +202,16 @@ class VectorStore:
         metadatas = []
         for chunk in chunks:
             meta = chunk.get("metadata", {})
-            flat_meta = {
-                "source": str(meta.get("source", "")),
-                "page": int(meta.get("page", 0)),
-                "chunk_idx": int(meta.get("chunk_idx", 0)),
-                "start_pos": int(meta.get("start_pos", 0)),
-                "end_pos": int(meta.get("end_pos", 0)),
-            }
+            flat_meta = self._flatten_metadata(meta)
+            # Keep canonical numeric fields for downstream filters.
+            if "page" in meta:
+                flat_meta["page"] = int(meta.get("page", 0))
+            if "chunk_idx" in meta:
+                flat_meta["chunk_idx"] = int(meta.get("chunk_idx", 0))
+            if "start_pos" in meta:
+                flat_meta["start_pos"] = int(meta.get("start_pos", 0))
+            if "end_pos" in meta:
+                flat_meta["end_pos"] = int(meta.get("end_pos", 0))
             metadatas.append(flat_meta)
         
         # Generate embeddings
@@ -262,3 +290,54 @@ class VectorStore:
             self._collection.delete(ids=all_data["ids"])
             print(f"Cleared {len(all_data['ids'])} documents from collection")
         return True
+
+    def delete_by_file_id(self, file_id: str) -> int:
+        """Delete all chunks that belong to the given file_id."""
+        if not file_id:
+            return 0
+        rows = self._collection.get(where={"file_id": str(file_id)}, include=["metadatas"])
+        ids = rows.get("ids", []) if rows else []
+        if not ids:
+            return 0
+        self._collection.delete(ids=ids)
+        return len(ids)
+
+    def list_all_chunks(self) -> list[dict[str, Any]]:
+        """Return all chunks with metadata for maintenance tasks."""
+        rows = self._collection.get(include=["documents", "metadatas"])
+        ids = rows.get("ids", []) if rows else []
+        docs = rows.get("documents", []) if rows else []
+        metas = rows.get("metadatas", []) if rows else []
+        payload: list[dict[str, Any]] = []
+        for idx, chunk_id in enumerate(ids):
+            payload.append(
+                {
+                    "id": chunk_id,
+                    "content": docs[idx] if idx < len(docs) else "",
+                    "metadata": metas[idx] if idx < len(metas) else {},
+                }
+            )
+        return payload
+
+    def repair_missing_file_id(self, file_id: str, source_name: str) -> int:
+        """Backfill file_id for historical chunks by matching source filename."""
+        if not file_id or not source_name:
+            return 0
+        rows = self._collection.get(include=["metadatas"])
+        ids = rows.get("ids", []) if rows else []
+        metas = rows.get("metadatas", []) if rows else []
+        patch_ids: list[str] = []
+        patch_meta: list[dict[str, Any]] = []
+        for idx, chunk_id in enumerate(ids):
+            meta = dict(metas[idx] if idx < len(metas) else {})
+            source = str(meta.get("source", ""))
+            if source != source_name:
+                continue
+            if str(meta.get("file_id", "")).strip():
+                continue
+            meta["file_id"] = str(file_id)
+            patch_ids.append(chunk_id)
+            patch_meta.append(self._flatten_metadata(meta))
+        if patch_ids:
+            self._collection.update(ids=patch_ids, metadatas=patch_meta)
+        return len(patch_ids)

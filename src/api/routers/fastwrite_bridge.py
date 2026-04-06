@@ -3,17 +3,30 @@
 
 from __future__ import annotations
 
+import os
 import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 
 router = APIRouter()
+DEFAULT_FASTWRITE_URL = "http://127.0.0.1:3002"
+
+
+def _resolve_fastwrite_url() -> str:
+    value = (
+        os.getenv("FASTWRITE_URL")
+        or os.getenv("NEXT_PUBLIC_FASTWRITE_URL")
+        or DEFAULT_FASTWRITE_URL
+    ).strip()
+    return value.rstrip("/") if value else DEFAULT_FASTWRITE_URL
 
 
 @dataclass
@@ -131,7 +144,10 @@ async def create_handoff(req: HandoffRequest):
             "created_at": datetime.now().isoformat(),
         }
     )
-    fastwrite_url = f"http://localhost:3002/?wb_session={session.session_id}&wb_callback={session.callback_token}"
+    fastwrite_url = (
+        f"{_resolve_fastwrite_url()}/"
+        f"?wb_session={session.session_id}&wb_callback={session.callback_token}"
+    )
     return {
         "success": True,
         "data": {
@@ -141,6 +157,43 @@ async def create_handoff(req: HandoffRequest):
             "expires_at": session.expires_at.isoformat(),
         },
     }
+
+
+@router.get("/fastwrite/health")
+async def fastwrite_health():
+    base_url = _resolve_fastwrite_url()
+    target = f"{base_url}/"
+    req = urllib_request.Request(target, method="GET")
+    try:
+        with urllib_request.urlopen(req, timeout=2.0) as resp:
+            status_code = int(getattr(resp, "status", 200))
+            return {
+                "success": True,
+                "data": {
+                    "available": True,
+                    "status_code": status_code,
+                    "url": base_url,
+                },
+            }
+    except urllib_error.HTTPError as exc:
+        return {
+            "success": True,
+            "data": {
+                "available": True,
+                "status_code": int(exc.code),
+                "url": base_url,
+                "warning": f"FastWrite returned HTTP {exc.code}",
+            },
+        }
+    except Exception as exc:
+        return {
+            "success": True,
+            "data": {
+                "available": False,
+                "url": base_url,
+                "error": str(exc),
+            },
+        }
 
 
 @router.get("/fastwrite/handoff/{session_id}")

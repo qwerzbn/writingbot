@@ -225,3 +225,19 @@ bash scripts/demo_readiness_check.sh
 ## 📄 License
 
 MIT
+
+## Demo Environment Variables
+
+For stable local demo and cross-machine portability, use:
+
+- `WRITINGBOT_API_URL` (default `http://127.0.0.1:5001`)
+- `FASTWRITE_URL` (default `http://127.0.0.1:3002`)
+- `NEXT_PUBLIC_FASTWRITE_URL` (default follows `FASTWRITE_URL`)
+
+Startup helpers:
+
+- macOS/Linux: `bash start_dev.sh`
+- Windows: `.\start_dev.ps1`
+- Preflight:
+  - macOS/Linux: `bash scripts/preflight_check.sh`
+  - Windows: `.\scripts\preflight_check.ps1`

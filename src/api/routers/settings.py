@@ -23,7 +23,7 @@ class LLMSettings(BaseModel):
     provider: str = "ollama"
     base_url: str = "http://localhost:11434/v1"
     model: str = "qwen3:0.6b"
-    api_key: str = "ollama"
+    api_key: str | None = None
 
 
 def _read_env() -> dict[str, str]:
@@ -76,7 +76,7 @@ def _apply_config_to_runtime(settings: LLMSettings):
     os.environ["LLM_PROVIDER"] = settings.provider
     os.environ["LLM_BASE_URL"] = settings.base_url
     os.environ["LLM_MODEL"] = settings.model
-    os.environ["LLM_API_KEY"] = settings.api_key
+    os.environ["LLM_API_KEY"] = settings.api_key or ""
 
     # 2. Reset cached singletons
     import src.services.llm.config as config_mod
@@ -85,17 +85,39 @@ def _apply_config_to_runtime(settings: LLMSettings):
     client_mod._llm_client = None
 
 
+def _mask_api_key(api_key: str) -> str:
+    value = (api_key or "").strip()
+    if not value:
+        return ""
+    if len(value) <= 4:
+        return "*" * len(value)
+    if len(value) <= 8:
+        return f"{value[:1]}{'*' * (len(value) - 2)}{value[-1:]}"
+    return f"{value[:4]}{'*' * (len(value) - 8)}{value[-4:]}"
+
+
+def _resolve_api_key_for_update(incoming: str | None, existing: str) -> str:
+    candidate = (incoming or "").strip()
+    if not candidate:
+        return existing
+    if existing and candidate == _mask_api_key(existing):
+        return existing
+    return candidate
+
+
 @router.get("/settings/llm")
 async def get_llm_settings():
     """Get current LLM configuration from .env file."""
     env = _read_env()
+    api_key = env.get("LLM_API_KEY", "")
     return {
         "success": True,
         "data": {
             "provider": env.get("LLM_PROVIDER", "ollama"),
             "base_url": env.get("LLM_BASE_URL", "http://localhost:11434/v1"),
             "model": env.get("LLM_MODEL", "qwen3:0.6b"),
-            "api_key": env.get("LLM_API_KEY", "ollama"),
+            "api_key": _mask_api_key(api_key),
+            "has_api_key": bool((api_key or "").strip()),
         },
     }
 
@@ -108,16 +130,28 @@ async def update_llm_settings(settings: LLMSettings):
     - Applies to runtime immediately (no restart needed)
     """
     try:
+        env = _read_env()
+        resolved_api_key = _resolve_api_key_for_update(
+            settings.api_key,
+            env.get("LLM_API_KEY", ""),
+        )
+        applied = LLMSettings(
+            provider=settings.provider,
+            base_url=settings.base_url,
+            model=settings.model,
+            api_key=resolved_api_key,
+        )
+
         # Persist to .env
         _write_env({
-            "LLM_PROVIDER": settings.provider,
-            "LLM_BASE_URL": settings.base_url,
-            "LLM_MODEL": settings.model,
-            "LLM_API_KEY": settings.api_key,
+            "LLM_PROVIDER": applied.provider,
+            "LLM_BASE_URL": applied.base_url,
+            "LLM_MODEL": applied.model,
+            "LLM_API_KEY": applied.api_key or "",
         })
 
         # Apply to running process
-        _apply_config_to_runtime(settings)
+        _apply_config_to_runtime(applied)
 
         return {"success": True, "message": "LLM 配置已保存并生效"}
     except Exception as e:
@@ -136,12 +170,17 @@ async def test_llm_connection(settings: LLMSettings | None = None):
         from src.services.llm.config import LLMConfig
 
         if settings:
+            env = _read_env()
+            resolved_api_key = _resolve_api_key_for_update(
+                settings.api_key,
+                env.get("LLM_API_KEY", ""),
+            )
             # Test with provided settings (before saving)
             config = LLMConfig(
                 provider=settings.provider,
                 base_url=settings.base_url,
                 model=settings.model,
-                api_key=settings.api_key,
+                api_key=resolved_api_key,
             )
         else:
             # Test with current saved config

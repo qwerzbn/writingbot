@@ -3,7 +3,9 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from src.services.notebook import NotebookManager
+import pytest
+
+from src.services.notebook import NotebookConflictError, NotebookManager
 
 
 def _prepare_kb_file(manager: NotebookManager, tmp_path: Path) -> tuple[str, str]:
@@ -168,3 +170,51 @@ def test_source_scoped_chat_studio_and_note_flow(tmp_path):
     assert len(workspace["recent_sessions"]) == 1
     assert len(workspace["studio_outputs"]) == 1
     assert len(workspace["notes_summary"]) == 2
+
+
+def test_workspace_filters_and_note_conflict_guard(tmp_path):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    notebook = manager.create_notebook(name="Filter notebook")
+    notebook_id = notebook["id"]
+
+    note_a = manager.create_note(
+        notebook_id=notebook_id,
+        title="Research summary",
+        content="Transformer retrieval summary.",
+        tags=["research"],
+    )
+    note_b = manager.create_note(
+        notebook_id=notebook_id,
+        title="Lab TODO",
+        content="Need follow-up experiments.",
+        tags=["todo"],
+    )
+
+    filtered = manager.build_workspace_view(
+        notebook_id,
+        active_note_id=note_a["id"],
+        search="summary",
+        tag="research",
+    )
+    assert filtered is not None
+    assert len(filtered["notes_summary"]) == 1
+    assert filtered["notes_summary"][0]["id"] == note_a["id"]
+    assert filtered["ui_defaults"]["active_note_id"] == note_a["id"]
+
+    updated = manager.update_note(
+        notebook_id=notebook_id,
+        note_id=note_b["id"],
+        title="Lab TODO v2",
+        expected_updated_at=note_b["updated_at"],
+    )
+    assert updated is not None
+    assert updated["title"] == "Lab TODO v2"
+
+    with pytest.raises(NotebookConflictError) as exc_info:
+        manager.update_note(
+            notebook_id=notebook_id,
+            note_id=note_b["id"],
+            title="stale write",
+            expected_updated_at=note_b["updated_at"],
+        )
+    assert exc_info.value.latest["id"] == note_b["id"]

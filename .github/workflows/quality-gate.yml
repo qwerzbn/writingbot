@@ -140,6 +140,13 @@ jobs:
       - name: Run pytest
         run: pytest -q
 
+      - name: Notebook contract tests (explicit gate)
+        run: |
+          pytest -q \
+            tests/test_notebook_router_v2.py \
+            tests/test_notebook_service_v2.py \
+            tests/test_knowledge_router_cleanup.py
+
   web-quality:
     name: Web Quality
     runs-on: ubuntu-latest
@@ -165,3 +172,55 @@ jobs:
 
       - name: Build web
         run: npm run build
+
+  web-integration-smoke:
+    name: Web Integration Smoke
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          cd web
+          npm ci
+
+      - name: Run backend + web smoke (non-mock)
+        run: |
+          set -euo pipefail
+          python -m uvicorn src.api.main:app --host 127.0.0.1 --port 5001 > /tmp/writingbot-api.log 2>&1 &
+          API_PID=$!
+          cd web
+          WRITINGBOT_API_URL=http://127.0.0.1:5001 npm run dev -- --port 3000 > /tmp/writingbot-web.log 2>&1 &
+          WEB_PID=$!
+          cd ..
+          cleanup() {
+            kill "$WEB_PID" "$API_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          sleep 15
+          curl -sSf http://127.0.0.1:3000/api/health >/tmp/proxy-health.json
+          python - <<'PY'
+          import json
+          with open('/tmp/proxy-health.json', 'r', encoding='utf-8') as f:
+              payload = json.load(f)
+          assert payload.get('success') is True
+          assert payload.get('data', {}).get('status') == 'ok'
+          PY

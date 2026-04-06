@@ -246,6 +246,7 @@ export interface RelatedNote {
 export interface NotebookEvent {
   type: 'init' | 'step' | 'metric' | 'job_patch' | 'context_invalidated' | 'done' | 'error';
   notebook_id?: string;
+  cursor?: number;
   job_id?: string;
   job_type?: string;
   step?: string;
@@ -285,6 +286,7 @@ export interface NotebookWorkspaceData {
     selected_source_ids: string[];
     active_session_id: string | null;
     active_output_id: string | null;
+    active_note_id?: string | null;
     note_drawer_open: boolean;
   };
   rail: {
@@ -497,7 +499,7 @@ function normalizeWorkspaceData(
     },
     active_jobs: [],
     view_state_defaults: {
-      active_note_id: workspace.notes_summary[0]?.id || null,
+      active_note_id: workspace.ui_defaults.active_note_id || workspace.notes_summary[0]?.id || null,
       mobile_tab: 'write',
       context_tab: 'insights',
       editor_mode: 'edit',

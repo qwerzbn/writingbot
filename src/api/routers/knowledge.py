@@ -216,9 +216,9 @@ async def ingest_file(
 
         # Add metadata to chunks
         for chunk in chunks:
-            if chunk.metadata:
-                chunk.metadata["source"] = filename
-                chunk.metadata["file_id"] = file_id
+            chunk.metadata = chunk.metadata or {}
+            chunk.metadata["source"] = filename
+            chunk.metadata["file_id"] = file_id
 
         # Index in vector store
         vs = get_vector_store(kb_id)
@@ -301,5 +301,81 @@ async def delete_file(kb_id: str, file_id: str):
     if not kb:
         raise HTTPException(status_code=404, detail="KB not found")
 
-    kb_manager.remove_file(kb_id, file_id)
-    return {"success": True}
+    file_info = next((row for row in kb.get("files", []) if str(row.get("id")) == str(file_id)), None)
+    if not file_info:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    raw_deleted = False
+    raw_path = Path(str(file_info.get("path") or ""))
+    if raw_path.exists() and raw_path.is_file():
+        raw_path.unlink()
+        raw_deleted = True
+
+    vector_deleted = 0
+    index_deleted = 0
+    vector_error = None
+    index_error = None
+
+    try:
+        vs = get_vector_store(kb_id)
+        vector_deleted = vs.delete_by_file_id(file_id)
+    except Exception as exc:
+        vector_error = str(exc)
+
+    try:
+        from src.retrieval import KnowledgeIndexStore
+
+        index_store = KnowledgeIndexStore(DATA_DIR / "knowledge_bases")
+        index_deleted = index_store.delete_by_file_id(kb_id, file_id)
+    except Exception as exc:
+        index_error = str(exc)
+
+    removed = kb_manager.remove_file(kb_id, file_id)
+
+    return {
+        "success": True,
+        "data": {
+            "file_id": file_id,
+            "metadata_deleted": removed is not None,
+            "raw_deleted": raw_deleted,
+            "vector_deleted": vector_deleted,
+            "index_deleted": index_deleted,
+            "vector_error": vector_error,
+            "index_error": index_error,
+        },
+    }
+
+
+@router.post("/kbs/{kb_id}/repair-indexes")
+async def repair_indexes(kb_id: str):
+    """Repair historical chunks missing file_id and rebuild local indexes."""
+    kb_manager = get_kb_manager()
+    kb = kb_manager.get_kb(kb_id)
+    if not kb:
+        raise HTTPException(status_code=404, detail="KB not found")
+
+    vs = get_vector_store(kb_id)
+    repaired = 0
+    for file_info in kb.get("files", []) or []:
+        repaired += vs.repair_missing_file_id(
+            str(file_info.get("id") or ""),
+            str(file_info.get("name") or ""),
+        )
+
+    from src.retrieval import KnowledgeIndexStore
+
+    chunks = vs.list_all_chunks()
+    index_store = KnowledgeIndexStore(DATA_DIR / "knowledge_bases")
+    reindexed_docs = index_store.rebuild_from_chunks(
+        kb_id,
+        [{"content": row.get("content", ""), "metadata": row.get("metadata", {})} for row in chunks],
+    )
+
+    return {
+        "success": True,
+        "data": {
+            "kb_id": kb_id,
+            "repaired_vectors": repaired,
+            "reindexed_docs": reindexed_docs,
+        },
+    }

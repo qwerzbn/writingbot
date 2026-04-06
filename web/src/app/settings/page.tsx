@@ -8,6 +8,7 @@ interface LLMConfig {
     base_url: string;
     model: string;
     api_key: string;
+    has_api_key?: boolean;
 }
 
 interface EvaluationReportSummary {
@@ -53,6 +54,7 @@ export default function SettingsPage() {
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
     const [saveResult, setSaveResult] = useState<{ success: boolean; message: string } | null>(null);
     const [showKey, setShowKey] = useState(false);
+    const [hasApiKey, setHasApiKey] = useState(false);
     const [evalRunning, setEvalRunning] = useState(false);
     const [latestReport, setLatestReport] = useState<EvaluationReportSummary | null>(null);
     const [recentReports, setRecentReports] = useState<EvaluationReportSummary[]>([]);
@@ -64,6 +66,7 @@ export default function SettingsPage() {
             const data = await res.json();
             if (data.success) {
                 setConfig(data.data);
+                setHasApiKey(Boolean(data.data?.has_api_key));
             }
         } catch (e) {
             console.error('Failed to fetch LLM config:', e);
@@ -109,10 +112,14 @@ export default function SettingsPage() {
         setSaveResult(null);
         setTestResult(null);
         try {
+            const payload = { ...config };
+            if (hasApiKey && payload.api_key.includes('*')) {
+                payload.api_key = '';
+            }
             const res = await fetch('/api/settings/llm', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
             if (data.success) {
@@ -284,8 +291,13 @@ export default function SettingsPage() {
                                     type={showKey ? 'text' : 'password'}
                                     value={config.api_key}
                                     onChange={(e) => setConfig({ ...config, api_key: e.target.value })}
+                                    onFocus={() => {
+                                        if (hasApiKey && config.api_key.includes('*')) {
+                                            setConfig((prev) => ({ ...prev, api_key: '' }));
+                                        }
+                                    }}
                                     className="w-full px-4 py-2.5 pr-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                                    placeholder="sk-..."
+                                    placeholder={hasApiKey ? '淇濇寔涓嶅彉璇风暀绌烘垨杈撳叆鏂?Key' : 'sk-...'}
                                 />
                                 <button
                                     onClick={() => setShowKey(!showKey)}
