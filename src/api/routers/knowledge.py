@@ -11,8 +11,15 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
+
+from src.knowledge.assets import (
+    asset_response_row,
+    asset_to_chunk,
+    build_visual_summary,
+    interpret_asset_with_llm,
+)
 
 # Project root for data directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -62,6 +69,10 @@ def get_vector_store(kb_id: str):
         embedding_model=embedding_model,
         embedding_provider=embedding_provider,
     )
+
+
+def _asset_row(kb_id: str, asset: dict) -> dict:
+    return asset_response_row(kb_id, asset)
 
 
 # ============== Embedding Test ==============
@@ -147,6 +158,55 @@ async def get_kb_details(kb_id: str):
     return {"success": True, "data": {"metadata": kb}}
 
 
+@router.get("/kbs/{kb_id}/assets")
+async def list_assets(kb_id: str, kind: str | None = Query(default=None)):
+    """List extracted figure/table assets for a knowledge base."""
+    kb_manager = get_kb_manager()
+    kb = kb_manager.get_kb(kb_id)
+    if not kb:
+        raise HTTPException(status_code=404, detail="KB not found")
+
+    rows = kb_manager.list_assets(kb_id, kind=kind)
+    rows.sort(key=lambda row: (int(row.get("page", 0) or 0), str(row.get("ref_label") or row.get("id") or "")))
+    return {"success": True, "data": [_asset_row(kb_id, row) for row in rows]}
+
+
+@router.get("/kbs/{kb_id}/assets/{asset_id}/content")
+async def get_asset_content(kb_id: str, asset_id: str):
+    """Serve the extracted asset thumbnail image."""
+    kb_manager = get_kb_manager()
+    asset = kb_manager.get_asset(kb_id, asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    image_path = Path(str(asset.get("image_path") or ""))
+    if not image_path.exists():
+        raise HTTPException(status_code=404, detail="Asset image not found on disk")
+
+    return FileResponse(path=str(image_path), filename=image_path.name, media_type="image/png")
+
+
+@router.post("/kbs/{kb_id}/assets/{asset_id}/interpret")
+async def interpret_asset(kb_id: str, asset_id: str):
+    """Interpret a figure/table asset with a multimodal model or fallback heuristic."""
+    kb_manager = get_kb_manager()
+    asset = kb_manager.get_asset(kb_id, asset_id)
+    if not asset:
+        raise HTTPException(status_code=404, detail="Asset not found")
+
+    interpretation = asset.get("interpretation") if isinstance(asset.get("interpretation"), dict) else None
+    if not interpretation:
+        interpretation = interpret_asset_with_llm(asset).to_dict()
+        visual_summary = build_visual_summary(asset, interpretation)
+        asset = kb_manager.update_asset(
+            kb_id,
+            asset_id,
+            {"interpretation": interpretation, "visual_summary": visual_summary},
+        ) or {**asset, "interpretation": interpretation, "visual_summary": visual_summary}
+
+    return {"success": True, "data": _asset_row(kb_id, asset)}
+
+
 @router.get("/kbs/{kb_id}/files/{file_id}/content")
 async def get_file_content(kb_id: str, file_id: str):
     """Get the raw content of a file (e.g., PDF) in a knowledge base."""
@@ -208,7 +268,11 @@ async def ingest_file(
 
         # Parse PDF
         parser = get_parser()
-        content_list = parser.parse(str(filepath))
+        content_list, assets = parser.parse_with_assets(
+            str(filepath),
+            asset_output_dir=str(kb_manager.get_assets_path(kb_id)),
+            file_id=file_id,
+        )
 
         # Chunk content
         chunker = SemanticChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
@@ -220,15 +284,18 @@ async def ingest_file(
             chunk.metadata["source"] = filename
             chunk.metadata["file_id"] = file_id
 
+        text_chunk_dicts = [c.to_dict() for c in chunks]
+        asset_chunk_dicts = [asset_to_chunk(asset) for asset in assets if str(asset.get("caption") or asset.get("nearby_text") or "").strip()]
+        all_chunk_dicts = text_chunk_dicts + asset_chunk_dicts
+
         # Index in vector store
         vs = get_vector_store(kb_id)
-        chunk_dicts = [c.to_dict() for c in chunks]
-        vs.add_chunks(chunk_dicts)
+        vs.add_chunks(all_chunk_dicts)
 
         # Incrementally update local retrieval indexes (BM25 + concept graph)
         from src.retrieval import KnowledgeIndexStore
 
-        KnowledgeIndexStore(DATA_DIR / "knowledge_bases").upsert_chunks(kb_id, chunk_dicts)
+        KnowledgeIndexStore(DATA_DIR / "knowledge_bases").upsert_chunks(kb_id, all_chunk_dicts)
 
         # Record file info
         file_info = {
@@ -239,8 +306,10 @@ async def ingest_file(
             "uploaded_at": datetime.now().isoformat(),
             "blocks": len(content_list),
             "chunks": len(chunks),
+            "asset_count": len(assets),
         }
         kb_manager.add_file(kb_id, file_info)
+        kb_manager.add_assets(kb_id, assets)
 
         # Trigger notebook auto-import jobs if enabled on any notebook bound to this KB.
         try:
@@ -251,7 +320,7 @@ async def ingest_file(
             # Auto-import should never break ingest success path.
             pass
 
-        return {"success": True, "data": file_info}
+        return {"success": True, "data": {**file_info, "assets": [_asset_row(kb_id, row) for row in assets]}}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -331,6 +400,13 @@ async def delete_file(kb_id: str, file_id: str):
         index_error = str(exc)
 
     removed = kb_manager.remove_file(kb_id, file_id)
+    removed_assets = kb_manager.remove_assets_by_file_id(kb_id, file_id)
+    asset_deleted = 0
+    for asset in removed_assets:
+        image_path = Path(str(asset.get("image_path") or ""))
+        if image_path.exists() and image_path.is_file():
+            image_path.unlink()
+            asset_deleted += 1
 
     return {
         "success": True,
@@ -340,6 +416,7 @@ async def delete_file(kb_id: str, file_id: str):
             "raw_deleted": raw_deleted,
             "vector_deleted": vector_deleted,
             "index_deleted": index_deleted,
+            "asset_deleted": asset_deleted,
             "vector_error": vector_error,
             "index_error": index_error,
         },

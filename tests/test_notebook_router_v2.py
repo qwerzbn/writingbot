@@ -33,6 +33,14 @@ def _prepare_kb_file(manager: NotebookManager, tmp_path: Path) -> tuple[str, str
     return kb_id, file_id
 
 
+def _iter_sse_data_chunks(response):
+    for chunk in response.iter_text():
+        for line in chunk.splitlines():
+            if not line.startswith("data: "):
+                continue
+            yield line[6:].strip()
+
+
 def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     manager = NotebookManager(data_dir=tmp_path / "data")
     kb_id, file_id = _prepare_kb_file(manager, tmp_path)
@@ -205,7 +213,7 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     assert import_resp.status_code == 200
     assert import_resp.json()["data"]["status"] in ("done", "partial_failed")
 
-    with client.stream("GET", f"/api/notebooks/{notebook_id}/events") as events_resp:
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?single_pass=1") as events_resp:
         assert events_resp.status_code == 200
         chunks: list[str] = []
         for chunk in events_resp.iter_text():
@@ -262,23 +270,19 @@ def test_notebook_events_support_cursor_resume(tmp_path, monkeypatch):
     notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "pending"})
 
     first_cursor = 0
-    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0") as resp:
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0&single_pass=1") as resp:
         assert resp.status_code == 200
-        for chunk in resp.iter_text():
-            if not chunk.startswith("data: "):
-                continue
-            data = json.loads(chunk[6:].strip())
+        for raw in _iter_sse_data_chunks(resp):
+            data = json.loads(raw)
             first_cursor = int(data["cursor"])
             break
     assert first_cursor > 0
 
     notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "running"})
-    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor={first_cursor}") as resp:
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor={first_cursor}&single_pass=1") as resp:
         assert resp.status_code == 200
-        for chunk in resp.iter_text():
-            if not chunk.startswith("data: "):
-                continue
-            data = json.loads(chunk[6:].strip())
+        for raw in _iter_sse_data_chunks(resp):
+            data = json.loads(raw)
             assert int(data["cursor"]) > first_cursor
             break
 
@@ -295,12 +299,10 @@ def test_notebook_events_support_last_event_id_resume(tmp_path, monkeypatch):
     notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "pending"})
 
     first_cursor = 0
-    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0") as resp:
+    with client.stream("GET", f"/api/notebooks/{notebook_id}/events?cursor=0&single_pass=1") as resp:
         assert resp.status_code == 200
-        for chunk in resp.iter_text():
-            if not chunk.startswith("data: "):
-                continue
-            data = json.loads(chunk[6:].strip())
+        for raw in _iter_sse_data_chunks(resp):
+            data = json.loads(raw)
             first_cursor = int(data["cursor"])
             break
     assert first_cursor > 0
@@ -308,13 +310,11 @@ def test_notebook_events_support_last_event_id_resume(tmp_path, monkeypatch):
     notebook_router._append_event(notebook_id, {"type": "job_patch", "status": "running"})
     with client.stream(
         "GET",
-        f"/api/notebooks/{notebook_id}/events",
+        f"/api/notebooks/{notebook_id}/events?single_pass=1",
         headers={"Last-Event-ID": str(first_cursor)},
     ) as resp:
         assert resp.status_code == 200
-        for chunk in resp.iter_text():
-            if not chunk.startswith("data: "):
-                continue
-            data = json.loads(chunk[6:].strip())
+        for raw in _iter_sse_data_chunks(resp):
+            data = json.loads(raw)
             assert int(data["cursor"]) > first_cursor
             break

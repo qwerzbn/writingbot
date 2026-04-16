@@ -10,8 +10,11 @@ Supports multiple embedding providers:
 - OpenAI (API)
 """
 
-import os
+import hashlib
 import json
+import math
+import os
+import re
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Callable
 
@@ -25,6 +28,36 @@ load_dotenv()
 # ==============================================================================
 # Embedding Provider Factory
 # ==============================================================================
+
+
+def _hashing_embedding_function(dim: int = 384) -> Callable:
+    """
+    Lightweight deterministic fallback embedding.
+
+    This keeps local demos usable when `sentence-transformers` is unavailable or
+    incompatible with the current Python/Torch environment.
+    """
+
+    def _tokenize(text: str) -> list[str]:
+        return re.findall(r"\w+", (text or "").lower(), flags=re.UNICODE)
+
+    def embed_fn(texts: List[str]) -> List[List[float]]:
+        rows: List[List[float]] = []
+        for text in texts:
+            vec = [0.0] * dim
+            for token in _tokenize(text):
+                digest = hashlib.md5(token.encode("utf-8")).digest()
+                bucket_a = int.from_bytes(digest[:4], "big") % dim
+                bucket_b = int.from_bytes(digest[4:8], "big") % dim
+                sign = 1.0 if digest[8] % 2 == 0 else -1.0
+                vec[bucket_a] += sign
+                vec[bucket_b] += 0.5 * sign
+            norm = math.sqrt(sum(value * value for value in vec)) or 1.0
+            rows.append([value / norm for value in vec])
+        return rows
+
+    return embed_fn
+
 
 def get_embedding_function(provider: str, model: str, base_url: str = None, api_key: str = None) -> Callable:
     """
@@ -42,12 +75,22 @@ def get_embedding_function(provider: str, model: str, base_url: str = None, api_
     provider = provider.lower()
     
     if provider == "sentence-transformers":
-        from sentence_transformers import SentenceTransformer
-        st_model = SentenceTransformer(model)
-        def embed_fn(texts: List[str]) -> List[List[float]]:
-            embeddings = st_model.encode(texts, show_progress_bar=len(texts) > 10)
-            return embeddings.tolist()
-        return embed_fn
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            st_model = SentenceTransformer(model)
+
+            def embed_fn(texts: List[str]) -> List[List[float]]:
+                embeddings = st_model.encode(texts, show_progress_bar=len(texts) > 10)
+                return embeddings.tolist()
+
+            return embed_fn
+        except Exception as exc:
+            print(
+                "[vector_store] sentence-transformers unavailable, "
+                f"falling back to hashing embeddings: {exc}"
+            )
+            return _hashing_embedding_function()
     
     elif provider == "ollama":
         import requests

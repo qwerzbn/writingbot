@@ -1,9 +1,35 @@
+import type { EvidenceInterpretation } from '@/components/common/evidence';
+
 export interface ChatSource {
   source: string;
   page: number | string;
+  line_start?: number;
+  line_end?: number;
+  bbox?: number[];
+  page_width?: number;
+  page_height?: number;
+  highlight_boxes?: Array<{
+    page?: number;
+    bbox?: number[];
+    line_start?: number;
+    line_end?: number;
+    page_width?: number;
+    page_height?: number;
+  }>;
+  title?: string;
   content?: string;
+  summary?: string;
+  excerpt?: string;
   score?: number;
   file_id?: string;
+  asset_id?: string;
+  asset_type?: string;
+  caption?: string;
+  ref_label?: string;
+  thumbnail_url?: string;
+  interpretation?: EvidenceInterpretation;
+  is_primary?: boolean;
+  evidence_kind?: string;
 }
 
 export interface ChatMessage {

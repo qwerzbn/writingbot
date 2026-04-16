@@ -1,0 +1,76 @@
+{
+  "id": "108ffc0b-6234-491b-837c-e722cd53091d",
+  "notebook_id": "dd3f2834-af25-4123-af36-73dd42ac67f5",
+  "title": "- **标题**：图3的核心结论与支持主张",
+  "content": "- **标题**：图3的核心结论与支持主张 - **要点**： - 图3核心结论：训练动态在AIR RLVR过程中的关键变化，支持了作者关于“训练策略与环境交互的动态规律”的主张。 - 证据引用：[1] 图表证据（Training dynamics in the AIR RLVR process of Conan.） - **结论/建议**： 图3通过1k至3k训练步数的数据，验证了训练动态的阶段性变化，进一步支持了作者提出的“训练策略需动态适应环境变化”的主张，为后续研究提供了实证依据。",
+  "kind": "saved_chat",
+  "origin": "chat:d6dac495-cf76-46e6-b8db-4afef797617e",
+  "citations": [
+    {
+      "source_id": "f8ba543c-4c7a-4acb-9d97-d593283b50e2",
+      "source_title": "Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence",
+      "locator": "第 8 页",
+      "excerpt": "图注：Training dynamics in the AIR RLVR process of Conan.\n邻近正文：data from 1k to 3k training steps",
+      "summary": "结论：Fig. 3主要说明了Training dynamics in the AIR RLVR process of Conan。\n依据：increasing。",
+      "line_start": null,
+      "line_end": null,
+      "bbox": [
+        18,
+        233.82,
+        594,
+        414.09
+      ],
+      "page": 8,
+      "page_width": 612,
+      "page_height": 792,
+      "highlight_boxes": [
+        {
+          "page": 8,
+          "bbox": [
+            18,
+            233.82,
+            594,
+            414.09
+          ],
+          "page_width": 612,
+          "page_height": 792
+        }
+      ],
+      "asset_id": "6ce2910a-85e6-4b25-b39f-2817ac839519",
+      "asset_type": "figure",
+      "caption": "Figure 3. Training dynamics in the AIR RLVR process of Conan.",
+      "ref_label": "Fig. 3",
+      "thumbnail_url": "/api/kbs/d6dac495-cf76-46e6-b8db-4afef797617e/assets/6ce2910a-85e6-4b25-b39f-2817ac839519/content",
+      "interpretation": {
+        "chart_type": "training dynamics in the AIR RLVR process",
+        "main_message": "Training dynamics in the AIR RLVR process of Conan",
+        "entities": [
+          "Conan",
+          "AIR RLVR"
+        ],
+        "metrics": [
+          "1k",
+          "1.5k",
+          "2.0k",
+          "2.5k",
+          "3.0k"
+        ],
+        "trend": "increasing",
+        "evidence_text": "data from 1k to 3k training steps",
+        "confidence": 0.3
+      },
+      "title": "Conan- Progressive Learning to Reason Like a Detective over Multi-Scale Visual Evidence",
+      "is_primary": true,
+      "evidence_kind": "figure",
+      "index": 1
+    }
+  ],
+  "source_ids": [
+    "f8ba543c-4c7a-4acb-9d97-d593283b50e2"
+  ],
+  "tags": [
+    "chat"
+  ],
+  "created_at": "2026-04-07T14:57:18.696047",
+  "updated_at": "2026-04-07T14:57:18.696047"
+}

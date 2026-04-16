@@ -469,7 +469,6 @@ export default function KBDetailPage() {
             {activePdf && (
                 <PdfViewer
                     fileUrl={activePdf.url}
-                    fileName={activePdf.name}
                     onClose={() => setActivePdf(null)}
                 />
             )}

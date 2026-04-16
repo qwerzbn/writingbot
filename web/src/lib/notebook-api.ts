@@ -1,5 +1,7 @@
 'use client';
 
+import type { EvidenceInterpretation } from '@/components/common/evidence';
+
 export interface NotebookListRow {
   id: string;
   name: string;
@@ -42,6 +44,30 @@ export interface NotebookCitation {
   source_title: string;
   locator: string;
   excerpt: string;
+  page?: number | string;
+  line_start?: number;
+  line_end?: number;
+  bbox?: number[];
+  page_width?: number;
+  page_height?: number;
+  highlight_boxes?: Array<{
+    page?: number;
+    bbox?: number[];
+    line_start?: number;
+    line_end?: number;
+    page_width?: number;
+    page_height?: number;
+  }>;
+  summary?: string;
+  title?: string;
+  asset_id?: string;
+  asset_type?: string;
+  caption?: string;
+  ref_label?: string;
+  thumbnail_url?: string;
+  interpretation?: EvidenceInterpretation;
+  is_primary?: boolean;
+  evidence_kind?: string;
 }
 
 export interface NotebookSource {
@@ -389,8 +415,26 @@ function citationToEvidence(citations: NotebookCitation[] = []) {
   return citations.map((citation) => ({
     id: `${citation.source_id}:${citation.index}`,
     source: citation.source_title,
-    page: citation.locator,
+    page: citation.page ?? citation.locator,
+    line_start: citation.line_start,
+    line_end: citation.line_end,
+    bbox: citation.bbox,
+    page_width: citation.page_width,
+    page_height: citation.page_height,
+    highlight_boxes: citation.highlight_boxes,
     content: citation.excerpt,
+    title: citation.title || citation.source_title,
+    summary: citation.summary,
+    excerpt: citation.excerpt,
+    file_id: citation.source_id,
+    asset_id: citation.asset_id,
+    asset_type: citation.asset_type,
+    caption: citation.caption,
+    ref_label: citation.ref_label,
+    thumbnail_url: citation.thumbnail_url,
+    interpretation: citation.interpretation,
+    is_primary: citation.is_primary,
+    evidence_kind: citation.evidence_kind,
   }));
 }
 

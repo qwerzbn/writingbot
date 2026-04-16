@@ -6,6 +6,7 @@
 
 - **📖 知识库管理** — 导入 PDF 文献，自动解析、分块、向量化存储，支持多知识库
 - **💬 智能问答** — 基于 RAG（检索增强生成）的文献问答，支持实时流式输出与来源引用
+- **🖼️ 图表理解** — 自动抽取论文 Figure/Table 资产，支持图表解释、页码回跳与图文联合证据
 - **📝 笔记本** — 结构化笔记管理，关联知识库内容
 - **🔬 深度研究** — 多轮自主 Agent 深度调研模式
 - **✍️ 协同写作** — AI 辅助的论文撰写功能
@@ -93,6 +94,8 @@ cp .env.example .env
 | OpenAI | `openai` | `https://api.openai.com/v1` | `gpt-4o-mini` |
 | DeepSeek | `openai` | `https://api.deepseek.com/v1` | `deepseek-chat` |
 
+提示：如果要启用“论文图表理解”，请优先使用支持视觉输入的 OpenAI-compatible 多模态模型。
+
 ### 4. 一键启动
 
 ```bash
@@ -114,14 +117,20 @@ bash start_dev.sh
 ### 知识库管理
 
 1. 进入「知识库」页面，点击 **创建知识库**
-2. 上传 PDF 文献，系统自动完成：解析 → 语义分块 → 向量化存储
+2. 上传 PDF 文献，系统自动完成：文本解析 → Figure/Table 抽取 → 语义分块 → 向量化存储
 3. 支持选择不同的 Embedding 模型（本地 Sentence-Transformers / Ollama / OpenAI）
+
+图表资产接口：
+
+- `GET /api/kbs/{kb_id}/assets` — 列出当前知识库中的 Figure/Table 资产
+- `POST /api/kbs/{kb_id}/assets/{asset_id}/interpret` — 调用多模态模型解释单个图表
 
 ### 智能问答
 
 1. 进入「聊天」页面，选择目标知识库
 2. 输入问题，AI 基于文献内容提供回答，附带来源引用
 3. 支持多轮对话，自动保存历史
+4. 当问题命中“图3/表2/趋势/对比/消融”等模式时，会补充图表证据卡并支持跳回 PDF 原页
 
 ### Skills 规范（Anthropic 风格）
 
@@ -197,6 +206,7 @@ python main.py
 - 全链路守卫演练：`scripts/simulate_full_guard_ci.sh`（一次性验证架构锚点 + 依赖循环两类守卫）
 - 漂移看板生成：`scripts/generate_structure_drift_dashboard.sh`（输出 drift dashboard）
 - 本地 PR 演练包装脚本：`scripts/rehearse_arch_guard_pr.sh`（输出可归档的 snapshot/log/summary）
+- 根级 `pytest.ini`：将测试发现固定在主仓 `tests/`，避免把参考子项目一并扫入答辩前回归
 - PR 演练说明：`docs/upgrade/architecture-guard-pr-drill.md`
 - 最近演练报告：`docs/upgrade/architecture-guard-drill-report.md`
 - 最近月度复盘：`docs/upgrade/monthly-gate-failure-postmortem-2026-03.md`

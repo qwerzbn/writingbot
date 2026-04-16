@@ -997,6 +997,7 @@ async def stream_notebook_events(
     notebook_id: str,
     request: Request,
     cursor: int | None = Query(default=None, ge=0),
+    single_pass: bool = Query(default=False),
 ):
     _require_notebook(notebook_id)
     header_cursor = request.headers.get("last-event-id")
@@ -1016,8 +1017,12 @@ async def stream_notebook_events(
                 for event in pending:
                     current_cursor = int(event.get("cursor", current_cursor))
                     yield _sse_event_with_cursor(event)
+                if single_pass:
+                    break
             else:
                 yield ": ping\n\n"
+                if single_pass:
+                    break
             await asyncio.sleep(1.0)
 
     return StreamingResponse(

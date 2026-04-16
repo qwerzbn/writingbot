@@ -2,12 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Bot, Loader2, MessageCircle, Plus, Send, Trash2, User } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import EvidenceCard from '@/components/common/EvidenceCard';
+import { cleanEvidenceTitle, type EvidenceHighlight } from '@/components/common/evidence';
 import { useAppContext } from '@/context/AppContext';
 import { ApiError, getConversation, listConversations, listSkills, removeConversation, streamChat } from '@/lib/chat';
 import type { ChatMessage, ConversationDetail, ConversationSummary } from '@/types/chat';
 import type { SkillItem } from '@/lib/chat';
+
+const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 
 const DRAFT_ID = '__draft__';
 
@@ -130,6 +135,23 @@ function formatAgentName(agentId: string): string {
   return mapping[agentId] || agentId;
 }
 
+function parsePageNumber(page: number | string | undefined): number {
+  if (typeof page === 'number' && page > 0) return page;
+  const raw = String(page || '').trim();
+  const matched = raw.match(/(\d+)/);
+  return matched ? Number(matched[1]) : 1;
+}
+
+function sortChatSources<T extends { is_primary?: boolean; asset_id?: string; score?: number }>(sources: T[]): T[] {
+  return [...sources].sort((a, b) => {
+    const primaryDelta = Number(Boolean(b.is_primary)) - Number(Boolean(a.is_primary));
+    if (primaryDelta !== 0) return primaryDelta;
+    const assetDelta = Number(Boolean(b.asset_id)) - Number(Boolean(a.asset_id));
+    if (assetDelta !== 0) return assetDelta;
+    return Number(b.score || 0) - Number(a.score || 0);
+  });
+}
+
 export default function ChatPage() {
   const { kbs, selectedKbId, setSelectedKbId } = useAppContext();
 
@@ -161,6 +183,12 @@ export default function ChatPage() {
   const [hasFirstChunk, setHasFirstChunk] = useState(false);
   const [progressEventCount, setProgressEventCount] = useState(0);
   const [lastProgressTs, setLastProgressTs] = useState('');
+  const [activePdf, setActivePdf] = useState<{
+    url: string;
+    name: string;
+    initialPage: number;
+    highlightBoxes?: EvidenceHighlight[];
+  } | null>(null);
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -420,7 +448,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           title,
           content: msg.content,
-          sources: msg.sources || [],
+          sources: sortChatSources(msg.sources || []),
           kb_id: selectedKbId || undefined,
           origin_type: 'chat',
           tags,
@@ -624,11 +652,42 @@ export default function ChatPage() {
     }
   };
 
+  const handleOpenSource = useCallback(
+    (source: ChatMessage['sources'][number]) => {
+      if (!selectedKbId || !source.file_id) return;
+      const fallbackHighlight =
+        Array.isArray(source.bbox) && source.bbox.length === 4
+          ? [
+              {
+                page: parsePageNumber(source.page),
+                bbox: source.bbox,
+                line_start: source.line_start,
+                line_end: source.line_end,
+                page_width: source.page_width,
+                page_height: source.page_height,
+              },
+            ]
+          : [];
+      const highlightBoxes =
+        (source.highlight_boxes || []).length > 0 ? source.highlight_boxes : fallbackHighlight;
+      const initialPage = parsePageNumber(
+        highlightBoxes?.[0]?.page ?? source.page
+      );
+      setActivePdf({
+        url: `/api/kbs/${selectedKbId}/files/${source.file_id}/content`,
+        name: source.title || cleanEvidenceTitle(source.source),
+        initialPage,
+        highlightBoxes,
+      });
+    },
+    [selectedKbId]
+  );
+
   return (
     <div data-testid="chat-page-root" className="h-full min-h-0 w-full bg-slate-100 dark:bg-slate-900 transition-colors">
       <div
         data-testid="chat-grid"
-        className="h-full min-h-0 w-full grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-0"
+        className={`h-full min-h-0 w-full grid grid-cols-1 gap-0 ${activePdf ? 'lg:grid-cols-[280px_minmax(0,1fr)_520px]' : 'lg:grid-cols-[280px_minmax(0,1fr)]'}`}
       >
         <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur border-r border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden min-h-0">
           <div className="p-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -823,6 +882,7 @@ export default function ChatPage() {
                 const isUser = msg.role === 'user';
                 const isStreamingPlaceholder =
                   !isUser && sending && idx === messages.length - 1 && !(msg.content || '').trim();
+                const orderedSources = sortChatSources(msg.sources || []);
                 return (
                   <div key={`${msg.timestamp}-${idx}`} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
@@ -847,7 +907,26 @@ export default function ChatPage() {
                           <div className="h-2 w-40 rounded bg-slate-300/50 dark:bg-slate-600/50 animate-pulse" />
                         </div>
                       ) : (
-                        <MarkdownRenderer content={msg.content} sources={msg.sources || []} className="text-sm" />
+                        <div>
+                          <MarkdownRenderer
+                            content={msg.content}
+                            sources={orderedSources}
+                            onCitationClick={handleOpenSource}
+                            className="text-sm"
+                          />
+                          {orderedSources.length > 0 ? (
+                            <div className="mt-3 space-y-2">
+                              {orderedSources.map((source, sourceIdx) => (
+                                <EvidenceCard
+                                  key={`${msg.timestamp}-${sourceIdx}-${source.source}-${source.page}`}
+                                  index={sourceIdx + 1}
+                                  source={source}
+                                  onOpen={source.file_id ? handleOpenSource : undefined}
+                                />
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
                       )}
                       {!isUser && !isStreamingPlaceholder && (msg.content || '').trim() && (
                         <div className="mt-2 flex justify-end">
@@ -962,6 +1041,14 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
+        {activePdf ? (
+          <PdfViewer
+            fileUrl={activePdf.url}
+            initialPage={activePdf.initialPage}
+            highlightBoxes={activePdf.highlightBoxes}
+            onClose={() => setActivePdf(null)}
+          />
+        ) : null}
       </div>
     </div>
   );

@@ -8,7 +8,16 @@ from collections import defaultdict
 from typing import Any
 
 from src.rag.components.reranker import Reranker
-from src.retrieval.common import estimate_tokens, safe_norm, stable_doc_id, tokenize
+from src.retrieval.common import (
+    build_sentence_excerpt,
+    build_text_evidence_excerpt,
+    clean_source_title,
+    estimate_tokens,
+    normalize_source_metadata,
+    safe_norm,
+    stable_doc_id,
+    tokenize,
+)
 from src.retrieval.index_store import IndexedDoc, KnowledgeIndexStore
 
 
@@ -216,7 +225,7 @@ class HybridRetrievalService:
         judged = self.judge.judge(reranked)
         kept = [r for r in judged if r.get("judge_keep")][:top_k]
 
-        context, sources = self.build_context(kept, token_budget=6000)
+        context, sources = self.build_context(kept, token_budget=6000, query=query)
 
         return {
             "query": query,
@@ -262,7 +271,7 @@ class HybridRetrievalService:
             dedup[item["doc_id"]] = item
 
         ranked = sorted(dedup.values(), key=lambda x: x.get("relevance", 0.0), reverse=True)
-        context, sources = self.build_context(ranked, token_budget=token_budget)
+        context, sources = self.build_context(ranked, token_budget=token_budget, query=query)
         return {
             "sub_questions": sub_questions,
             "buckets": bucket_rows,
@@ -332,23 +341,42 @@ class HybridRetrievalService:
                 row["rerank_score"] = row.get("fusion_score", 0.0)
             return rows
 
-    def build_context(self, rows: list[dict[str, Any]], token_budget: int = 6000) -> tuple[str, list[dict[str, Any]]]:
+    def build_context(
+        self,
+        rows: list[dict[str, Any]],
+        token_budget: int = 6000,
+        query: str = "",
+    ) -> tuple[str, list[dict[str, Any]]]:
         used = 0
         parts: list[str] = []
         sources: list[dict[str, Any]] = []
         for i, row in enumerate(rows, start=1):
             content = row.get("content", "")
-            meta = row.get("metadata", {}) or {}
+            meta = normalize_source_metadata(row.get("metadata", {}) or {})
             chunk_tokens = estimate_tokens(content)
             if used + chunk_tokens > token_budget:
                 break
             used += chunk_tokens
             parts.append(f"[{i}] {content}")
+            display_title = clean_source_title(meta.get("title") or meta.get("source", "Unknown"))
+            is_asset = bool(meta.get("asset_id") or meta.get("asset_type"))
+            summary = build_sentence_excerpt(content, query=query, limit=160, max_sentences=1) if is_asset else ""
+            excerpt = (
+                build_sentence_excerpt(content, query=query, limit=320, max_sentences=2)
+                if is_asset
+                else build_text_evidence_excerpt(content, metadata=meta, query=query, limit=320)
+            )
             sources.append(
                 {
                     "id": row.get("doc_id"),
                     "source": meta.get("source", "Unknown"),
                     "page": meta.get("page", "?"),
+                    "line_start": meta.get("line_start"),
+                    "line_end": meta.get("line_end"),
+                    "bbox": meta.get("bbox"),
+                    "page_width": meta.get("page_width"),
+                    "page_height": meta.get("page_height"),
+                    "highlight_boxes": meta.get("highlight_boxes") or [],
                     "file_id": meta.get("file_id"),
                     "paper_id": meta.get("paper_id") or meta.get("file_id") or row.get("doc_id"),
                     "title": meta.get("title") or meta.get("source", "Unknown"),
@@ -358,7 +386,17 @@ class HybridRetrievalService:
                     "doi": meta.get("doi"),
                     "section": meta.get("section"),
                     "chunk_type": meta.get("chunk_type") or meta.get("type"),
-                    "content": content[:220],
+                    "title": display_title,
+                    "summary": summary,
+                    "excerpt": excerpt,
+                    "asset_id": meta.get("asset_id"),
+                    "asset_type": meta.get("asset_type"),
+                    "caption": meta.get("caption"),
+                    "ref_label": meta.get("ref_label"),
+                    "image_path": meta.get("image_path"),
+                    "evidence_kind": meta.get("asset_type") or "text",
+                    "is_primary": False,
+                    "content": excerpt or summary or content[:220],
                     "score": row.get("relevance", row.get("rerank_score", row.get("fusion_score", 0.0))),
                     "relevance": row.get("relevance", 0.0),
                     "factual_risk": row.get("factual_risk", 0.0),

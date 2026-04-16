@@ -32,7 +32,15 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from src.processing.semantic_chunker import SemanticChunker
-from src.retrieval.common import tokenize
+from src.retrieval.common import (
+    build_sentence_excerpt,
+    build_text_evidence_excerpt,
+    clean_source_title,
+    format_page_locator,
+    normalize_display_text,
+    summarize_display_text,
+    tokenize,
+)
 from src.services.config import get_main_config
 
 
@@ -62,14 +70,11 @@ def _slugify(text: str, fallback: str = "source") -> str:
 
 
 def _normalize_whitespace(text: str) -> str:
-    text = (text or "").replace("\r\n", "\n").replace("\r", "\n")
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
+    return normalize_display_text(text, preserve_paragraphs=True)
 
 
 def _summarize_text(text: str, limit: int = 220) -> str:
-    compact = re.sub(r"\s+", " ", _normalize_whitespace(text))
-    return compact[:limit].strip()
+    return summarize_display_text(text, limit)
 
 
 def _word_count(text: str) -> int:
@@ -136,6 +141,13 @@ class RetrievedChunk:
     content: str
     score: float
     page: int | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+    bbox: list[float] | None = None
+    page_width: float | None = None
+    page_height: float | None = None
+    highlight_boxes: list[dict[str, Any]] | None = None
+    spans: list[dict[str, Any]] | None = None
     kind: str = "text"
 
 
@@ -329,10 +341,10 @@ class NotebookManager:
 
     def _normalize_source_title(self, source: dict[str, Any]) -> str:
         if source.get("title"):
-            return str(source["title"])
+            return clean_source_title(str(source["title"]), strip_extension=False)
         metadata = source.get("metadata", {}) or {}
         if metadata.get("file_name"):
-            return str(metadata["file_name"])
+            return clean_source_title(str(metadata["file_name"]))
         if metadata.get("url"):
             return str(metadata["url"])
         return "Untitled source"
@@ -408,6 +420,12 @@ class NotebookManager:
                         "page": metadata.get("page"),
                         "source": metadata.get("source") or filename,
                         "bbox": metadata.get("bbox"),
+                        "line_start": metadata.get("line_start"),
+                        "line_end": metadata.get("line_end"),
+                        "page_width": metadata.get("page_width"),
+                        "page_height": metadata.get("page_height"),
+                        "highlight_boxes": metadata.get("highlight_boxes") or [],
+                        "spans": metadata.get("spans") or [],
                     },
                 }
             )
@@ -634,16 +652,23 @@ class NotebookManager:
                 if score <= 0 and query_tokens:
                     continue
                 scored.append(
-                    RetrievedChunk(
-                        chunk_id=str(chunk.get("id") or ""),
-                        source_id=source_id,
-                        source_title=str(source.get("title") or "Untitled source"),
-                        content=str(chunk.get("content") or ""),
-                        score=score,
-                        page=chunk.get("page"),
-                        kind=str(source.get("kind") or "text"),
+                        RetrievedChunk(
+                            chunk_id=str(chunk.get("id") or ""),
+                            source_id=source_id,
+                            source_title=str(source.get("title") or "Untitled source"),
+                            content=str(chunk.get("content") or ""),
+                            score=score,
+                            page=chunk.get("page"),
+                            line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                            line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                            bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                            page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                            page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                            highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                            spans=(chunk.get("metadata", {}) or {}).get("spans"),
+                            kind=str(source.get("kind") or "text"),
+                        )
                     )
-                )
         if not scored and not query_tokens:
             for source_id, source in source_index.items():
                 for chunk in self._load_source_chunks(notebook_id, source_id)[:2]:
@@ -655,6 +680,13 @@ class NotebookManager:
                             content=str(chunk.get("content") or ""),
                             score=1.0,
                             page=chunk.get("page"),
+                            line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                            line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                            bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                            page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                            page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                            highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                            spans=(chunk.get("metadata", {}) or {}).get("spans"),
                             kind=str(source.get("kind") or "text"),
                         )
                     )
@@ -664,13 +696,37 @@ class NotebookManager:
     def _build_citations(self, chunks: list[RetrievedChunk]) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for chunk in chunks:
-            locator = f"p.{chunk.page}" if chunk.page is not None else chunk.kind
+            locator = format_page_locator(chunk.page, chunk.line_start, chunk.line_end) if chunk.page is not None else chunk.kind
             rows.append(
                 {
                     "source_id": chunk.source_id,
                     "source_title": chunk.source_title,
                     "locator": locator,
-                    "excerpt": _summarize_text(chunk.content, 240),
+                    "excerpt": build_text_evidence_excerpt(
+                        chunk.content,
+                        metadata={
+                            "spans": chunk.spans
+                            or [
+                                {
+                                    "content": chunk.content,
+                                    "page": chunk.page,
+                                    "bbox": chunk.bbox,
+                                    "line_start": chunk.line_start,
+                                    "line_end": chunk.line_end,
+                                    "page_width": chunk.page_width,
+                                    "page_height": chunk.page_height,
+                                }
+                            ]
+                        },
+                        limit=260,
+                    ),
+                    "line_start": chunk.line_start,
+                    "line_end": chunk.line_end,
+                    "bbox": chunk.bbox,
+                    "page": chunk.page,
+                    "page_width": chunk.page_width,
+                    "page_height": chunk.page_height,
+                    "highlight_boxes": chunk.highlight_boxes or [],
                 }
             )
         return _dedupe_citations(rows, limit=6)
@@ -1312,11 +1368,30 @@ class NotebookManager:
             [
                 {
                     "source_id": row.get("source_id") or row.get("file_id") or row.get("id"),
-                    "source_title": row.get("source_title") or row.get("source") or row.get("file_name") or "来源",
+                    "source_title": row.get("source_title") or row.get("title") or row.get("source") or row.get("file_name") or "来源",
                     "locator": (
-                        f"p.{row.get('page')}" if row.get("page") is not None else (row.get("locator") or "source")
+                        format_page_locator(row.get("page"), row.get("line_start"), row.get("line_end"))
+                        if row.get("page") is not None
+                        else (row.get("locator") or "source")
                     ),
                     "excerpt": row.get("excerpt") or row.get("content") or "",
+                    "summary": row.get("summary"),
+                    "line_start": row.get("line_start"),
+                    "line_end": row.get("line_end"),
+                    "bbox": row.get("bbox"),
+                    "page": row.get("page"),
+                    "page_width": row.get("page_width"),
+                    "page_height": row.get("page_height"),
+                    "highlight_boxes": row.get("highlight_boxes") or [],
+                    "asset_id": row.get("asset_id"),
+                    "asset_type": row.get("asset_type"),
+                    "caption": row.get("caption"),
+                    "ref_label": row.get("ref_label"),
+                    "thumbnail_url": row.get("thumbnail_url"),
+                    "interpretation": row.get("interpretation"),
+                    "title": row.get("title"),
+                    "is_primary": row.get("is_primary"),
+                    "evidence_kind": row.get("evidence_kind"),
                 }
                 for row in (sources or [])
             ]

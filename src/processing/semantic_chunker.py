@@ -156,23 +156,25 @@ class SemanticChunker:
         """
         # Concatenate all text content
         texts = []
-        page_markers = {}  # Track which text came from which page
-        
+        segments: list[dict] = []
+
         current_pos = 0
         for item in content_list:
             content = item.get("content", "")
             if content:
-                page = item.get("metadata", {}).get("page", 0)
-                source = item.get("metadata", {}).get("source", "")
-                
-                # Store page mapping for position
-                page_markers[current_pos] = {
-                    "page": page,
-                    "source": source
-                }
-                
+                metadata = item.get("metadata", {}) or {}
+                start_pos = current_pos
+                end_pos = start_pos + len(content)
+                segments.append(
+                    {
+                        "start": start_pos,
+                        "end": end_pos,
+                        "content": content,
+                        "metadata": metadata,
+                    }
+                )
                 texts.append(content)
-                current_pos += len(content) + 2  # +2 for \n\n separator
+                current_pos = end_pos + 2  # +2 for \n\n separator
         
         # Join with double newlines (paragraph separator)
         full_text = "\n\n".join(texts)
@@ -180,23 +182,102 @@ class SemanticChunker:
         # Chunk the full text
         chunks = self.chunk_text(full_text)
         
-        # Enrich chunk metadata with page info
+        # Enrich chunk metadata with page/span info
         for chunk in chunks:
-            start_pos = chunk.metadata.get("start_pos", 0)
-            # Find the closest page marker
-            closest_page = 1
-            closest_source = ""
-            for marker_pos, marker_info in sorted(page_markers.items()):
-                if marker_pos <= start_pos:
-                    closest_page = marker_info["page"]
-                    closest_source = marker_info["source"]
-                else:
-                    break
-            
-            chunk.metadata["page"] = closest_page
-            chunk.metadata["source"] = closest_source
+            start_pos = int(chunk.metadata.get("start_pos", 0) or 0)
+            end_pos = int(chunk.metadata.get("end_pos", start_pos) or start_pos)
+            overlaps = self._collect_overlap_segments(segments, start_pos, end_pos)
+            if not overlaps:
+                continue
+
+            primary_page = self._select_primary_page(overlaps)
+            page_spans = [span for span in overlaps if span.get("page") == primary_page] or overlaps
+            first = page_spans[0]
+            bbox = self._merge_bbox(page_spans)
+            line_numbers = [
+                int(span.get("line_start"))
+                for span in page_spans
+                if span.get("line_start") is not None
+            ]
+            line_ends = [
+                int(span.get("line_end"))
+                for span in page_spans
+                if span.get("line_end") is not None
+            ]
+
+            chunk.metadata["page"] = first.get("page")
+            chunk.metadata["source"] = first.get("source", "")
+            chunk.metadata["bbox"] = bbox
+            chunk.metadata["line_start"] = min(line_numbers) if line_numbers else None
+            chunk.metadata["line_end"] = max(line_ends) if line_ends else None
+            chunk.metadata["page_width"] = first.get("page_width")
+            chunk.metadata["page_height"] = first.get("page_height")
+            chunk.metadata["spans"] = page_spans
+            chunk.metadata["highlight_boxes"] = [
+                {
+                    "page": span.get("page"),
+                    "bbox": span.get("bbox"),
+                    "line_start": span.get("line_start"),
+                    "line_end": span.get("line_end"),
+                    "page_width": span.get("page_width"),
+                    "page_height": span.get("page_height"),
+                }
+                for span in page_spans
+                if span.get("bbox")
+            ]
         
         return chunks
+
+    @staticmethod
+    def _collect_overlap_segments(segments: list[dict], start: int, end: int) -> list[dict]:
+        overlaps: list[dict] = []
+        for segment in segments:
+            segment_start = int(segment.get("start", 0) or 0)
+            segment_end = int(segment.get("end", segment_start) or segment_start)
+            overlap = max(0, min(end, segment_end) - max(start, segment_start))
+            if overlap <= 0:
+                continue
+            metadata = segment.get("metadata", {}) or {}
+            overlaps.append(
+                {
+                    "content": segment.get("content", ""),
+                    "page": metadata.get("page"),
+                    "source": metadata.get("source"),
+                    "bbox": metadata.get("bbox"),
+                    "block_idx": metadata.get("block_idx"),
+                    "line_start": metadata.get("line_start"),
+                    "line_end": metadata.get("line_end"),
+                    "page_width": metadata.get("page_width"),
+                    "page_height": metadata.get("page_height"),
+                    "overlap": overlap,
+                }
+            )
+        overlaps.sort(key=lambda item: (item.get("page") or 0, item.get("line_start") or 0, item.get("block_idx") or 0))
+        return overlaps
+
+    @staticmethod
+    def _select_primary_page(spans: list[dict]) -> int | None:
+        page_scores: dict[int, int] = {}
+        for span in spans:
+            page = span.get("page")
+            if not isinstance(page, int):
+                continue
+            page_scores[page] = page_scores.get(page, 0) + int(span.get("overlap", 0) or 0)
+        if not page_scores:
+            return spans[0].get("page") if spans else None
+        return max(page_scores.items(), key=lambda item: item[1])[0]
+
+    @staticmethod
+    def _merge_bbox(spans: list[dict]) -> list[float] | None:
+        boxes = [span.get("bbox") for span in spans if isinstance(span.get("bbox"), list) and len(span.get("bbox")) == 4]
+        if not boxes:
+            return None
+        return [
+            min(float(box[0]) for box in boxes),
+            min(float(box[1]) for box in boxes),
+            max(float(box[2]) for box in boxes),
+            max(float(box[3]) for box in boxes),
+        ]
 
 
 # Convenience function

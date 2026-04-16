@@ -69,6 +69,8 @@ required = {
     "/api/orchestrator/run",
     "/api/orchestrator/stream/{run_id}",
     "/api/research/stream",
+    "/api/kbs/{kb_id}/assets",
+    "/api/kbs/{kb_id}/assets/{asset_id}/interpret",
     "/api/notebooks/{notebook_id}/imports/kb",
     "/api/notebooks/{notebook_id}/graph-view",
     "/api/notebooks/{notebook_id}/insights",

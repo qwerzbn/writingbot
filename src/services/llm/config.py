@@ -42,9 +42,9 @@ def get_llm_config() -> LLMConfig:
     global _llm_config
     if _llm_config is None:
         _llm_config = LLMConfig(
-            provider=os.getenv("LLM_PROVIDER", "ollama"),
-            base_url=os.getenv("LLM_BASE_URL", "http://localhost:11434/v1"),
-            model=os.getenv("LLM_MODEL", "qwen3:0.6b"),
-            api_key=os.getenv("LLM_API_KEY", "ollama"),
+            provider=os.getenv("LLM_PROVIDER", "openai"),
+            base_url=os.getenv("LLM_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+            model=os.getenv("LLM_MODEL", "qwen3.5-plus"),
+            api_key=os.getenv("LLM_API_KEY", "your_api_key_here"),
         )
     return _llm_config

@@ -60,7 +60,13 @@ async def get_writing_evidence(req: EvidenceRequest):
 
     hybrid = HybridRetrievalService()
     data = hybrid.retrieve(kb_id=req.kb_id, vector_store=vector_store, query=req.query, top_k=req.top_k)
-    return {"success": True, "data": data.get("sources", [])}
+    augmented = get_orchestrator_service()._augment_chart_evidence(  # noqa: SLF001 - shared evidence enrichment path
+        kb_id=req.kb_id,
+        query=req.query,
+        context=data.get("context_window", {}).get("context", ""),
+        sources=data.get("sources", []) or [],
+    )
+    return {"success": True, "data": augmented.get("sources", [])}
 
 
 @router.post("/co-writer/edit")

@@ -1,6 +1,7 @@
 'use client';
 
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   BookOpen,
   Bot,
@@ -24,6 +25,10 @@ import {
 import { toast } from 'sonner';
 
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import EvidenceCard from '@/components/common/EvidenceCard';
+import { cleanEvidenceTitle, type EvidenceHighlight } from '@/components/common/evidence';
+
+const PdfViewer = dynamic(() => import('@/components/common/PdfViewer'), { ssr: false });
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -136,9 +141,26 @@ function compactTitle(text: string, fallback: string): string {
 function citationSources(citations: NotebookCitation[] = []) {
   return citations.map((citation) => ({
     source: citation.source_title,
-    page: citation.locator,
+    page: citation.page ?? citation.locator,
+    line_start: citation.line_start,
+    line_end: citation.line_end,
+    bbox: citation.bbox,
+    page_width: citation.page_width,
+    page_height: citation.page_height,
+    highlight_boxes: citation.highlight_boxes,
     content: citation.excerpt,
+    title: citation.title || citation.source_title,
+    summary: citation.summary,
+    excerpt: citation.excerpt,
     file_id: citation.source_id,
+    asset_id: citation.asset_id,
+    asset_type: citation.asset_type,
+    caption: citation.caption,
+    ref_label: citation.ref_label,
+    thumbnail_url: citation.thumbnail_url,
+    interpretation: citation.interpretation,
+    is_primary: citation.is_primary,
+    evidence_kind: citation.evidence_kind,
   }));
 }
 
@@ -231,6 +253,13 @@ function MindMapTree({ node }: { node: NotebookMindMapNode | null }) {
   );
 }
 
+function parsePageNumber(page: number | string | undefined): number {
+  if (typeof page === 'number' && page > 0) return page;
+  const raw = String(page || '').trim();
+  const matched = raw.match(/(\d+)/);
+  return matched ? Number(matched[1]) : 1;
+}
+
 export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspaceScreenProps) {
   const { kbs } = useAppContext();
   const setRecentNotebookId = useNotebookWorkspaceUiStore((state) => state.setRecentNotebookId);
@@ -266,6 +295,12 @@ export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspac
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteDeleting, setNoteDeleting] = useState(false);
   const [noteEditor, setNoteEditor] = useState({ title: '', content: '', tags: '' });
+  const [activePdf, setActivePdf] = useState<{
+    url: string;
+    name: string;
+    initialPage: number;
+    highlightBoxes?: EvidenceHighlight[];
+  } | null>(null);
 
   const activeOutput = useMemo(
     () => studioOutputs.find((output) => output.id === activeOutputId) || studioOutputs[0] || null,
@@ -397,6 +432,41 @@ export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspac
   const enabledSources = useMemo(
     () => sources.filter((source) => selectedSourceIds.includes(source.id)),
     [selectedSourceIds, sources]
+  );
+
+  const handleOpenCitation = useCallback(
+    (source: Parameters<typeof EvidenceCard>[0]['source']) => {
+      if (!source.file_id) return;
+      const kbId = workspace?.notebook.default_kb_id;
+      const fileUrl = kbId
+        ? `/api/kbs/${kbId}/files/${source.file_id}/content`
+        : `/api/files/${source.file_id}/content`;
+      const fallbackHighlight =
+        Array.isArray(source.bbox) && source.bbox.length === 4
+          ? [
+              {
+                page: parsePageNumber(source.page),
+                bbox: source.bbox,
+                line_start: source.line_start,
+                line_end: source.line_end,
+                page_width: source.page_width,
+                page_height: source.page_height,
+              },
+            ]
+          : [];
+      const highlightBoxes =
+        (source.highlight_boxes || []).length > 0 ? source.highlight_boxes : fallbackHighlight;
+      const initialPage = parsePageNumber(
+        highlightBoxes?.[0]?.page ?? source.page
+      );
+      setActivePdf({
+        url: fileUrl,
+        name: source.title || cleanEvidenceTitle(source.source),
+        initialPage,
+        highlightBoxes,
+      });
+    },
+    [workspace]
   );
 
   const panelClass =
@@ -1083,16 +1153,35 @@ export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspac
                                 </div>
                                 <div className="space-y-2">
                                   {(message.citations || []).map((citation) => (
-                                    <div
+                                    <EvidenceCard
                                       key={`${message.id}:${citation.index}`}
-                                      className="rounded-[14px] border border-[var(--nb-border-soft)] bg-[var(--nb-surface)] px-3 py-3 text-[13px]"
-                                    >
-                                      <div className="font-medium text-[var(--nb-text-strong)]">
-                                        [{citation.index}] {citation.source_title}
-                                      </div>
-                                      <div className="mt-1 text-[12px] text-[var(--nb-text-soft)]">{citation.locator}</div>
-                                      <div className="mt-2 leading-5 text-[var(--nb-text)]">{citation.excerpt}</div>
-                                    </div>
+                                      index={citation.index}
+                                      compact
+                                      source={{
+                                        source: citation.source_title,
+                                        page: citation.page ?? citation.locator,
+                                        line_start: citation.line_start,
+                                        line_end: citation.line_end,
+                                        bbox: citation.bbox,
+                                        page_width: citation.page_width,
+                                        page_height: citation.page_height,
+                                        highlight_boxes: citation.highlight_boxes,
+                                        content: citation.excerpt,
+                                        title: citation.title || citation.source_title,
+                                        summary: citation.summary,
+                                        excerpt: citation.excerpt,
+                                        file_id: citation.source_id,
+                                        asset_id: citation.asset_id,
+                                        asset_type: citation.asset_type,
+                                        caption: citation.caption,
+                                        ref_label: citation.ref_label,
+                                        thumbnail_url: citation.thumbnail_url,
+                                        interpretation: citation.interpretation,
+                                        is_primary: citation.is_primary,
+                                        evidence_kind: citation.evidence_kind,
+                                      }}
+                                      onOpen={citation.source_id ? handleOpenCitation : undefined}
+                                    />
                                   ))}
                                 </div>
                               </div>
@@ -1652,16 +1741,34 @@ export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspac
                         <div className="mb-3 text-[15px] font-medium text-[var(--nb-text-strong)]">关联引用</div>
                         <div className="space-y-3">
                           {activeNote.citations.map((citation) => (
-                            <div
+                            <EvidenceCard
                               key={`${activeNote.id}:${citation.index}`}
-                              className="rounded-[var(--nb-card-radius)] border border-[var(--nb-border-soft)] bg-[var(--nb-surface)] px-4 py-4"
-                            >
-                              <div className="text-[15px] font-medium text-[var(--nb-text-strong)]">
-                                [{citation.index}] {citation.source_title}
-                              </div>
-                              <div className="mt-1 text-[12px] text-[var(--nb-text-soft)]">{citation.locator}</div>
-                              <div className="mt-2 text-[13px] leading-6 text-[var(--nb-text)]">{citation.excerpt}</div>
-                            </div>
+                              index={citation.index}
+                              source={{
+                                source: citation.source_title,
+                                page: citation.page ?? citation.locator,
+                                line_start: citation.line_start,
+                                line_end: citation.line_end,
+                                bbox: citation.bbox,
+                                page_width: citation.page_width,
+                                page_height: citation.page_height,
+                                highlight_boxes: citation.highlight_boxes,
+                                content: citation.excerpt,
+                                title: citation.title || citation.source_title,
+                                summary: citation.summary,
+                                excerpt: citation.excerpt,
+                                file_id: citation.source_id,
+                                asset_id: citation.asset_id,
+                                asset_type: citation.asset_type,
+                                caption: citation.caption,
+                                ref_label: citation.ref_label,
+                                thumbnail_url: citation.thumbnail_url,
+                                interpretation: citation.interpretation,
+                                is_primary: citation.is_primary,
+                                evidence_kind: citation.evidence_kind,
+                              }}
+                              onOpen={citation.source_id ? handleOpenCitation : undefined}
+                            />
                           ))}
                         </div>
                       </div>
@@ -1677,6 +1784,18 @@ export default function NotebookWorkspaceScreen({ notebookId }: NotebookWorkspac
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer overlay – slides in from the right */}
+      {activePdf ? (
+        <div className="fixed inset-y-0 right-0 z-50 flex shadow-2xl">
+          <PdfViewer
+            fileUrl={activePdf.url}
+            initialPage={activePdf.initialPage}
+            highlightBoxes={activePdf.highlightBoxes}
+            onClose={() => setActivePdf(null)}
+          />
+        </div>
+      ) : null}
     </>
   );
 }

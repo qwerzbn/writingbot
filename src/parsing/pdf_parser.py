@@ -10,11 +10,15 @@ Output format mimics MinerU's content_list structure for downstream compatibilit
 """
 
 import json
+import re
+import uuid
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import fitz  # PyMuPDF
+
+from src.knowledge.assets import KnowledgeAsset, normalize_ref_label
 
 
 @dataclass
@@ -22,12 +26,16 @@ class TextBlock:
     """Represents a text block extracted from a PDF page."""
     content: str
     page: int
+    page_width: float
+    page_height: float
     x0: float
     y0: float
     x1: float
     y1: float
     block_type: str = "text"  # text, title, header, footer
     block_idx: int = 0
+    line_start: int = 0
+    line_end: int = 0
     
     @property
     def width(self) -> float:
@@ -40,6 +48,11 @@ class TextBlock:
     @property
     def center_x(self) -> float:
         return (self.x0 + self.x1) / 2
+
+    @property
+    def line_count(self) -> int:
+        lines = [line.strip() for line in str(self.content or "").splitlines() if line.strip()]
+        return max(1, len(lines))
 
 
 @dataclass
@@ -107,7 +120,7 @@ class PDFParser:
         for page_num in range(len(doc)):
             page = doc[page_num]
             page_blocks = self._extract_page_blocks(page, page_num + 1)
-            sorted_blocks = self._sort_blocks_column_aware(page_blocks, page.rect)
+            sorted_blocks = self._assign_line_numbers(self._sort_blocks_column_aware(page_blocks, page.rect))
             all_blocks.extend(sorted_blocks)
         
         doc.close()
@@ -124,6 +137,66 @@ class PDFParser:
                 json.dump(content_list, f, ensure_ascii=False, indent=2)
         
         return content_list
+
+    def parse_with_assets(
+        self,
+        file_path: str,
+        output_dir: Optional[str] = None,
+        asset_output_dir: Optional[str] = None,
+        file_id: str | None = None,
+    ) -> tuple[List[dict], list[dict]]:
+        """
+        Parse a PDF into text content and figure/table assets.
+
+        Args:
+            file_path: Path to the PDF file
+            output_dir: Optional directory to save content_list JSON
+            asset_output_dir: Optional directory to write extracted asset PNGs
+            file_id: Optional file id used in asset metadata
+
+        Returns:
+            Tuple of (content_list, asset_list)
+        """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"PDF not found: {file_path}")
+
+        doc = fitz.open(file_path)
+        all_blocks: List[TextBlock] = []
+        all_assets: list[dict] = []
+
+        asset_dir_path = Path(asset_output_dir) if asset_output_dir else None
+        if asset_dir_path:
+            asset_dir_path.mkdir(parents=True, exist_ok=True)
+
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            page_blocks = self._extract_page_blocks(page, page_num + 1)
+            sorted_blocks = self._assign_line_numbers(self._sort_blocks_column_aware(page_blocks, page.rect))
+            all_blocks.extend(sorted_blocks)
+            if asset_dir_path:
+                all_assets.extend(
+                    self._extract_page_assets(
+                        page=page,
+                        page_num=page_num + 1,
+                        blocks=sorted_blocks,
+                        source_name=file_path.name,
+                        asset_output_dir=asset_dir_path,
+                        file_id=file_id,
+                    )
+                )
+
+        doc.close()
+
+        content_list = self._blocks_to_content_list(all_blocks, file_path.name)
+        if output_dir:
+            output_path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
+            json_file = output_path / f"{file_path.stem}.json"
+            with open(json_file, "w", encoding="utf-8") as f:
+                json.dump(content_list, f, ensure_ascii=False, indent=2)
+
+        return content_list, all_assets
     
     def _extract_page_blocks(self, page: fitz.Page, page_num: int) -> List[TextBlock]:
         """
@@ -166,6 +239,8 @@ class PDFParser:
             blocks.append(TextBlock(
                 content=text,
                 page=page_num,
+                page_width=page.rect.width,
+                page_height=page.rect.height,
                 x0=x0, y0=y0, x1=x1, y1=y1,
                 block_idx=idx
             ))
@@ -228,6 +303,15 @@ class PDFParser:
         
         # Final order: Top Spanning -> Left Column -> Right Column -> Bottom Spanning
         return top_spanning + left_blocks + right_blocks + bottom_spanning
+
+    @staticmethod
+    def _assign_line_numbers(blocks: List[TextBlock]) -> List[TextBlock]:
+        current_line = 1
+        for block in blocks:
+            block.line_start = current_line
+            block.line_end = current_line + block.line_count - 1
+            current_line = block.line_end + 1
+        return blocks
     
     def _blocks_to_content_list(self, 
                                  blocks: List[TextBlock], 
@@ -251,13 +335,142 @@ class PDFParser:
                 "metadata": {
                     "source": source_name,
                     "page": block.page,
+                    "page_width": block.page_width,
+                    "page_height": block.page_height,
                     "block_idx": block.block_idx,
-                    "bbox": [block.x0, block.y0, block.x1, block.y1]
+                    "bbox": [block.x0, block.y0, block.x1, block.y1],
+                    "line_start": block.line_start,
+                    "line_end": block.line_end,
                 }
             }
             content_list.append(item)
         
         return content_list
+
+    @staticmethod
+    def _is_caption_text(text: str) -> bool:
+        compact = re.sub(r"\s+", " ", (text or "").strip())
+        if not compact:
+            return False
+        return bool(re.match(r"^(?:fig(?:ure)?|table|图|表)[\s\.:：-]*[A-Za-z]?\d+", compact, flags=re.IGNORECASE))
+
+    @staticmethod
+    def _asset_kind(text: str) -> str:
+        compact = (text or "").strip().lower()
+        if compact.startswith("table") or compact.startswith("表"):
+            return "table"
+        return "figure"
+
+    def _extract_page_assets(
+        self,
+        page: fitz.Page,
+        page_num: int,
+        blocks: List[TextBlock],
+        source_name: str,
+        asset_output_dir: Path,
+        file_id: str | None = None,
+    ) -> list[dict]:
+        caption_blocks = [block for block in blocks if self._is_caption_text(block.content)]
+        if not caption_blocks:
+            return []
+
+        caption_blocks.sort(key=lambda block: block.y0)
+        assets: list[dict] = []
+        page_rect = page.rect
+
+        for idx, caption_block in enumerate(caption_blocks, start=1):
+            kind = self._asset_kind(caption_block.content)
+            prev_caption = caption_blocks[idx - 2] if idx >= 2 else None
+            next_caption = caption_blocks[idx] if idx < len(caption_blocks) else None
+            clip = self._estimate_asset_bbox(
+                page_rect=page_rect,
+                caption_block=caption_block,
+                prev_caption=prev_caption,
+                next_caption=next_caption,
+                kind=kind,
+            )
+            if clip is None:
+                continue
+
+            ref_label = normalize_ref_label(caption_block.content, fallback_kind=kind, default_index=idx)
+            image_file = asset_output_dir / f"{page_num:03d}_{ref_label.replace(' ', '_').replace('.', '').lower()}_{uuid.uuid4().hex[:8]}.png"
+            pixmap = page.get_pixmap(clip=fitz.Rect(*clip), matrix=fitz.Matrix(2.0, 2.0), alpha=False)
+            pixmap.save(str(image_file))
+
+            nearby_blocks = self._neighbor_blocks(blocks, caption_block, limit=3)
+            nearby_text = "\n".join(block.content for block in nearby_blocks if block.content.strip()).strip()
+            asset = KnowledgeAsset(
+                id=str(uuid.uuid4()),
+                kind=kind,
+                page=page_num,
+                bbox=[float(v) for v in clip],
+                page_width=float(page_rect.width),
+                page_height=float(page_rect.height),
+                caption=re.sub(r"\s+", " ", caption_block.content).strip(),
+                ref_label=ref_label,
+                image_path=str(image_file),
+                source_file=source_name,
+                file_id=str(file_id or ""),
+                nearby_text=nearby_text,
+                visual_summary=re.sub(
+                    r"^(?:fig(?:ure)?|table|图|表)[\s\.:-]*[A-Za-z]?\d+(?:\.\d+)?[\s\.:-]*",
+                    "",
+                    re.sub(r"\s+", " ", caption_block.content).strip(),
+                    flags=re.IGNORECASE,
+                ).strip(),
+            )
+            assets.append(asset.to_dict())
+
+        return assets
+
+    @staticmethod
+    def _neighbor_blocks(blocks: List[TextBlock], caption_block: TextBlock, limit: int = 3) -> List[TextBlock]:
+        scored: list[tuple[float, TextBlock]] = []
+        for block in blocks:
+            if block.block_idx == caption_block.block_idx:
+                continue
+            vertical_gap = abs(((block.y0 + block.y1) / 2) - ((caption_block.y0 + caption_block.y1) / 2))
+            if vertical_gap > 220:
+                continue
+            scored.append((vertical_gap, block))
+        scored.sort(key=lambda item: item[0])
+        return [block for _, block in scored[:limit]]
+
+    @staticmethod
+    def _estimate_asset_bbox(
+        page_rect: fitz.Rect,
+        caption_block: TextBlock,
+        prev_caption: TextBlock | None,
+        next_caption: TextBlock | None,
+        kind: str,
+    ) -> list[float] | None:
+        pad_x = 18.0
+        top_bound = page_rect.y0 + 18.0
+        bottom_bound = page_rect.y1 - 18.0
+        prev_edge = prev_caption.y1 + 8.0 if prev_caption else top_bound
+        next_edge = next_caption.y0 - 8.0 if next_caption else bottom_bound
+
+        if kind == "figure":
+            y0 = max(prev_edge, caption_block.y0 - 360.0)
+            y1 = min(next_edge, caption_block.y1 + 48.0)
+        else:
+            y0 = max(prev_edge, caption_block.y0 - 24.0)
+            y1 = min(next_edge, caption_block.y1 + 360.0)
+
+        if y1 - y0 < 96.0:
+            if kind == "figure":
+                y0 = max(top_bound, caption_block.y0 - 260.0)
+                y1 = min(bottom_bound, caption_block.y1 + 80.0)
+            else:
+                y0 = max(top_bound, caption_block.y0 - 40.0)
+                y1 = min(bottom_bound, caption_block.y1 + 260.0)
+
+        if y1 - y0 < 80.0:
+            return None
+
+        x0 = page_rect.x0 + pad_x
+        x1 = page_rect.x1 - pad_x
+        return [x0, y0, x1, y1]
 
 
 # Convenience function

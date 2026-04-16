@@ -143,6 +143,7 @@ class KnowledgeBaseManager:
             "created_at": now,
             "updated_at": now,
             "files": [],
+            "assets": [],
             "status": "ready"
         }
         
@@ -219,6 +220,80 @@ class KnowledgeBaseManager:
         
         with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+    def add_assets(self, kb_id: str, assets: list[dict[str, Any]]) -> int:
+        """Append extracted figure/table assets to KB metadata."""
+        if not assets:
+            return 0
+
+        metadata_file = self.base_dir / kb_id / "metadata.json"
+        if not metadata_file.exists():
+            raise ValueError(f"KB not found: {kb_id}")
+
+        with open(metadata_file, encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        rows = metadata.setdefault("assets", [])
+        rows.extend(assets)
+        metadata["updated_at"] = datetime.now().isoformat()
+
+        with open(metadata_file, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+        return len(assets)
+
+    def list_assets(
+        self,
+        kb_id: str,
+        kind: str | None = None,
+        file_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """List figure/table assets for a KB."""
+        metadata = self.get_kb(kb_id)
+        if not metadata:
+            return []
+
+        rows = list(metadata.get("assets", []) or [])
+        filtered: list[dict[str, Any]] = []
+        for row in rows:
+            if kind and str(row.get("kind") or "") != str(kind):
+                continue
+            if file_id and str(row.get("file_id") or "") != str(file_id):
+                continue
+            filtered.append(row)
+        return filtered
+
+    def get_asset(self, kb_id: str, asset_id: str) -> Optional[dict[str, Any]]:
+        """Get a single KB asset by id."""
+        for row in self.list_assets(kb_id):
+            if str(row.get("id") or "") == str(asset_id):
+                return row
+        return None
+
+    def update_asset(self, kb_id: str, asset_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
+        """Patch a KB asset and return the updated row."""
+        metadata_file = self.base_dir / kb_id / "metadata.json"
+        if not metadata_file.exists():
+            return None
+
+        with open(metadata_file, encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        updated: dict[str, Any] | None = None
+        assets = metadata.setdefault("assets", [])
+        for row in assets:
+            if str(row.get("id") or "") != str(asset_id):
+                continue
+            row.update(patch)
+            updated = row
+            break
+
+        if updated is None:
+            return None
+
+        metadata["updated_at"] = datetime.now().isoformat()
+        with open(metadata_file, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+        return updated
     
     def remove_file(self, kb_id: str, file_id: str) -> dict[str, Any] | None:
         """Remove a file record from KB metadata and return the removed row."""
@@ -244,6 +319,30 @@ class KnowledgeBaseManager:
         with open(metadata_file, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
         return removed
+
+    def remove_assets_by_file_id(self, kb_id: str, file_id: str) -> list[dict[str, Any]]:
+        """Remove all assets belonging to a file and return removed rows."""
+        metadata_file = self.base_dir / kb_id / "metadata.json"
+        if not metadata_file.exists():
+            return []
+
+        with open(metadata_file, encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        removed: list[dict[str, Any]] = []
+        kept: list[dict[str, Any]] = []
+        for row in metadata.get("assets", []) or []:
+            if str(row.get("file_id") or "") == str(file_id):
+                removed.append(row)
+            else:
+                kept.append(row)
+
+        metadata["assets"] = kept
+        metadata["updated_at"] = datetime.now().isoformat()
+
+        with open(metadata_file, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2, ensure_ascii=False)
+        return removed
     
     def get_kb_path(self, kb_id: str) -> Path:
         """Get the directory path for a KB."""
@@ -256,3 +355,9 @@ class KnowledgeBaseManager:
     def get_raw_path(self, kb_id: str) -> Path:
         """Get the raw documents path for a KB."""
         return self.base_dir / kb_id / "raw"
+
+    def get_assets_path(self, kb_id: str) -> Path:
+        """Get the extracted asset image path for a KB."""
+        path = self.base_dir / kb_id / "assets"
+        path.mkdir(parents=True, exist_ok=True)
+        return path

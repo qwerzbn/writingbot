@@ -119,6 +119,17 @@ async function installApiMocks(
       return jsonResponse({ success: true, data: baseSkills() });
     }
 
+    if (pathname.includes('/assets/') && pathname.endsWith('/content') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+        body: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wn0X0QAAAAASUVORK5CYII=',
+          'base64'
+        ),
+      });
+    }
+
     if (pathname === '/api/chat/stream' && method === 'POST') {
       const payload = req.postDataJSON() as Record<string, unknown>;
       state.lastChatPayload = payload;
@@ -234,6 +245,54 @@ test('聊天页全屏布局：无外围留白', async ({ page }) => {
   }
 });
 
+test('图表证据卡会展示缩略图、caption 与解释摘要', async ({ page }) => {
+  await installApiMocks(page, {
+    streamEvents: [
+      { type: 'chunk', content: '图3表明系统在加入图表证据后引用质量提升。[1]' },
+      {
+        type: 'sources',
+        data: [
+          {
+            source: '60629ba1-ac90-4ac9-8a71-a1415ba252a9_demo-paper.pdf',
+            page: 3,
+            line_start: 12,
+            line_end: 18,
+            title: 'Demo Paper',
+            file_id: 'file-1',
+            asset_id: 'asset-1',
+            asset_type: 'figure',
+            caption: 'Figure 3. Citation quality improves after chart grounding.',
+            ref_label: 'Fig. 3',
+            thumbnail_url: '/api/kbs/kb-1/assets/asset-1/content',
+            summary: '结论：Fig. 3主要说明了图表证据接入后引用质量提升。\n依据：曲线在多模态证据接入后明显上升。',
+            excerpt: '图注：Citation quality improves after chart grounding.\n邻近正文：The nearby paragraph states that citation quality rises after chart grounding.',
+            is_primary: true,
+            interpretation: {
+              main_message: 'Chart grounding increases citation quality.',
+              trend: 'The curve rises after multimodal evidence is introduced.',
+            },
+          },
+        ],
+      },
+      { type: 'done', conversation_id: 'conv-1', meta: { progress_event_count: 1 } },
+    ],
+  });
+
+  await page.goto('/chat');
+  await page.getByTestId('chat-input').fill('请解释图3的核心结论');
+  await page.getByTestId('chat-send').click();
+
+  await expect(page.getByText('图表证据', { exact: true })).toBeVisible();
+  await expect(page.getByText('主证据', { exact: true })).toBeVisible();
+  await expect(page.getByText('第 3 页 · 第 12-18 行')).toBeVisible();
+  await expect(page.getByText('结论', { exact: true })).toBeVisible();
+  await expect(page.getByText('原文依据', { exact: true })).toBeVisible();
+  await expect(page.getByText('结论：Fig. 3主要说明了图表证据接入后引用质量提升。')).toBeVisible();
+  await expect(page.getByText('邻近正文：The nearby paragraph states that citation quality rises after chart grounding.')).toBeVisible();
+  await expect(page.getByText('60629ba1-ac90-4ac9-8a71-a1415ba252a9_demo-paper.pdf')).toHaveCount(0);
+  await expect(page.getByText('Demo Paper')).toHaveCount(0);
+});
+
 test('长等待期间不会静默卡死（30 秒）', async ({ page }) => {
   test.setTimeout(120000);
   await installApiMocks(page, {
@@ -282,6 +341,59 @@ test('回答渲染清洁：不显示裸 <br> 且表格可读', async ({ page }) 
   await expect(assistantBubble).toContainText('第二行');
   await expect(assistantBubble).not.toContainText('<br>');
   await expect(page.locator('table').first()).toBeVisible();
+});
+
+test('点击查看原文后 PDF 预览面板出现并跳转到正确页', async ({ page }) => {
+  await installApiMocks(page, {
+    streamEvents: [
+      { type: 'chunk', content: '根据图1的数据，温度升高会加速反应。[1]' },
+      {
+        type: 'sources',
+        data: [
+          {
+            source: 'chemistry-paper.pdf',
+            page: 5,
+            line_start: 10,
+            line_end: 15,
+            title: 'Chemistry Paper',
+            file_id: 'file-chem-1',
+            bbox: [72, 200, 520, 240],
+            page_width: 595,
+            page_height: 842,
+          },
+        ],
+      },
+      { type: 'done', conversation_id: 'conv-chem-1', meta: { progress_event_count: 1 } },
+    ],
+  });
+
+  // Intercept PDF fetch so the viewer doesn't fail on a bad URL
+  await page.route('**/files/file-chem-1/content', (route) =>
+    route.fulfill({
+      status: 200,
+      headers: { 'content-type': 'application/pdf' },
+      body: Buffer.alloc(4),
+    })
+  );
+
+  await page.goto('/chat');
+
+  // Select the mock KB so that file_id-based onOpen is enabled
+  await page.locator('select').selectOption('kb-1');
+
+  await page.getByTestId('chat-input').fill('温度升高会加速反应吗？');
+  await page.getByTestId('chat-send').click();
+
+  // The evidence card 查看原文 button should appear after the response
+  const viewBtn = page.getByRole('button', { name: '查看原文' });
+  await expect(viewBtn).toBeVisible({ timeout: 15000 });
+
+  await viewBtn.click();
+
+  // PdfViewer renders a numeric page input once open
+  const pageInput = page.getByRole('spinbutton');
+  await expect(pageInput).toBeVisible({ timeout: 8000 });
+  await expect(pageInput).toHaveValue('5');
 });
 
 test('选中 skill 后空输入可直接发送', async ({ page }) => {

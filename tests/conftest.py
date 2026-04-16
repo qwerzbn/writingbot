@@ -13,23 +13,63 @@ try:
 except Exception:
     class _DummyCollection:
         def __init__(self):
-            self._docs = []
+            self._rows = []
 
         def count(self):
-            return len(self._docs)
+            return len(self._rows)
 
         def add(self, ids=None, embeddings=None, documents=None, metadatas=None):
+            ids = ids or []
             documents = documents or []
-            for doc in documents:
-                self._docs.append(doc)
+            metadatas = metadatas or []
+            for idx, doc in enumerate(documents):
+                self._rows.append(
+                    {
+                        "id": ids[idx] if idx < len(ids) else f"doc-{len(self._rows) + idx}",
+                        "document": doc,
+                        "metadata": metadatas[idx] if idx < len(metadatas) else {},
+                    }
+                )
 
         def query(self, query_embeddings=None, n_results=5, where=None):  # pragma: no cover - safety stub
+            matched = []
+            for row in self._rows[:n_results]:
+                meta = row.get("metadata", {})
+                if where and any(meta.get(key) != value for key, value in where.items()):
+                    continue
+                matched.append(row)
             return {
-                "documents": [[]],
-                "metadatas": [[]],
-                "distances": [[]],
-                "ids": [[]],
+                "documents": [[row["document"] for row in matched]],
+                "metadatas": [[row["metadata"] for row in matched]],
+                "distances": [[0.0 for _ in matched]],
+                "ids": [[row["id"] for row in matched]],
             }
+
+        def get(self, where=None, include=None):
+            matched = []
+            for row in self._rows:
+                meta = row.get("metadata", {})
+                if where and any(meta.get(key) != value for key, value in where.items()):
+                    continue
+                matched.append(row)
+            return {
+                "ids": [row["id"] for row in matched],
+                "documents": [row["document"] for row in matched],
+                "metadatas": [row["metadata"] for row in matched],
+            }
+
+        def delete(self, ids=None):
+            ids = set(ids or [])
+            self._rows = [row for row in self._rows if row["id"] not in ids]
+
+        def update(self, ids=None, metadatas=None):
+            ids = ids or []
+            metadatas = metadatas or []
+            for idx, row_id in enumerate(ids):
+                for row in self._rows:
+                    if row["id"] == row_id:
+                        row["metadata"] = metadatas[idx] if idx < len(metadatas) else row["metadata"]
+                        break
 
     class _DummyClient:
         def __init__(self, *args, **kwargs):
