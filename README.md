@@ -251,3 +251,9 @@ Startup helpers:
 - Preflight:
   - macOS/Linux: `bash scripts/preflight_check.sh`
   - Windows: `.\scripts\preflight_check.ps1`
+
+## Research Workflow Note
+
+- `/api/research` is now powered by `src/paper_workflow`.
+- `chat_research` and `writing` still run through the legacy orchestrator path in this pass.
+- Full regression validation for research endpoints expects `pytest`, `fastapi`, and knowledge-base dependencies to be installed in the local environment.

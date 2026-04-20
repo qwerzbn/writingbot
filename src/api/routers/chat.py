@@ -17,11 +17,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from src.knowledge.kb_manager import KnowledgeBaseManager
-from src.knowledge.vector_store import VectorStore
 from src.orchestrator.service import get_orchestrator_service
-from src.rag.engine import RAGEngine
-from src.services.llm import get_llm_client
 from src.session import ConversationSession, SessionManager
 
 
@@ -301,42 +297,6 @@ def _resolve_session(req: ChatRequest) -> ConversationSession:
 
     return session
 
-
-def _vector_store_for_kb(kb_id: str) -> VectorStore:
-    kb_manager = KnowledgeBaseManager(DATA_DIR / "knowledge_bases")
-    kb = kb_manager.get_kb(kb_id)
-    if not kb:
-        raise HTTPException(status_code=404, detail=f"KB not found: {kb_id}")
-
-    return VectorStore(
-        persist_dir=str(kb_manager.get_vector_store_path(kb_id)),
-        collection_name=kb["collection_name"],
-        embedding_model=kb.get("embedding_model", "sentence-transformers/all-mpnet-base-v2"),
-        embedding_provider=kb.get("embedding_provider", "sentence-transformers"),
-    )
-
-
-def _chat_with_rag(history: list[dict[str, str]], message: str, kb_id: str) -> tuple[str, list[dict]]:
-    engine = RAGEngine(vector_store=_vector_store_for_kb(kb_id))
-    engine.history = history
-    result = engine.query(message, use_history=True)
-    return result.get("answer", ""), result.get("sources", []) or []
-
-
-def _chat_with_llm(
-    history: list[dict[str, str]],
-    message: str,
-    append_user_message: bool = True,
-) -> tuple[str, list[dict]]:
-    client = get_llm_client()
-    messages = [{"role": "system", "content": _CHAT_SYSTEM_PROMPT}]
-    messages.extend(history)
-    if append_user_message:
-        messages.append({"role": "user", "content": message})
-    answer = client.chat(messages=messages, temperature=0.7, max_tokens=2000, timeout=_LLM_TIMEOUT_SECONDS)
-    return answer or "", []
-
-
 def _chat_with_orchestrator_sync(
     history: list[dict[str, str]],
     message: str,
@@ -468,114 +428,6 @@ def _make_message_meta(
     if isinstance(extra, dict):
         payload.update(extra)
     return payload
-
-
-def _stream_rag_with_retry(
-    history: list[dict[str, str]],
-    kb_id: str,
-    message: str,
-    emit_chunk: Callable[[str], None],
-) -> tuple[str, list[dict]]:
-    last_exc: Exception | None = None
-    for attempt in range(1, _STREAM_INIT_RETRY_ATTEMPTS + 1):
-        full_response = ""
-        try:
-            engine = RAGEngine(vector_store=_vector_store_for_kb(kb_id))
-            engine.history = history
-            stream = engine.query_stream(message, use_history=True)
-
-            try:
-                first_chunk = next(stream)
-            except StopIteration as stop:
-                payload = stop.value if isinstance(stop.value, dict) else {}
-                return "", payload.get("sources", []) or []
-
-            full_response += first_chunk
-            emit_chunk(first_chunk)
-            while True:
-                try:
-                    chunk = next(stream)
-                except StopIteration as stop:
-                    payload = stop.value if isinstance(stop.value, dict) else {}
-                    return full_response, payload.get("sources", []) or []
-                full_response += chunk
-                emit_chunk(chunk)
-        except Exception as exc:  # noqa: BLE001
-            last_exc = exc
-            _inc_metric("retries_total", 1)
-            retryable = attempt < _STREAM_INIT_RETRY_ATTEMPTS and full_response == ""
-            _append_chat_audit(
-                "stream_retry",
-                {
-                    "mode": "rag",
-                    "attempt": attempt,
-                    "max_attempts": _STREAM_INIT_RETRY_ATTEMPTS,
-                    "retryable": retryable,
-                    "error": str(exc),
-                },
-            )
-            if retryable:
-                time.sleep(_RETRY_BACKOFF_SECONDS * attempt)
-                continue
-            raise
-
-    raise RuntimeError(f"stream rag failed: {last_exc}")
-
-
-def _stream_llm_with_retry(
-    history: list[dict[str, str]],
-    message: str,
-    emit_chunk: Callable[[str], None],
-) -> tuple[str, list[dict]]:
-    last_exc: Exception | None = None
-    for attempt in range(1, _STREAM_INIT_RETRY_ATTEMPTS + 1):
-        full_response = ""
-        try:
-            client = get_llm_client()
-            messages = [{"role": "system", "content": _CHAT_SYSTEM_PROMPT}]
-            messages.extend(history)
-            messages.append({"role": "user", "content": message})
-
-            llm_stream = client.chat_stream(
-                messages=messages,
-                temperature=0.7,
-                max_tokens=2000,
-                timeout=_LLM_TIMEOUT_SECONDS,
-            )
-
-            try:
-                first_chunk = next(llm_stream)
-            except StopIteration:
-                return "", []
-
-            full_response += first_chunk
-            emit_chunk(first_chunk)
-            for chunk in llm_stream:
-                full_response += chunk
-                emit_chunk(chunk)
-
-            return full_response, []
-        except Exception as exc:  # noqa: BLE001
-            last_exc = exc
-            _inc_metric("retries_total", 1)
-            retryable = attempt < _STREAM_INIT_RETRY_ATTEMPTS and full_response == ""
-            _append_chat_audit(
-                "stream_retry",
-                {
-                    "mode": "llm",
-                    "attempt": attempt,
-                    "max_attempts": _STREAM_INIT_RETRY_ATTEMPTS,
-                    "retryable": retryable,
-                    "error": str(exc),
-                },
-            )
-            if retryable:
-                time.sleep(_RETRY_BACKOFF_SECONDS * attempt)
-                continue
-            raise
-
-    raise RuntimeError(f"stream llm failed: {last_exc}")
-
 
 def _stream_orchestrator_with_retry(
     history: list[dict[str, str]],

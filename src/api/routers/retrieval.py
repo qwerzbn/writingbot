@@ -3,19 +3,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from src.knowledge.kb_manager import KnowledgeBaseManager
-from src.knowledge.vector_store import VectorStore
 from src.retrieval import HybridRetrievalService
+from src.shared_capabilities.knowledge import get_kb_manager, get_vector_store
 
 
 router = APIRouter()
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
 
 
 class HybridRequest(BaseModel):
@@ -26,17 +21,14 @@ class HybridRequest(BaseModel):
 
 @router.post("/retrieval/hybrid")
 async def hybrid_retrieval(req: HybridRequest):
-    kb_manager = KnowledgeBaseManager(DATA_DIR / "knowledge_bases")
+    kb_manager = get_kb_manager()
     kb = kb_manager.get_kb(req.kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail=f"KB not found: {req.kb_id}")
 
-    vector_store = VectorStore(
-        persist_dir=str(kb_manager.get_vector_store_path(req.kb_id)),
-        collection_name=kb["collection_name"],
-        embedding_model=kb.get("embedding_model", "sentence-transformers/all-mpnet-base-v2"),
-        embedding_provider=kb.get("embedding_provider", "sentence-transformers"),
-    )
+    vector_store = get_vector_store(req.kb_id)
+    if vector_store is None:
+        raise HTTPException(status_code=404, detail=f"KB not found: {req.kb_id}")
 
     service = HybridRetrievalService()
     result = service.retrieve(kb_id=req.kb_id, vector_store=vector_store, query=req.query, top_k=req.top_k)

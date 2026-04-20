@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Agents Module
-==============
+"""Legacy agent import paths preserved as thin adapters."""
 
-Multi-Agent system for WritingBot.
-"""
-
-from src.agents.base_agent import BaseAgent
 from src.agents.chat import ChatAgent
+from src.agents.co_writer import CoWriterAgent
+from src.agents.research import ResearchAgent
 
-__all__ = ["BaseAgent", "ChatAgent"]
+__all__ = ["ChatAgent", "CoWriterAgent", "ResearchAgent"]

@@ -40,6 +40,7 @@ class _FakeOrchestrator:
                 "output": "hello",
                 "sources": [{"source": "a.pdf", "page": 1}],
                 "metrics": {"source_count": 1, "evidence_status": "ok"},
+                "paper_workflow": {"control_flags": {"current_stage": "complete"}},
             },
             "metrics": {"source_count": 1, "evidence_status": "ok"},
         }
@@ -142,6 +143,7 @@ def test_orchestrator_run_and_stream_endpoints(monkeypatch):
     assert detail_resp.status_code == 200
     detail = detail_resp.json()["data"]
     assert detail["metrics"]["source_count"] == 1
+    assert detail["result"]["paper_workflow"]["control_flags"]["current_stage"] == "complete"
 
     chat_resp = client.post(
         "/api/orchestrator/run",
@@ -151,8 +153,8 @@ def test_orchestrator_run_and_stream_endpoints(monkeypatch):
 
 
 def test_retrieval_hybrid_endpoint(monkeypatch):
-    monkeypatch.setattr(retrieval_router, "KnowledgeBaseManager", _FakeKBManager)
-    monkeypatch.setattr(retrieval_router, "VectorStore", _FakeVectorStore)
+    monkeypatch.setattr(retrieval_router, "get_kb_manager", lambda: _FakeKBManager())
+    monkeypatch.setattr(retrieval_router, "get_vector_store", lambda kb_id: _FakeVectorStore())
     monkeypatch.setattr(retrieval_router, "HybridRetrievalService", _FakeHybrid)
 
     app = FastAPI()

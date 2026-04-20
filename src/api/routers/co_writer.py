@@ -11,17 +11,12 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from src.knowledge.kb_manager import KnowledgeBaseManager
-from src.knowledge.vector_store import VectorStore
 from src.orchestrator.service import get_orchestrator_service
 from src.retrieval import HybridRetrievalService
+from src.shared_capabilities.knowledge import augment_chart_evidence, get_vector_store
 
 
 router = APIRouter()
-PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
-
-
 class EditRequest(BaseModel):
     text: str
     action: Literal["rewrite", "expand", "shorten", "polish"] = "rewrite"
@@ -36,35 +31,23 @@ class EvidenceRequest(BaseModel):
     top_k: int = 5
 
 
-def _vector_store_for_kb(kb_id: str) -> VectorStore | None:
-    kb_manager = KnowledgeBaseManager(DATA_DIR / "knowledge_bases")
-    kb = kb_manager.get_kb(kb_id)
-    if not kb:
-        return None
-    return VectorStore(
-        persist_dir=str(kb_manager.get_vector_store_path(kb_id)),
-        collection_name=kb["collection_name"],
-        embedding_model=kb.get("embedding_model", "sentence-transformers/all-mpnet-base-v2"),
-        embedding_provider=kb.get("embedding_provider", "sentence-transformers"),
-    )
-
-
 @router.post("/co-writer/evidence")
 async def get_writing_evidence(req: EvidenceRequest):
     if not req.query.strip():
         return {"success": True, "data": []}
 
-    vector_store = _vector_store_for_kb(req.kb_id)
+    vector_store = get_vector_store(req.kb_id)
     if not vector_store:
         return {"success": True, "data": []}
 
     hybrid = HybridRetrievalService()
     data = hybrid.retrieve(kb_id=req.kb_id, vector_store=vector_store, query=req.query, top_k=req.top_k)
-    augmented = get_orchestrator_service()._augment_chart_evidence(  # noqa: SLF001 - shared evidence enrichment path
+    augmented = augment_chart_evidence(
         kb_id=req.kb_id,
         query=req.query,
         context=data.get("context_window", {}).get("context", ""),
         sources=data.get("sources", []) or [],
+        data_dir=Path(__file__).resolve().parents[4] / "data" / "knowledge_bases",
     )
     return {"success": True, "data": augmented.get("sources", [])}
 

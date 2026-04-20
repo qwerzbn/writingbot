@@ -13,14 +13,21 @@ class _Run:
 
 
 class _FakeOrchestrator:
-    def __init__(self, events: list[dict], run_result: dict | None = None):
+    def __init__(self, events: list[dict], run_result: dict | None = None, fail_stream_run: bool = False):
         self._events = events
         self._run = _Run(result=run_result or {})
+        self._fail_stream_run = fail_stream_run
 
     def create_run(self, mode: str, payload: dict):
         return {"run_id": "run-1", "trace_id": "trace-1", "mode": mode, "payload": payload}
 
+    def stream_research_workflow(self, topic: str, kb_id: str | None = None):
+        for ev in self._events:
+            yield ev
+
     def stream_run(self, run_id: str):
+        if self._fail_stream_run:
+            raise AssertionError("research stream router should use stream_research_workflow directly")
         for ev in self._events:
             yield ev
 
@@ -31,11 +38,12 @@ class _FakeOrchestrator:
 def test_research_stream_compat_header_and_plan(monkeypatch):
     fake = _FakeOrchestrator(
         events=[
-            {"type": "step", "step": "plan", "status": "done"},
-            {"type": "chunk", "content": "报告正文"},
-            {"type": "done"},
+            {"type": "plan", "content": "- background\n- methods"},
+            {"type": "chunk", "content": "report body"},
+            {"type": "done", "meta": {"coverage_status": "partial"}},
         ],
-        run_result={"plan": "- 子问题A\n- 子问题B"},
+        run_result={"plan": "- background\n- methods"},
+        fail_stream_run=True,
     )
     monkeypatch.setattr(research_router, "get_orchestrator_service", lambda: fake)
 
