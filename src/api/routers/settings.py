@@ -13,6 +13,12 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from src.services.llm.config import (
+    DEFAULT_LLM_BASE_URL,
+    DEFAULT_LLM_MODEL,
+    DEFAULT_LLM_PROVIDER,
+)
+
 router = APIRouter()
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
@@ -20,9 +26,9 @@ ENV_FILE = PROJECT_ROOT / ".env"
 
 
 class LLMSettings(BaseModel):
-    provider: str = "ollama"
-    base_url: str = "http://localhost:11434/v1"
-    model: str = "qwen3:0.6b"
+    provider: str = DEFAULT_LLM_PROVIDER
+    base_url: str = DEFAULT_LLM_BASE_URL
+    model: str = DEFAULT_LLM_MODEL
     api_key: str | None = None
 
 
@@ -47,12 +53,26 @@ def _write_env(updates: dict[str, str]):
     else:
         lines = ENV_FILE.read_text(encoding="utf-8").splitlines()
 
+    alias_pairs = {
+        "LLM_BASE_URL": {"BASE_URL"},
+        "LLM_MODEL": {"MODEL_ID"},
+        "LLM_API_KEY": {"API_KEY"},
+    }
+    alias_keys_to_remove = {
+        alias
+        for key, aliases in alias_pairs.items()
+        if key in updates
+        for alias in aliases
+    }
+
     updated_keys = set()
     new_lines = []
     for line in lines:
         stripped = line.strip()
         if stripped and not stripped.startswith("#") and "=" in stripped:
             key = stripped.split("=", 1)[0].strip()
+            if key in alias_keys_to_remove:
+                continue
             if key in updates:
                 new_lines.append(f"{key}={updates[key]}")
                 updated_keys.add(key)
@@ -105,17 +125,25 @@ def _resolve_api_key_for_update(incoming: str | None, existing: str) -> str:
     return candidate
 
 
+def _env_value(env: dict[str, str], *names: str, default: str) -> str:
+    for name in names:
+        value = str(env.get(name, "") or "").strip()
+        if value:
+            return value
+    return default
+
+
 @router.get("/settings/llm")
 async def get_llm_settings():
     """Get current LLM configuration from .env file."""
     env = _read_env()
-    api_key = env.get("LLM_API_KEY", "")
+    api_key = _env_value(env, "LLM_API_KEY", "API_KEY", default="")
     return {
         "success": True,
         "data": {
-            "provider": env.get("LLM_PROVIDER", "ollama"),
-            "base_url": env.get("LLM_BASE_URL", "http://localhost:11434/v1"),
-            "model": env.get("LLM_MODEL", "qwen3:0.6b"),
+            "provider": _env_value(env, "LLM_PROVIDER", default=DEFAULT_LLM_PROVIDER),
+            "base_url": _env_value(env, "LLM_BASE_URL", "BASE_URL", default=DEFAULT_LLM_BASE_URL),
+            "model": _env_value(env, "LLM_MODEL", "MODEL_ID", default=DEFAULT_LLM_MODEL),
             "api_key": _mask_api_key(api_key),
             "has_api_key": bool((api_key or "").strip()),
         },
@@ -133,7 +161,7 @@ async def update_llm_settings(settings: LLMSettings):
         env = _read_env()
         resolved_api_key = _resolve_api_key_for_update(
             settings.api_key,
-            env.get("LLM_API_KEY", ""),
+            _env_value(env, "LLM_API_KEY", "API_KEY", default=""),
         )
         applied = LLMSettings(
             provider=settings.provider,
@@ -173,7 +201,7 @@ async def test_llm_connection(settings: LLMSettings | None = None):
             env = _read_env()
             resolved_api_key = _resolve_api_key_for_update(
                 settings.api_key,
-                env.get("LLM_API_KEY", ""),
+                _env_value(env, "LLM_API_KEY", "API_KEY", default=""),
             )
             # Test with provided settings (before saving)
             config = LLMConfig(

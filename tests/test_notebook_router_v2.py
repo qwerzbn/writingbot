@@ -100,6 +100,8 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     assert '"type": "message_chunk"' in chat_resp.text
     assert '"type": "citations"' in chat_resp.text
     assert '"type": "done"' in chat_resp.text
+    assert '"answer_mode"' in chat_resp.text
+    assert '"retrieval_mode"' in chat_resp.text
 
     sessions_resp = client.get(f"/api/notebooks/{notebook_id}/chat/sessions")
     assert sessions_resp.status_code == 200
@@ -128,7 +130,7 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
     save_from_sources_resp = client.post(
         f"/api/notebooks/{notebook_id}/notes/from-sources",
         json={
-            "title": "Saved from research",
+            "title": "Saved from chat",
             "content": "Grounded answers build trust.",
             "sources": [
                 {
@@ -138,12 +140,12 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
                     "excerpt": "Knowledge base snapshots should stay local to the notebook.",
                 }
             ],
-            "origin_type": "research",
-            "tags": ["research"],
+            "origin_type": "chat",
+            "tags": ["chat"],
         },
     )
     assert save_from_sources_resp.status_code == 200
-    assert save_from_sources_resp.json()["data"]["kind"] == "saved_research"
+    assert save_from_sources_resp.json()["data"]["kind"] == "saved_chat"
 
     notes_resp = client.get(f"/api/notebooks/{notebook_id}/notes")
     assert notes_resp.status_code == 200
@@ -153,7 +155,7 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
 
     filtered_workspace_resp = client.get(
         f"/api/notebooks/{notebook_id}/workspace",
-        params={"search": "research", "tag": "research", "active_note_id": active_note},
+        params={"search": "chat", "tag": "chat", "active_note_id": active_note},
     )
     assert filtered_workspace_resp.status_code == 200
     filtered_workspace = filtered_workspace_resp.json()["data"]
@@ -225,6 +227,53 @@ def test_notebook_router_end_to_end(tmp_path, monkeypatch):
 
     delete_source_resp = client.delete(f"/api/notebooks/{notebook_id}/sources/{source['id']}")
     assert delete_source_resp.status_code == 200
+
+
+def test_notebook_source_content_route_serves_local_pdf_asset(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    monkeypatch.setattr(notebook_router, "get_notebook_manager", lambda: manager)
+
+    def fake_materialize_pdf(
+        current_notebook_id: str,
+        source_id: str,
+        filename: str,
+        file_bytes: bytes | None = None,
+        source_path: Path | None = None,
+    ):
+        asset_path = manager._assets_dir(current_notebook_id, ensure=True) / f"{source_id}.pdf"
+        asset_path.write_bytes(file_bytes or b"%PDF-1.4\n% notebook test pdf")
+        chunks = [
+            {
+                "id": f"{source_id}:0",
+                "source_id": source_id,
+                "content": "PDF evidence chunk",
+                "page": 1,
+                "chunk_idx": 0,
+                "tokens": ["pdf", "evidence", "chunk"],
+                "metadata": {"page": 1, "source": filename},
+            }
+        ]
+        return asset_path, [{"content": chunks[0]["content"]}], chunks, chunks[0]["content"]
+
+    monkeypatch.setattr(manager, "_materialize_pdf", fake_materialize_pdf)
+
+    app = FastAPI()
+    app.include_router(notebook_router.router, prefix="/api")
+    client = TestClient(app)
+
+    notebook_id = client.post("/api/notebooks", json={"name": "pdf-route"}).json()["data"]["id"]
+    source_resp = client.post(
+        f"/api/notebooks/{notebook_id}/sources",
+        files={"file": ("demo.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF", "application/pdf")},
+        data={"kind": "pdf", "title": "Demo PDF"},
+    )
+    assert source_resp.status_code == 200
+    source_id = source_resp.json()["data"]["id"]
+
+    content_resp = client.get(f"/api/notebooks/{notebook_id}/sources/{source_id}/content")
+    assert content_resp.status_code == 200
+    assert content_resp.headers["content-type"].startswith("application/pdf")
+    assert content_resp.content.startswith(b"%PDF-1.4")
 
 
 def test_update_note_conflict_returns_latest(tmp_path, monkeypatch):

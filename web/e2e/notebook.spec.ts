@@ -30,6 +30,8 @@ type NotebookMessage = {
   content: string;
   background_extension?: string;
   citations?: NotebookCitation[];
+  answer_mode?: 'grounded' | 'weakly_grounded' | 'llm_fallback';
+  retrieval_mode?: 'grounded' | 'weakly_grounded' | 'llm_fallback';
   source_ids: string[];
   created_at: string;
 };
@@ -295,12 +297,17 @@ async function installNotebookMocks(page: Page): Promise<MockState> {
         ? createCitation(source, 'NotebookLM 风格智能笔记本支持来源优先回答与 Studio 生成。')
         : null;
       const sessionId = 'session-1';
+      const weaklyGrounded = String(body.message || '').includes('泛问');
       const assistant: NotebookMessage = {
         id: 'assistant-1',
         role: 'assistant',
-        content: '来源显示，这个 notebook 会优先基于导入材料回答问题。[1]',
-        background_extension: '补充背景：在来源不足时，模型补充会单独标记出来。',
-        citations: citation ? [citation] : [],
+        content: weaklyGrounded
+          ? '我先基于已选来源做一个相关整理，但这次没有形成可直接引用的证据片段。'
+          : '来源显示，这个 notebook 会优先基于导入材料回答问题。[1]',
+        background_extension: weaklyGrounded ? '' : '补充背景：在来源不足时，模型补充会单独标记出来。',
+        citations: weaklyGrounded ? [] : citation ? [citation] : [],
+        answer_mode: weaklyGrounded ? 'weakly_grounded' : 'grounded',
+        retrieval_mode: weaklyGrounded ? 'weakly_grounded' : 'grounded',
         source_ids: body.source_ids || [],
         created_at: nowIso(),
       };
@@ -326,11 +333,18 @@ async function installNotebookMocks(page: Page): Promise<MockState> {
 
       const sse = [
         { type: 'init', mode: 'notebook-chat' },
-        { type: 'message_chunk', content: '来源显示，这个 notebook 会优先基于导入材料回答问题。[1]' },
-        { type: 'citations', data: citation ? [citation] : [] },
-        { type: 'background_extension', content: '补充背景：在来源不足时，模型补充会单独标记出来。' },
+        {
+          type: 'message_chunk',
+          content: weaklyGrounded
+            ? '我先基于已选来源做一个相关整理，但这次没有形成可直接引用的证据片段。'
+            : '来源显示，这个 notebook 会优先基于导入材料回答问题。[1]',
+        },
+        { type: 'citations', data: weaklyGrounded ? [] : citation ? [citation] : [] },
+        ...(weaklyGrounded ? [] : [{ type: 'background_extension', content: '补充背景：在来源不足时，模型补充会单独标记出来。' }]),
         {
           type: 'done',
+          answer_mode: weaklyGrounded ? 'weakly_grounded' : 'grounded',
+          retrieval_mode: weaklyGrounded ? 'weakly_grounded' : 'grounded',
           session: state.sessions[0],
           assistant_message: assistant,
         },
@@ -421,8 +435,70 @@ async function installNotebookMocks(page: Page): Promise<MockState> {
       return json({ success: true, data: note });
     }
 
+    if (pathname === `/api/notebooks/${notebookId}/notes/from-sources` && method === 'POST') {
+      const body = req.postDataJSON() as {
+        title: string;
+        content: string;
+        sources?: NotebookCitation[];
+        tags?: string[];
+        origin_type?: string;
+      };
+      const note: NotebookNote = {
+        id: `note-chat-${state.notes.length + 1}`,
+        notebook_id: notebookId,
+        title: body.title,
+        content: body.content,
+        kind: 'saved_chat',
+        origin: body.origin_type || 'chat',
+        citations: (body.sources || []).map((source, index) => ({
+          index: index + 1,
+          source_id: String(source.source_id || state.sources[0]?.id || ''),
+          source_title: String(source.source_title || state.sources[0]?.title || 'Untitled source'),
+          locator: String(source.locator || 'p.1'),
+          excerpt: String(source.excerpt || ''),
+        })),
+        source_ids: (body.sources || []).map((source) => String(source.source_id || '')),
+        tags: body.tags || ['chat'],
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        source: {
+          type: 'chat',
+          citation_count: (body.sources || []).length,
+          evidence_links: (body.sources || []).map((source, index) => ({
+            id: `chat:${index}`,
+            source: String(source.source_title || state.sources[0]?.title || 'Untitled source'),
+            page: String(source.locator || 'p.1'),
+            content: String(source.excerpt || ''),
+          })),
+        },
+        ai_meta: {
+          summary: body.content.slice(0, 120),
+          suggested_tags: body.tags || ['chat'],
+        },
+      };
+      state.notes = [note, ...state.notes.filter((item) => item.id !== note.id)];
+      return json({ success: true, data: note });
+    }
+
     const noteMatch = pathname.match(/^\/api\/notebooks\/nb-demo\/notes\/([^/]+)$/);
     if (noteMatch && method === 'GET') {
+      const note = state.notes.find((item) => item.id === noteMatch[1]);
+      return json({ success: true, data: note });
+    }
+
+    if (noteMatch && method === 'PUT') {
+      const body = req.postDataJSON() as Partial<NotebookNote>;
+      state.notes = state.notes.map((note) =>
+        note.id === noteMatch[1]
+          ? {
+              ...note,
+              title: body.title ?? note.title,
+              content: body.content ?? note.content,
+              tags: body.tags ?? note.tags,
+              updated_at: nowIso(),
+            }
+          : note
+      );
       const note = state.notes.find((item) => item.id === noteMatch[1]);
       return json({ success: true, data: note });
     }
@@ -433,49 +509,76 @@ async function installNotebookMocks(page: Page): Promise<MockState> {
   return state;
 }
 
-test('notebook workspace covers sources, chat, studio, and notes', async ({ page }) => {
+test('notebook workspace keeps a persistent notes rail and routes report generation into notes', async ({ page }) => {
   await installNotebookMocks(page);
+  const consoleErrors: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      consoleErrors.push(msg.text());
+    }
+  });
 
   await page.goto('/notebook/nb-demo');
   await expect(page.getByTestId('notebook-page-root')).toBeVisible();
   await expect(page.locator('h1')).toHaveText('NotebookLM Demo');
-  await expect(page.getByText('Research saved note')).not.toBeVisible();
+  await expect(page.getByTestId('notebook-header-settings')).toHaveCount(0);
+  await expect(page.getByTestId('notebook-header-avatar')).toHaveCount(0);
+  await expect(page.getByTestId('notebook-notes-panel')).toBeVisible();
+  await expect(page.getByTestId('notebook-studio-panel')).toBeHidden();
+  await expect(page.getByText('生成的笔记、报告和总结会显示在这里，默认以文档阅读态查看。')).toHaveCount(0);
+  await expect(page.getByText('笔记列表保持简洁，选中后会在下方进入完整阅读态，避免右栏内容全部堆在一张卡片里。')).toHaveCount(0);
+  await expect(page.getByTestId('note-list-item').first()).toBeVisible();
+  await expect(page.getByTestId('notebook-notes-panel').getByText('Research saved note').first()).toBeVisible();
+  await expect(page.getByTestId('notebook-chat-empty-state')).toBeVisible();
 
   await page.getByTestId('notebook-add-source').click();
+  await expect(page.getByTestId('source-file-trigger')).toBeVisible();
+  await page.getByTestId('source-file-input').setInputFiles({
+    name: 'demo.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF'),
+  });
+  await expect(page.getByText('demo.pdf')).toBeVisible();
   await page.getByRole('button', { name: '粘贴文本' }).click();
   await page.getByPlaceholder('可选，自定义来源标题').fill('课程摘要');
   await page.getByPlaceholder('粘贴文稿、会议纪要、采访内容或章节正文').fill('NotebookLM 风格智能笔记本支持来源优先回答。');
   await page.getByRole('button', { name: '添加来源' }).click();
   await expect(page.getByTestId('notebook-sources-panel').getByText('课程摘要')).toBeVisible();
-
-  await page.getByRole('button', { name: 'Exclude' }).click();
-  await expect(page.getByTestId('notebook-sources-panel').getByText('Excluded')).toBeVisible();
-  await page.getByRole('button', { name: 'Include' }).click();
-  await expect(page.getByTestId('notebook-sources-panel').getByText('Included')).toBeVisible();
+  await expect(page.getByTestId('sources-select-all')).toBeVisible();
 
   await page.getByTestId('notebook-chat-input').fill('这个智能笔记本怎么工作？');
   await page.getByTestId('notebook-chat-send').click();
   await expect(page.getByText('来源显示，这个 notebook 会优先基于导入材料回答问题。[1]')).toBeVisible();
+  await expect(page.getByTestId('chat-answer-mode')).toContainText('Grounded');
   await expect(page.getByText('背景补充', { exact: true })).toBeVisible();
   await expect(page.getByText('Citations')).toBeVisible();
+  await page.getByRole('button', { name: '保存为笔记' }).click();
+  await expect(page.getByTestId('notes-back-to-list')).toBeVisible();
+  await expect(page.getByTestId('notebook-notes-panel').getByText('聊天笔记：来源显示，这个 notebook 会优先').first()).toBeVisible();
+  await expect(page.getByTestId('note-reading-view')).toBeVisible();
+  await expect(page.getByTestId('note-reading-breadcrumb')).toContainText('Notes');
+  await expect(page.getByTestId('note-reading-view').getByText('背景补充')).toBeVisible();
+  await expect(page.getByTestId('note-edit-button')).toBeVisible();
+  await expect(page.getByTestId('note-editor-form')).toBeHidden();
 
-  for (const kind of ['summary', 'study_guide', 'faq', 'mind_map'] as const) {
-    await page.getByTestId(`studio-generate-${kind}`).click();
-    await expect(
-      page.getByTestId('notebook-studio-panel').getByRole('heading', { name: `${kind} output` })
-    ).toBeVisible();
-  }
+  await page.getByTestId('note-edit-button').click();
+  await expect(page.getByTestId('note-editor-form')).toBeVisible();
+  await page.getByTestId('note-title-input').fill('已编辑聊天笔记');
+  await page.getByTestId('note-save-button').click();
+  await expect(page.getByTestId('notebook-notes-panel').getByText('已编辑聊天笔记').first()).toBeVisible();
+  await expect(page.getByTestId('note-reading-title')).toHaveText('已编辑聊天笔记');
 
-  await page
-    .getByTestId('notebook-studio-panel')
-    .getByRole('button', { name: '保存为笔记' })
-    .click();
-  await expect(page.getByTestId('notebook-notes-drawer')).toBeVisible();
-  await expect(page.getByTestId('notebook-notes-drawer').getByText('Research saved note').first()).toBeVisible();
-  await expect(page.getByTestId('notebook-notes-drawer').getByText('mind_map output').first()).toBeVisible();
+  await page.getByTestId('notebook-generate-report').click();
+  await expect(page.getByTestId('notes-back-to-list')).toBeVisible();
+  await expect(page.getByTestId('note-reading-title')).toHaveText('summary output');
+  await expect(page.getByTestId('note-reading-source-count')).toContainText('Based on');
+  await page.getByTestId('notes-back-to-list').click();
+  await expect(page.getByTestId('note-list-item').first()).toBeVisible();
+  await expect(page.getByTestId('notebook-notes-panel').getByText('summary output').first()).toBeVisible();
+  expect(consoleErrors).not.toContainEqual(expect.stringContaining('<button> cannot be a descendant of <button>'));
 });
 
-test('mobile tabs switch between sources, chat, and studio', async ({ page }) => {
+test('mobile tabs switch between sources, chat, and notes', async ({ page }) => {
   await installNotebookMocks(page);
   await page.setViewportSize({ width: 430, height: 932 });
   await page.goto('/notebook/nb-demo');
@@ -484,9 +587,21 @@ test('mobile tabs switch between sources, chat, and studio', async ({ page }) =>
   await page.getByTestId('mobile-tab-sources').click();
   await expect(page.getByTestId('notebook-sources-panel')).toBeVisible();
 
-  await page.getByTestId('mobile-tab-studio').click();
-  await expect(page.getByTestId('notebook-studio-panel')).toBeVisible();
+  await page.getByTestId('mobile-tab-notes').click();
+  await expect(page.getByTestId('notebook-notes-panel')).toBeVisible();
 
   await page.getByTestId('mobile-tab-chat').click();
   await expect(page.getByTestId('notebook-chat-panel')).toBeVisible();
+});
+
+test('chat shows weakly grounded state even when citations are empty', async ({ page }) => {
+  await installNotebookMocks(page);
+  await page.goto('/notebook/nb-demo');
+
+  await page.getByTestId('notebook-chat-input').fill('这是一个泛问，请先给我相关整理');
+  await page.getByTestId('notebook-chat-send').click();
+
+  await expect(page.getByText('我先基于已选来源做一个相关整理，但这次没有形成可直接引用的证据片段。')).toBeVisible();
+  await expect(page.getByTestId('chat-answer-mode')).toContainText('Related sources');
+  await expect(page.getByText('未引用来源')).toBeVisible();
 });

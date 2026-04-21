@@ -18,6 +18,7 @@ Storage layout:
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import uuid
@@ -149,6 +150,7 @@ class RetrievedChunk:
     highlight_boxes: list[dict[str, Any]] | None = None
     spans: list[dict[str, Any]] | None = None
     kind: str = "text"
+    match_reasons: tuple[str, ...] = ()
 
 
 class NotebookConflictError(ValueError):
@@ -192,6 +194,7 @@ class NotebookManager:
         (self.base_dir / "notebooks").mkdir(parents=True, exist_ok=True)
         self._kb_manager = None
         self._pdf_parser = None
+        self._embedding_fn = None
 
     # ------------------------------------------------------------------ #
     # Internal helpers
@@ -210,6 +213,22 @@ class NotebookManager:
 
             self._pdf_parser = PDFParser()
         return self._pdf_parser
+
+    def _get_embedding_fn(self):
+        if self._embedding_fn is None:
+            from src.knowledge.vector_store import get_embedding_function
+
+            provider = os.getenv("EMBEDDING_PROVIDER", "sentence-transformers")
+            model = os.getenv("EMBEDDING_MODEL", "all-mpnet-base-v2")
+            base_url = os.getenv("EMBEDDING_BASE_URL")
+            api_key = os.getenv("EMBEDDING_API_KEY") or os.getenv("LLM_API_KEY")
+            self._embedding_fn = get_embedding_function(
+                provider=provider,
+                model=model,
+                base_url=base_url,
+                api_key=api_key,
+            )
+        return self._embedding_fn
 
     def _notebook_dir(self, notebook_id: str, ensure: bool = False) -> Path:
         path = self.base_dir / "notebooks" / notebook_id
@@ -340,14 +359,33 @@ class NotebookManager:
         }
 
     def _normalize_source_title(self, source: dict[str, Any]) -> str:
-        if source.get("title"):
-            return clean_source_title(str(source["title"]), strip_extension=False)
+        aliases = self._source_title_aliases(source)
+        return aliases[0] if aliases else "Untitled source"
+
+    def _source_title_aliases(self, source: dict[str, Any]) -> list[str]:
         metadata = source.get("metadata", {}) or {}
-        if metadata.get("file_name"):
-            return clean_source_title(str(metadata["file_name"]))
-        if metadata.get("url"):
-            return str(metadata["url"])
-        return "Untitled source"
+        candidates = [
+            clean_source_title(str(source.get("title") or ""), strip_extension=False),
+            clean_source_title(str(metadata.get("file_name") or "")),
+            clean_source_title(str(metadata.get("source") or ""), strip_extension=False),
+        ]
+        url = str(metadata.get("url") or "").strip()
+        if url:
+            candidates.append(url)
+            candidates.append(urlparse(url).netloc)
+
+        aliases: list[str] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            normalized = self._normalize_query(candidate)
+            if not normalized:
+                continue
+            key = normalized.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            aliases.append(candidate if candidate else normalized)
+        return aliases
 
     def _extract_url_content(self, url: str) -> tuple[str, str]:
         request = Request(
@@ -456,21 +494,120 @@ class NotebookManager:
             )
         return rows
 
-    def _build_embedding_index(self, source_id: str, chunks: list[dict[str, Any]]) -> dict[str, Any]:
+    def _build_retrieval_cache(
+        self,
+        source_id: str,
+        chunks: list[dict[str, Any]],
+        *,
+        source_title: str = "",
+        source_metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         doc_freq: Counter[str] = Counter()
         chunk_lengths: dict[str, int] = {}
+        chunk_ids: list[str] = []
+        texts: list[str] = []
         for chunk in chunks:
             unique_tokens = set(chunk.get("tokens", []) or [])
             for token in unique_tokens:
                 doc_freq[token] += 1
             chunk_lengths[str(chunk["id"])] = len(chunk.get("tokens", []) or [])
+            chunk_ids.append(str(chunk["id"]))
+            texts.append(str(chunk.get("content") or ""))
+
+        vectors: dict[str, list[float]] = {}
+        if texts:
+            try:
+                rows = self._get_embedding_fn()(texts)
+                for chunk_id, vector in zip(chunk_ids, rows):
+                    vectors[chunk_id] = [float(value) for value in vector]
+            except Exception:
+                vectors = {}
+        aliases: list[str] = []
+        if source_title:
+            aliases.append(source_title)
+        metadata = source_metadata or {}
+        file_name = clean_source_title(str(metadata.get("file_name") or ""))
+        if file_name:
+            aliases.append(file_name)
+        source_name = clean_source_title(str(metadata.get("source") or ""), strip_extension=False)
+        if source_name:
+            aliases.append(source_name)
+        url = str(metadata.get("url") or "").strip()
+        if url:
+            aliases.append(url)
+            aliases.append(urlparse(url).netloc)
+
+        title_aliases: list[str] = []
+        title_tokens: list[str] = []
+        seen_aliases: set[str] = set()
+        for alias in aliases:
+            normalized = self._normalize_query(alias)
+            if not normalized:
+                continue
+            key = normalized.casefold()
+            if key in seen_aliases:
+                continue
+            seen_aliases.add(key)
+            title_aliases.append(alias if alias else normalized)
+            for token in tokenize(normalized):
+                if token not in title_tokens:
+                    title_tokens.append(token)
         return {
             "source_id": source_id,
             "chunk_count": len(chunks),
             "doc_freq": dict(doc_freq),
             "chunk_lengths": chunk_lengths,
+            "chunk_vectors": vectors,
+            "title_aliases": title_aliases,
+            "title_tokens": title_tokens,
+            "representative_chunk_ids": chunk_ids[:2],
             "updated_at": _now_iso(),
         }
+
+    def _build_embedding_index(self, source_id: str, chunks: list[dict[str, Any]]) -> dict[str, Any]:
+        return self._build_retrieval_cache(source_id, chunks)
+
+    def _ensure_source_retrieval_cache(self, notebook_id: str, source: dict[str, Any]) -> dict[str, Any]:
+        source_id = str(source.get("id") or "")
+        chunks = self._load_source_chunks(notebook_id, source_id)
+        cache = self._load_source_embedding_index(notebook_id, source_id)
+        if (
+            not isinstance(cache, dict)
+            or int(cache.get("chunk_count") or 0) != len(chunks)
+            or "title_aliases" not in cache
+            or "title_tokens" not in cache
+            or "representative_chunk_ids" not in cache
+        ):
+            cache = self._build_retrieval_cache(
+                source_id,
+                chunks,
+                source_title=self._normalize_source_title(source),
+                source_metadata=source.get("metadata", {}) or {},
+            )
+            _safe_json_save(self._source_embedding_path(notebook_id, source_id), cache)
+        return cache
+
+    def _merge_retrieved_chunk(self, existing: RetrievedChunk | None, incoming: RetrievedChunk) -> RetrievedChunk:
+        if existing is None:
+            return incoming
+        reasons = tuple(dict.fromkeys([*existing.match_reasons, *incoming.match_reasons]))
+        return RetrievedChunk(
+            chunk_id=existing.chunk_id,
+            source_id=existing.source_id,
+            source_title=incoming.source_title or existing.source_title,
+            content=incoming.content or existing.content,
+            score=max(existing.score, incoming.score),
+            page=incoming.page if incoming.page is not None else existing.page,
+            line_start=incoming.line_start if incoming.line_start is not None else existing.line_start,
+            line_end=incoming.line_end if incoming.line_end is not None else existing.line_end,
+            bbox=incoming.bbox or existing.bbox,
+            page_width=incoming.page_width if incoming.page_width is not None else existing.page_width,
+            page_height=incoming.page_height if incoming.page_height is not None else existing.page_height,
+            highlight_boxes=incoming.highlight_boxes or existing.highlight_boxes,
+            spans=incoming.spans or existing.spans,
+            kind=incoming.kind or existing.kind,
+            match_reasons=reasons,
+        )
 
     def _derive_source_payload(self, notebook_id: str, source_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         kind = str(payload["kind"])
@@ -569,7 +706,12 @@ class NotebookManager:
         _safe_json_save(self._source_chunks_path(notebook_id, source_id), chunk_rows)
         _safe_json_save(
             self._source_embedding_path(notebook_id, source_id),
-            self._build_embedding_index(source_id, chunk_rows),
+            self._build_retrieval_cache(
+                source_id,
+                chunk_rows,
+                source_title=title,
+                source_metadata=metadata,
+            ),
         )
 
         source = {
@@ -597,6 +739,10 @@ class NotebookManager:
         rows = _safe_json_load(self._source_chunks_path(notebook_id, source_id), [])
         return rows if isinstance(rows, list) else []
 
+    def _load_source_embedding_index(self, notebook_id: str, source_id: str) -> dict[str, Any]:
+        payload = _safe_json_load(self._source_embedding_path(notebook_id, source_id), {})
+        return payload if isinstance(payload, dict) else {}
+
     def _load_session(self, notebook_id: str, session_id: str) -> dict[str, Any] | None:
         return _safe_json_load(self._session_path(notebook_id, session_id), None)
 
@@ -623,13 +769,229 @@ class NotebookManager:
         if not query_tokens:
             return 0.0
         token_counts = Counter(tokens)
-        unique_overlap = set(query_tokens) & set(tokens)
-        if not unique_overlap:
+        metadata_source = str((chunk.get("metadata", {}) or {}).get("source") or "")
+        title_tokens = set(tokenize(source_title)) | set(tokenize(metadata_source))
+        content_overlap = set(query_tokens) & set(tokens)
+        title_overlap = set(query_tokens) & title_tokens
+        if not content_overlap and not title_overlap:
             return 0.0
-        overlap_score = sum(token_counts[token] for token in unique_overlap)
-        title_bonus = sum(1 for token in unique_overlap if token in tokenize(source_title))
-        density = len(unique_overlap) / max(1, len(set(query_tokens)))
+        overlap_score = sum(token_counts[token] for token in content_overlap)
+        title_bonus = float(len(title_overlap)) * 0.6
+        density = len(content_overlap or title_overlap) / max(1, len(set(query_tokens)))
         return float(overlap_score) + float(title_bonus) * 0.6 + density
+
+    def _normalize_query(self, query: str) -> str:
+        return normalize_display_text(query or "", preserve_paragraphs=False)
+
+    def _query_variants(self, query: str, source_index: dict[str, dict[str, Any]]) -> list[str]:
+        normalized = self._normalize_query(query)
+        variants: list[str] = []
+        if normalized:
+            variants.append(normalized)
+
+        stripped = re.sub(
+            r"(给我一份|请给我|帮我|报告|总结|研究|概览|介绍|分析|说明|核心主题|主要贡献|overview|summary|report|research)",
+            " ",
+            normalized,
+            flags=re.IGNORECASE,
+        )
+        stripped = re.sub(r"\s+", " ", stripped).strip()
+        if stripped and stripped not in variants:
+            variants.append(stripped)
+
+        topic_tokens = [token for token in tokenize(normalized) if token not in self.STOPWORDS]
+        if topic_tokens:
+            topic_variant = " ".join(topic_tokens[:8])
+            if topic_variant and topic_variant not in variants:
+                variants.append(topic_variant)
+            english_variant = " ".join(token for token in topic_tokens if re.search(r"[A-Za-z]", token))
+            if english_variant and english_variant not in variants:
+                variants.append(english_variant)
+            cjk_variant = " ".join(token for token in topic_tokens if re.search(r"[\u4e00-\u9fff]", token))
+            if cjk_variant and cjk_variant not in variants:
+                variants.append(cjk_variant)
+        return variants
+
+    def _cosine_similarity(self, left: list[float], right: list[float]) -> float:
+        if not left or not right or len(left) != len(right):
+            return 0.0
+        numerator = sum(a * b for a, b in zip(left, right))
+        left_norm = sum(a * a for a in left) ** 0.5
+        right_norm = sum(b * b for b in right) ** 0.5
+        if not left_norm or not right_norm:
+            return 0.0
+        return numerator / (left_norm * right_norm)
+
+    def _vector_recall(
+        self,
+        notebook_id: str,
+        source_index: dict[str, dict[str, Any]],
+        query_variants: list[str],
+        limit: int,
+    ) -> list[RetrievedChunk]:
+        if not query_variants:
+            return []
+        try:
+            query_vectors = self._get_embedding_fn()(query_variants)
+        except Exception:
+            return []
+
+        candidates: dict[str, RetrievedChunk] = {}
+        for source_id, source in source_index.items():
+            source_title = self._normalize_source_title(source)
+            chunks = self._load_source_chunks(notebook_id, source_id)
+            index = self._ensure_source_retrieval_cache(notebook_id, source)
+            stored_vectors = index.get("chunk_vectors", {}) if isinstance(index, dict) else {}
+            for chunk in chunks:
+                chunk_id = str(chunk.get("id") or "")
+                vector = stored_vectors.get(chunk_id)
+                if not vector:
+                    continue
+                similarity = max((self._cosine_similarity(query_vector, vector) for query_vector in query_vectors), default=0.0)
+                if similarity <= 0:
+                    continue
+                candidate = RetrievedChunk(
+                    chunk_id=chunk_id,
+                    source_id=source_id,
+                    source_title=source_title,
+                    content=str(chunk.get("content") or ""),
+                    score=similarity + 0.15,
+                    page=chunk.get("page"),
+                    line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                    line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                    bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                    page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                    page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                    highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                    spans=(chunk.get("metadata", {}) or {}).get("spans"),
+                    kind=str(source.get("kind") or "text"),
+                    match_reasons=("vector",),
+                )
+                candidates[chunk_id] = self._merge_retrieved_chunk(candidates.get(chunk_id), candidate)
+        rows = sorted(candidates.values(), key=lambda item: (item.score, len(item.content)), reverse=True)
+        return rows[: max(1, limit)]
+
+    def _title_recall(
+        self,
+        notebook_id: str,
+        source_index: dict[str, dict[str, Any]],
+        query_variants: list[str],
+        limit: int,
+    ) -> list[RetrievedChunk]:
+        query_text = " ".join(query_variants)
+        query_tokens = {token for token in tokenize(query_text) if token not in self.STOPWORDS}
+        if not query_tokens:
+            return []
+
+        rows: list[RetrievedChunk] = []
+        normalized_query = self._normalize_query(query_text).casefold()
+        for source_id, source in source_index.items():
+            cache = self._ensure_source_retrieval_cache(notebook_id, source)
+            title_aliases = [str(alias) for alias in cache.get("title_aliases", []) if alias]
+            title_tokens = {str(token) for token in cache.get("title_tokens", []) if token}
+            overlap = query_tokens & title_tokens
+            best_score = 0.0
+            for alias in title_aliases:
+                normalized_alias = self._normalize_query(alias).casefold()
+                if not normalized_alias:
+                    continue
+                if normalized_alias in normalized_query:
+                    best_score = max(best_score, 1.2 + len(overlap) * 0.1)
+                elif overlap:
+                    best_score = max(best_score, 0.7 + len(overlap) * 0.12)
+            if best_score <= 0:
+                continue
+
+            chunks = self._load_source_chunks(notebook_id, source_id)
+            representative_ids = {str(row) for row in cache.get("representative_chunk_ids", []) if row}
+            representative = [chunk for chunk in chunks if str(chunk.get("id") or "") in representative_ids] or chunks[:1]
+            for chunk in representative[:1]:
+                rows.append(
+                    RetrievedChunk(
+                        chunk_id=str(chunk.get("id") or ""),
+                        source_id=source_id,
+                        source_title=self._normalize_source_title(source),
+                        content=str(chunk.get("content") or ""),
+                        score=best_score,
+                        page=chunk.get("page"),
+                        line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                        line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                        bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                        page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                        page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                        highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                        spans=(chunk.get("metadata", {}) or {}).get("spans"),
+                        kind=str(source.get("kind") or "text"),
+                        match_reasons=("title",),
+                    )
+                )
+        rows.sort(key=lambda item: (item.score, len(item.content)), reverse=True)
+        return rows[: max(1, limit)]
+
+    def _rerank_candidates(self, query: str, candidates: list[RetrievedChunk], limit: int) -> list[RetrievedChunk]:
+        if len(candidates) <= limit:
+            return sorted(candidates, key=lambda item: (item.score, len(item.content)), reverse=True)
+        reranker_provider = os.getenv("RERANKER_PROVIDER")
+        reranker_model = os.getenv("RERANKER_MODEL")
+        if not reranker_provider and not reranker_model:
+            return sorted(candidates, key=lambda item: (item.score, len(item.content)), reverse=True)[:limit]
+        try:
+            from src.rag.components.reranker import Reranker
+
+            docs = [
+                {
+                    "id": chunk.chunk_id,
+                    "content": chunk.content,
+                    "metadata": {"source": chunk.source_title},
+                }
+                for chunk in candidates
+            ]
+            reranked = Reranker(provider=reranker_provider, model=reranker_model).rerank(query, docs, top_k=limit)
+            mapping = {chunk.chunk_id: chunk for chunk in candidates}
+            ordered: list[RetrievedChunk] = []
+            for doc in reranked:
+                chunk_id = str(doc.get("id") or "")
+                chunk = mapping.get(chunk_id)
+                if chunk is None:
+                    continue
+                ordered.append(RetrievedChunk(**{**chunk.__dict__, "score": float(doc.get("rerank_score") or chunk.score)}))
+            return ordered or sorted(candidates, key=lambda item: (item.score, len(item.content)), reverse=True)[:limit]
+        except Exception:
+            return sorted(candidates, key=lambda item: (item.score, len(item.content)), reverse=True)[:limit]
+
+    def _representative_chunks(
+        self,
+        notebook_id: str,
+        source_index: dict[str, dict[str, Any]],
+        limit: int,
+    ) -> list[RetrievedChunk]:
+        rows: list[RetrievedChunk] = []
+        per_source = max(1, limit // max(1, len(source_index)))
+        for source_id, source in source_index.items():
+            source_title = self._normalize_source_title(source)
+            for chunk in self._load_source_chunks(notebook_id, source_id)[:per_source]:
+                rows.append(
+                    RetrievedChunk(
+                        chunk_id=str(chunk.get("id") or ""),
+                        source_id=source_id,
+                        source_title=source_title,
+                        content=str(chunk.get("content") or ""),
+                        score=0.01,
+                        page=chunk.get("page"),
+                        line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                        line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                        bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                        page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                        page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                        highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                        spans=(chunk.get("metadata", {}) or {}).get("spans"),
+                        kind=str(source.get("kind") or "text"),
+                        match_reasons=("representative",),
+                    )
+                )
+                if len(rows) >= max(1, limit):
+                    return rows
+        return rows
 
     def retrieve_chunks(
         self,
@@ -644,39 +1006,54 @@ class NotebookManager:
         else:
             source_index = {str(row["id"]): row for row in sources if row.get("included")}
 
-        query_tokens = [token for token in tokenize(query) if token not in self.STOPWORDS]
-        scored: list[RetrievedChunk] = []
+        query_variants = self._query_variants(query, source_index)
+        lexical_candidates: dict[str, RetrievedChunk] = {}
         for source_id, source in source_index.items():
+            source_title = self._normalize_source_title(source)
             for chunk in self._load_source_chunks(notebook_id, source_id):
-                score = self._score_chunk(query_tokens, chunk, str(source.get("title") or ""))
-                if score <= 0 and query_tokens:
-                    continue
-                scored.append(
-                        RetrievedChunk(
-                            chunk_id=str(chunk.get("id") or ""),
-                            source_id=source_id,
-                            source_title=str(source.get("title") or "Untitled source"),
-                            content=str(chunk.get("content") or ""),
-                            score=score,
-                            page=chunk.get("page"),
-                            line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
-                            line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
-                            bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
-                            page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
-                            page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
-                            highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
-                            spans=(chunk.get("metadata", {}) or {}).get("spans"),
-                            kind=str(source.get("kind") or "text"),
+                score = max(
+                    (
+                        self._score_chunk(
+                            [token for token in tokenize(variant) if token not in self.STOPWORDS],
+                            chunk,
+                            source_title,
                         )
-                    )
-        if not scored and not query_tokens:
+                        for variant in query_variants
+                    ),
+                    default=0.0,
+                )
+                if score <= 0 and query_variants:
+                    continue
+                candidate = RetrievedChunk(
+                    chunk_id=str(chunk.get("id") or ""),
+                    source_id=source_id,
+                    source_title=source_title,
+                    content=str(chunk.get("content") or ""),
+                    score=score,
+                    page=chunk.get("page"),
+                    line_start=(chunk.get("metadata", {}) or {}).get("line_start"),
+                    line_end=(chunk.get("metadata", {}) or {}).get("line_end"),
+                    bbox=(chunk.get("metadata", {}) or {}).get("bbox"),
+                    page_width=(chunk.get("metadata", {}) or {}).get("page_width"),
+                    page_height=(chunk.get("metadata", {}) or {}).get("page_height"),
+                    highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
+                    spans=(chunk.get("metadata", {}) or {}).get("spans"),
+                    kind=str(source.get("kind") or "text"),
+                    match_reasons=("lexical",),
+                )
+                lexical_candidates[candidate.chunk_id] = self._merge_retrieved_chunk(
+                    lexical_candidates.get(candidate.chunk_id),
+                    candidate,
+                )
+        scored = list(lexical_candidates.values())
+        if not scored and not query_variants:
             for source_id, source in source_index.items():
                 for chunk in self._load_source_chunks(notebook_id, source_id)[:2]:
                     scored.append(
                         RetrievedChunk(
                             chunk_id=str(chunk.get("id") or ""),
                             source_id=source_id,
-                            source_title=str(source.get("title") or "Untitled source"),
+                            source_title=self._normalize_source_title(source),
                             content=str(chunk.get("content") or ""),
                             score=1.0,
                             page=chunk.get("page"),
@@ -688,8 +1065,25 @@ class NotebookManager:
                             highlight_boxes=(chunk.get("metadata", {}) or {}).get("highlight_boxes"),
                             spans=(chunk.get("metadata", {}) or {}).get("spans"),
                             kind=str(source.get("kind") or "text"),
+                            match_reasons=("representative",),
                         )
                     )
+        title_rows = self._title_recall(notebook_id, source_index, query_variants, limit=max(limit * 2, 6))
+        if title_rows:
+            merged = {row.chunk_id: row for row in scored}
+            for row in title_rows:
+                merged[row.chunk_id] = self._merge_retrieved_chunk(merged.get(row.chunk_id), row)
+            scored = list(merged.values())
+        vector_rows = self._vector_recall(notebook_id, source_index, query_variants, limit=max(limit * 3, 8))
+        if vector_rows:
+            merged = {row.chunk_id: row for row in scored}
+            for row in vector_rows:
+                merged[row.chunk_id] = self._merge_retrieved_chunk(merged.get(row.chunk_id), row)
+            scored = list(merged.values())
+        if scored:
+            scored = self._rerank_candidates(query, scored, limit=max(limit * 2, 8))
+        if not scored and source_index:
+            scored = self._representative_chunks(notebook_id, source_index, limit=max(1, limit))
         scored.sort(key=lambda item: (item.score, len(item.content)), reverse=True)
         return scored[: max(1, limit)]
 
@@ -741,7 +1135,13 @@ class NotebookManager:
             return None
         return payload if isinstance(payload, dict) else None
 
-    def _generate_with_llm(self, prompt: str, default: dict[str, Any]) -> dict[str, Any]:
+    def _generate_with_llm(
+        self,
+        prompt: str,
+        default: dict[str, Any],
+        *,
+        max_tokens: int = 1800,
+    ) -> dict[str, Any]:
         try:
             from src.services.llm import get_llm_client
 
@@ -758,7 +1158,7 @@ class NotebookManager:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.2,
-                max_tokens=1800,
+                max_tokens=max_tokens,
             )
             parsed = self._extract_json_blob(raw)
             if parsed:
@@ -767,25 +1167,82 @@ class NotebookManager:
             pass
         return default
 
-    def _fallback_chat_answer(self, question: str, citations: list[dict[str, Any]]) -> dict[str, Any]:
-        if not citations:
+    def _fallback_chat_answer(
+        self,
+        question: str,
+        citations: list[dict[str, Any]],
+        answer_mode: str,
+    ) -> dict[str, Any]:
+        if answer_mode == "llm_fallback":
             return {
-                "answer_markdown": "我在当前已启用来源中没有找到足够证据来回答这个问题。你可以先添加更多来源，或切换已排除的来源后再试一次。",
+                "answer_markdown": (
+                    "当前未选来源，以下为通用回答。\n\n"
+                    f"关于“{question.strip()}”，我先给你一个通用概览：\n\n"
+                    "- 下面的回答基于通用模型知识整理。\n"
+                    "- 如果你把相关论文、网页或知识库文件加入 Sources，我可以进一步给出带引用的版本。"
+                ),
                 "background_extension": "",
             }
 
-        bullets = "\n".join(
-            f"- {row['excerpt']} [{row['index']}]"
-            for row in citations[:4]
+        bullets = "\n".join(f"- {row['excerpt']} [{row['index']}]" for row in citations[:4])
+        prefix = (
+            "以下回答优先基于已选来源中的高相关内容。"
+            if answer_mode == "grounded"
+            else "以下为基于相关材料的整理/推断。"
         )
         return {
             "answer_markdown": (
-                f"围绕“{question.strip()}”，我先从当前来源里提炼到这些关键信息：\n\n"
+                f"{prefix}\n\n"
+                f"围绕“{question.strip()}”，我先提炼到这些信息：\n\n"
                 f"{bullets}\n\n"
-                "如果你愿意，我可以继续把这些证据整理成学习指南、FAQ 或思维导图。"
+                "如果你愿意，我可以继续把这些内容整理成报告、FAQ 或学习指南。"
             ),
             "background_extension": "",
         }
+
+    def _llm_fallback_answer(self, question: str) -> dict[str, Any]:
+        prompt = (
+            "用户当前没有提供可用来源。请直接给出一个清晰、有结构的中文回答。"
+            "请尽量写得具体，至少包含背景、关键点和下一步建议。"
+            "返回 JSON，字段为 answer_markdown 和 background_extension。"
+            f"\n\n用户问题：{question.strip()}"
+        )
+        generated = self._generate_with_llm(
+            prompt,
+            default=self._fallback_chat_answer(question, [], "llm_fallback"),
+            max_tokens=2400,
+        )
+        answer = str(generated.get("answer_markdown") or "").strip()
+        background = str(generated.get("background_extension") or "").strip()
+        if not answer:
+            return self._fallback_chat_answer(question, [], "llm_fallback")
+        return {"answer_markdown": answer, "background_extension": background}
+
+    def _classify_answer_mode(self, question: str, retrieved: list[RetrievedChunk], sources_available: bool) -> str:
+        if not sources_available:
+            return "llm_fallback"
+        if not retrieved:
+            return "weakly_grounded"
+        original_tokens = {token for token in tokenize(question) if token not in self.STOPWORDS}
+        representative_only = all(set(row.match_reasons).issubset({"representative"}) for row in retrieved[:4])
+        strong_recall = any({"lexical", "vector"} & set(row.match_reasons) for row in retrieved[:4])
+        if original_tokens:
+            overlap = False
+            for row in retrieved[:4]:
+                evidence_tokens = set(tokenize(f"{row.source_title} {row.content}"))
+                if original_tokens.intersection(evidence_tokens):
+                    overlap = True
+                    break
+            if not overlap:
+                if representative_only:
+                    return "weakly_grounded"
+                if strong_recall and max((row.score for row in retrieved), default=0.0) >= 0.45:
+                    return "grounded"
+                return "weakly_grounded"
+        top_score = max((row.score for row in retrieved), default=0.0)
+        if representative_only:
+            return "weakly_grounded"
+        return "grounded" if top_score >= 1.0 else "weakly_grounded"
 
     def _generate_chat_answer(
         self,
@@ -793,9 +1250,17 @@ class NotebookManager:
         question: str,
         retrieved: list[RetrievedChunk],
         citations: list[dict[str, Any]],
+        *,
+        sources_available: bool,
     ) -> dict[str, Any]:
-        if not retrieved:
-            return self._fallback_chat_answer(question, citations)
+        answer_mode = self._classify_answer_mode(question, retrieved, sources_available)
+        if answer_mode == "llm_fallback":
+            payload = self._llm_fallback_answer(question)
+            return {
+                **payload,
+                "answer_mode": "llm_fallback",
+                "retrieval_mode": "llm_fallback",
+            }
 
         snippets = []
         for row in citations:
@@ -803,26 +1268,42 @@ class NotebookManager:
                 f"[{row['index']}] 来源：{row['source_title']} ({row['locator']})\n{row['excerpt']}"
             )
         snippets_text = "\n\n".join(snippets)
+        mode_rule = (
+            "主回答必须优先基于来源，关键句后附上 [编号] 引用。"
+            if answer_mode == "grounded"
+            else "请尽可能基于这些相关材料回答；若有归纳或推断，请明确说明，并在能引用的地方附上 [编号]。"
+        )
         prompt = (
             "请根据提供的来源片段回答用户问题。\n"
             "要求：\n"
-            "1. 主回答必须优先基于来源，关键句后附上 [编号] 引用。\n"
-            "2. 如果需要补充你自己的背景知识，请放到 background_extension 字段。\n"
-            "3. 返回 JSON，字段为 answer_markdown 和 background_extension。\n\n"
+            f"1. {mode_rule}\n"
+            "2. 主体内容要写得尽量充实，优先输出 4-6 段有小标题或分点的完整回答，而不是只给很短的摘要。\n"
+            "3. 如果问题是报告、总结、综述、学习导览这类请求，请覆盖：背景/主题、关键观点、方法或机制、局限性/风险、可行动建议。\n"
+            "4. 如果需要补充你自己的背景知识，请放到 background_extension 字段，并尽量写成 1-2 段补充说明。\n"
+            "5. weakly-grounded 场景下，请明确写出“以下为基于相关材料的整理/推断”。\n"
+            "6. 返回 JSON，字段为 answer_markdown 和 background_extension。\n\n"
             f"用户问题：{question.strip()}\n\n"
             f"来源片段：\n{snippets_text}"
         )
         generated = self._generate_with_llm(
             prompt,
-            default=self._fallback_chat_answer(question, citations),
+            default=self._fallback_chat_answer(question, citations, answer_mode),
+            max_tokens=2600,
         )
         answer = str(generated.get("answer_markdown") or "").strip()
         background = str(generated.get("background_extension") or "").strip()
         if not answer:
-            return self._fallback_chat_answer(question, citations)
+            fallback = self._fallback_chat_answer(question, citations, answer_mode)
+            return {
+                **fallback,
+                "answer_mode": answer_mode,
+                "retrieval_mode": answer_mode,
+            }
         return {
             "answer_markdown": answer,
             "background_extension": background,
+            "answer_mode": answer_mode,
+            "retrieval_mode": answer_mode,
         }
 
     def _fallback_studio(self, notebook: dict[str, Any], kind: str, citations: list[dict[str, Any]]) -> dict[str, Any]:
@@ -919,13 +1400,20 @@ class NotebookManager:
             "- content 使用中文 markdown。\n"
             "- blocks 为结构化段落数组，每项含 title 和 items。\n"
             "- kind 为 mind_map 时 tree 返回树结构，否则返回 null。\n\n"
+            "写作要求：\n"
+            "- 写得尽量充实，不要只给短摘要，要产出可以直接保存为笔记阅读的完整正文。\n"
+            "- 至少包含 4 个一级或二级小节，每个小节下给出充分展开的说明或要点。\n"
+            "- summary 要覆盖背景、核心主题、关键机制/方法、重要发现、局限与启发。\n"
+            "- study_guide 要覆盖学习路径、重点概念解释、复习问题与延伸建议。\n"
+            "- faq 至少生成 5 个有信息量的问题与回答，而不是简短占位句。\n"
+            "- mind_map 除 tree 外，content 也要补充对结构的文字解释。\n\n"
             "来源：\n"
             + "\n\n".join(
                 f"[{row['index']}] {row['source_title']} ({row['locator']})\n{row['excerpt']}"
                 for row in citations
             )
         )
-        generated = self._generate_with_llm(prompt, default=fallback)
+        generated = self._generate_with_llm(prompt, default=fallback, max_tokens=3200)
         title = str(generated.get("title") or fallback["title"]).strip() or fallback["title"]
         content = str(generated.get("content") or fallback["content"]).strip() or fallback["content"]
         blocks = generated.get("blocks")
@@ -1049,12 +1537,25 @@ class NotebookManager:
         source = self._load_source(notebook_id, source_id)
         if not source:
             return None
+        refresh_cache = False
         if "included" in patch and patch["included"] is not None:
             source["included"] = bool(patch["included"])
         if "title" in patch and patch["title"]:
             source["title"] = str(patch["title"])[:200]
+            refresh_cache = True
         source["updated_at"] = _now_iso()
         _safe_json_save(self._source_path(notebook_id, source_id), source)
+        if refresh_cache:
+            chunks = self._load_source_chunks(notebook_id, source_id)
+            _safe_json_save(
+                self._source_embedding_path(notebook_id, source_id),
+                self._build_retrieval_cache(
+                    source_id,
+                    chunks,
+                    source_title=self._normalize_source_title(source),
+                    source_metadata=source.get("metadata", {}) or {},
+                ),
+            )
         self._touch_notebook(notebook_id)
         return source
 
@@ -1146,15 +1647,24 @@ class NotebookManager:
         }
         session.setdefault("messages", []).append(user_message)
 
+        sources_available = bool(source_ids) or bool(self._iter_included_sources(notebook_id))
         retrieved = self.retrieve_chunks(notebook_id, message, source_ids=source_ids, limit=6)
         citations = self._build_citations(retrieved)
-        generated = self._generate_chat_answer(notebook_id, message, retrieved, citations)
+        generated = self._generate_chat_answer(
+            notebook_id,
+            message,
+            retrieved,
+            citations,
+            sources_available=sources_available,
+        )
         assistant_message = {
             "id": str(uuid.uuid4()),
             "role": "assistant",
             "content": generated["answer_markdown"],
             "background_extension": generated["background_extension"],
             "citations": citations,
+            "answer_mode": generated.get("answer_mode", "grounded"),
+            "retrieval_mode": generated.get("retrieval_mode", "grounded"),
             "source_ids": source_ids or [row.get("source_id") for row in citations],
             "created_at": _now_iso(),
         }
@@ -1399,7 +1909,7 @@ class NotebookManager:
         kind = {
             "chat": "saved_chat",
             "research": "saved_research",
-            "co_writer": "saved_research",
+            "co_writer": "saved_studio",
             "studio": "saved_studio",
         }.get(origin_type, "manual")
         source_ids = [str(row.get("source_id") or row.get("file_id") or "") for row in citations if row.get("source_id")]

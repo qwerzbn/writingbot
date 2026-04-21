@@ -172,6 +172,158 @@ def test_source_scoped_chat_studio_and_note_flow(tmp_path):
     assert len(workspace["notes_summary"]) == 2
 
 
+def test_chat_uses_llm_with_selected_sources_even_when_keyword_overlap_is_weak(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    notebook = manager.create_notebook(name="Agent Defense")
+    notebook_id = notebook["id"]
+
+    source = manager.create_source(
+        notebook_id,
+        kind="text",
+        title="AgentGuard",
+        text=(
+            "AgentGuard focuses on autonomous agent security, tool misuse detection, "
+            "execution monitoring, and defense-in-depth strategies for agent systems."
+        ),
+    )
+
+    calls: list[list[dict[str, str]]] = []
+
+    class FakeClient:
+        def chat(self, messages, temperature=0.7, max_tokens=2000, **kwargs):
+            calls.append(messages)
+            return '{"answer_markdown":"AgentGuard 提供了围绕自主智能体安全的防护与执行监控能力 [1]","background_extension":""}'
+
+    monkeypatch.setattr("src.services.llm.get_llm_client", lambda: FakeClient())
+
+    chat = manager.chat_in_session(
+        notebook_id=notebook_id,
+        session_id=None,
+        message="给我一份智能体安全研究的报告",
+        source_ids=[source["id"]],
+    )
+
+    assistant = chat["assistant_message"]
+    assert calls, "expected notebook chat to call the configured LLM"
+    assert "没有找到足够证据" not in assistant["content"]
+    assert "AgentGuard" in calls[0][1]["content"]
+    assert assistant["answer_mode"] == "weakly_grounded"
+    assert assistant["retrieval_mode"] == "weakly_grounded"
+    assert assistant["citations"]
+    assert {citation["source_id"] for citation in assistant["citations"]} == {source["id"]}
+
+
+def test_chat_uses_pure_llm_fallback_when_no_sources_are_available(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    notebook = manager.create_notebook(name="Empty notebook")
+
+    calls: list[list[dict[str, str]]] = []
+
+    class FakeClient:
+        def chat(self, messages, temperature=0.7, max_tokens=2000, **kwargs):
+            calls.append(messages)
+            return '{"answer_markdown":"这是基于通用模型知识的回答。","background_extension":""}'
+
+    monkeypatch.setattr("src.services.llm.get_llm_client", lambda: FakeClient())
+
+    chat = manager.chat_in_session(
+        notebook_id=notebook["id"],
+        session_id=None,
+        message="什么是智能体安全？",
+        source_ids=[],
+    )
+
+    assistant = chat["assistant_message"]
+    assert calls, "expected notebook chat to call the configured LLM even without sources"
+    assert assistant["content"]
+    assert assistant["answer_mode"] == "llm_fallback"
+    assert assistant["retrieval_mode"] == "llm_fallback"
+    assert assistant["citations"] == []
+
+
+def test_studio_generation_requests_more_detailed_llm_output(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    notebook = manager.create_notebook(name="Detailed studio")
+    notebook_id = notebook["id"]
+
+    source = manager.create_source(
+        notebook_id,
+        kind="text",
+        title="AgentGuard",
+        text=(
+            "AgentGuard studies autonomous agent security, policy enforcement, tool misuse detection, "
+            "runtime monitoring, reviewer workflows, and incident response for production agent systems."
+        ),
+    )
+
+    llm_calls: list[dict[str, object]] = []
+
+    class FakeClient:
+        def chat(self, messages, temperature=0.7, max_tokens=2000, **kwargs):
+            llm_calls.append(
+                {
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                }
+            )
+            return (
+                '{"title":"详细总结","content":"## 背景\\n展开说明\\n\\n## 核心机制\\n进一步展开","blocks":[{"title":"背景","items":["a","b"]}],"tree":null}'
+            )
+
+    monkeypatch.setattr("src.services.llm.get_llm_client", lambda: FakeClient())
+
+    studio = manager.generate_studio_output(
+        notebook_id=notebook_id,
+        kind="summary",
+        source_ids=[source["id"]],
+        session_id=None,
+    )
+
+    assert llm_calls, "expected studio generation to call the configured LLM"
+    prompt = str(llm_calls[0]["messages"][1]["content"])
+    assert "写得尽量充实" in prompt
+    assert "至少包含" in prompt
+    assert int(llm_calls[0]["max_tokens"]) >= 2600
+    assert studio["content"].startswith("## 背景")
+
+
+def test_retrieve_chunks_prefers_title_matched_source_when_embeddings_are_unavailable(tmp_path, monkeypatch):
+    manager = NotebookManager(data_dir=tmp_path / "data")
+    notebook = manager.create_notebook(name="Cross-language retrieval")
+    notebook_id = notebook["id"]
+
+    clawkeeper = manager.create_source(
+        notebook_id,
+        kind="text",
+        title="ClawKeeper",
+        text="This paper studies permission hardening, audit trails, and execution sandboxes for agent tools.",
+    )
+    agentguard = manager.create_source(
+        notebook_id,
+        kind="text",
+        title="AgentGuard",
+        text="This paper studies runtime monitoring, policy enforcement, and defense-in-depth for agent systems.",
+    )
+
+    monkeypatch.setattr(
+        manager,
+        "_get_embedding_fn",
+        lambda: (_ for _ in ()).throw(RuntimeError("embeddings unavailable")),
+    )
+
+    retrieved = manager.retrieve_chunks(
+        notebook_id,
+        query="请总结 ClawKeeper 的研究重点",
+        source_ids=[clawkeeper["id"], agentguard["id"]],
+        limit=1,
+    )
+
+    assert retrieved
+    assert retrieved[0].source_id == clawkeeper["id"]
+    assert retrieved[0].source_title == "ClawKeeper"
+
+
 def test_workspace_filters_and_note_conflict_guard(tmp_path):
     manager = NotebookManager(data_dir=tmp_path / "data")
     notebook = manager.create_notebook(name="Filter notebook")

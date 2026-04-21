@@ -100,6 +100,8 @@ export interface NotebookChatMessage {
   content: string;
   background_extension?: string;
   citations?: NotebookCitation[];
+  answer_mode?: 'grounded' | 'weakly_grounded' | 'llm_fallback';
+  retrieval_mode?: 'grounded' | 'weakly_grounded' | 'llm_fallback';
   source_ids: string[];
   created_at: string;
 }

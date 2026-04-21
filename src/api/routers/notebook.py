@@ -6,6 +6,7 @@ NotebookLM-style notebook router.
 from __future__ import annotations
 
 import asyncio
+import mimetypes
 import threading
 import uuid
 from collections import Counter, defaultdict
@@ -15,7 +16,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.orchestrator.events import build_done_event, build_error_event, build_init_event, sse_event
@@ -89,7 +90,7 @@ class SaveFromSourcesRequest(BaseModel):
     content: str
     sources: list[dict[str, Any]] = Field(default_factory=list)
     kb_id: str | None = None
-    origin_type: Literal["research", "co_writer", "chat", "studio"] = "research"
+    origin_type: Literal["research", "co_writer", "chat", "studio"] = "chat"
     tags: list[str] = Field(default_factory=list)
 
 
@@ -633,6 +634,32 @@ async def get_source(notebook_id: str, source_id: str):
     return {"success": True, "data": source}
 
 
+@router.get("/notebooks/{notebook_id}/sources/{source_id}/content")
+async def get_source_content(notebook_id: str, source_id: str):
+    _require_notebook(notebook_id)
+    manager = get_notebook_manager()
+    source = next(
+        (row for row in manager.list_sources(notebook_id) if str(row.get("id")) == source_id),
+        None,
+    )
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    metadata = source.get("metadata", {}) or {}
+    asset_value = str(metadata.get("asset_path") or "").strip()
+    if asset_value:
+        asset_path = Path(asset_value)
+        if asset_path.exists() and asset_path.is_file():
+            media_type, _ = mimetypes.guess_type(str(asset_path))
+            return FileResponse(str(asset_path), media_type=media_type or "application/octet-stream")
+
+    body_path = manager._source_body_path(notebook_id, source_id)
+    if body_path.exists() and body_path.is_file():
+        return PlainTextResponse(body_path.read_text(encoding="utf-8"))
+
+    raise HTTPException(status_code=404, detail="Source content not found")
+
+
 @router.put("/notebooks/{notebook_id}/sources/{source_id}")
 async def update_source(notebook_id: str, source_id: str, req: UpdateSourceRequest):
     _require_notebook(notebook_id)
@@ -734,6 +761,8 @@ async def stream_notebook_chat(notebook_id: str, req: ChatStreamRequest):
                     run_id=run_id,
                     trace_id=trace_id,
                     output=assistant_message.get("content", ""),
+                    answer_mode=assistant_message.get("answer_mode"),
+                    retrieval_mode=assistant_message.get("retrieval_mode"),
                     notebook_id=notebook_id,
                     session_id=session["id"],
                     assistant_message=assistant_message,
