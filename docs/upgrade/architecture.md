@@ -9,13 +9,13 @@
 flowchart TB
   subgraph UI["UI Layer"]
     WEB["web/ (Next.js)"]
-    FW["FastWrite/ (Bun + React + Vite)"]
+    FW["协同写作模块/ (Bun + React + Vite)"]
   end
 
   subgraph API["API Layer"]
     MAIN["src/api/main.py"]
     ROUTERS["src/api/routers/*"]
-    BRIDGE["src/api/routers/fastwrite_bridge.py"]
+    BRIDGE["协同写作桥接路由"]
   end
 
   subgraph APP["Application Layer"]

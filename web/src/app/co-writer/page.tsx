@@ -42,20 +42,23 @@ export default function CoWriterPage() {
         return;
       }
 
-      setHealthMessage(payload?.data?.error || 'FastWrite service is unavailable.');
+      setHealthMessage(payload?.data?.error || '协同写作模块服务不可用。');
       setStatus('error');
     } catch (error) {
       if (cancelledRef?.cancelled) return;
-      setHealthMessage(error instanceof Error ? error.message : 'FastWrite health check failed.');
+      setHealthMessage(error instanceof Error ? error.message : '协同写作模块健康检查失败。');
       setStatus('error');
     }
   };
 
   useEffect(() => {
     const cancelledRef = { cancelled: false };
-    void checkConnection(cancelledRef);
+    const timer = window.setTimeout(() => {
+      void checkConnection(cancelledRef);
+    }, 0);
     return () => {
       cancelledRef.cancelled = true;
+      window.clearTimeout(timer);
     };
   }, []);
 
@@ -70,7 +73,7 @@ export default function CoWriterPage() {
         {status === 'loading' && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
             <Loader2 size={32} className="mb-4 animate-spin text-rose-500" />
-            <p className="text-sm text-slate-500 dark:text-slate-400">Checking FastWrite availability...</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">正在检查协同写作模块可用性...</p>
           </div>
         )}
 
@@ -79,10 +82,10 @@ export default function CoWriterPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-900/20">
               <AlertCircle size={32} className="text-red-400" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-slate-700 dark:text-slate-200">FastWrite unavailable</h3>
+            <h3 className="mb-2 text-lg font-semibold text-slate-700 dark:text-slate-200">协同写作模块不可用</h3>
             <p className="mb-6 max-w-xl text-center text-sm text-slate-500 dark:text-slate-400">
-              Co-writer is running in degraded mode. Start FastWrite and retry. Use{' '}
-              <code className="rounded bg-slate-200 px-1.5 py-0.5 text-xs dark:bg-slate-700">start_dev.sh</code> or{' '}
+              协同写作模块当前处于降级模式。请启动本地编辑器服务后重试，可使用{' '}
+              <code className="rounded bg-slate-200 px-1.5 py-0.5 text-xs dark:bg-slate-700">start_dev.sh</code> 或{' '}
               <code className="rounded bg-slate-200 px-1.5 py-0.5 text-xs dark:bg-slate-700">start_dev.ps1</code>.
               {healthMessage ? ` (${healthMessage})` : ''}
             </p>
@@ -102,7 +105,7 @@ export default function CoWriterPage() {
             ref={iframeRef}
             src={fastWriteUrl}
             className="h-full w-full border-0"
-            title="FastWrite co-writer"
+            title="协同写作模块"
             allow="clipboard-read; clipboard-write"
           />
         )}

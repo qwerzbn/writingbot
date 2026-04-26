@@ -8,7 +8,7 @@
 flowchart TB
   subgraph UI["UI Layer"]
     WEB["web/ (Next.js)"]
-    FW["FastWrite/web (Vite + React)"]
+    FW["协同写作模块/web (Vite + React)"]
   end
 
   subgraph API["API Layer"]

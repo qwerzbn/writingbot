@@ -110,7 +110,7 @@ FASTWRITE_ROOT="${PROJECT_ROOT}/FastWrite"
 if [[ -d "${FASTWRITE_ROOT}" && -f "${FASTWRITE_ROOT}/package.json" ]]; then
   if command -v bun >/dev/null 2>&1; then
     FASTWRITE_MODE="enabled"
-    log "Starting FastWrite API on :${FASTWRITE_API_PORT}"
+    log "Starting co-writing module API on :${FASTWRITE_API_PORT}"
     (
       cd "${FASTWRITE_ROOT}"
       PORT="${FASTWRITE_API_PORT}" bun run --watch src/server.ts
@@ -118,23 +118,23 @@ if [[ -d "${FASTWRITE_ROOT}" && -f "${FASTWRITE_ROOT}/package.json" ]]; then
     PIDS+=("$!")
 
     if [[ -d "${FASTWRITE_ROOT}/web" ]]; then
-      log "Starting FastWrite web on :${FASTWRITE_WEB_PORT}"
+      log "Starting co-writing module web on :${FASTWRITE_WEB_PORT}"
       (
         cd "${FASTWRITE_ROOT}/web"
-        bun run dev --no-open --port "${FASTWRITE_WEB_PORT}"
+        bun run dev --host 127.0.0.1 --no-open --port "${FASTWRITE_WEB_PORT}"
       ) > "${LOG_DIR}/fastwrite-web.log" 2>&1 &
       PIDS+=("$!")
     else
       FASTWRITE_MODE="degraded"
-      warn "FastWrite web directory not found; co-writer will stay in degraded mode."
+      warn "Co-writing module web directory not found; co-writer will stay in degraded mode."
     fi
   else
     FASTWRITE_MODE="degraded"
-    warn "bun not found; FastWrite skipped. Install bun to enable co-writer."
+    warn "bun not found; co-writing module skipped. Install bun to enable co-writer."
   fi
 else
   FASTWRITE_MODE="degraded"
-  warn "FastWrite project unavailable; co-writer page will show degraded mode."
+  warn "Co-writing module project unavailable; co-writer page will show degraded mode."
 fi
 
 echo
@@ -143,10 +143,10 @@ echo " WritingBot development services started"
 echo "=========================================="
 echo " WritingBot API : ${WRITINGBOT_API_URL}"
 echo " WritingBot Web : http://127.0.0.1:${WRITINGBOT_WEB_PORT}"
-echo " FastWrite mode : ${FASTWRITE_MODE}"
+echo " Co-writing module mode : ${FASTWRITE_MODE}"
 if [[ "${FASTWRITE_MODE}" == "enabled" ]]; then
-  echo " FastWrite API  : http://127.0.0.1:${FASTWRITE_API_PORT}"
-  echo " FastWrite Web  : ${FASTWRITE_URL}"
+  echo " Co-writing module API  : http://127.0.0.1:${FASTWRITE_API_PORT}"
+  echo " Co-writing module Web  : ${FASTWRITE_URL}"
 fi
 echo " Logs directory : ${LOG_DIR}"
 echo "=========================================="

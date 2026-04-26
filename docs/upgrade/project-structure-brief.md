@@ -8,7 +8,7 @@
 |---|---|
 | `src/` | Python 后端主代码（API/编排/检索/会话/LLM/技能） |
 | `web/` | Next.js 前端与 API 代理 |
-| `FastWrite/` | 论文编辑子系统（独立前后端） |
+| `协同写作模块/` | 论文编辑子系统（独立前后端） |
 | `config/` | 配置 |
 | `data/` | 运行数据（knowledge_bases/sessions/metrics 等） |
 | `docs/upgrade/` | 架构、演练、升级文档 |

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FastWrite lightweight bridge APIs."""
+"""Co-writing module lightweight bridge APIs."""
 
 from __future__ import annotations
 
@@ -182,7 +182,7 @@ async def fastwrite_health():
                 "available": True,
                 "status_code": int(exc.code),
                 "url": base_url,
-                "warning": f"FastWrite returned HTTP {exc.code}",
+                "warning": f"协同写作模块返回 HTTP {exc.code}",
             },
         }
     except Exception as exc:

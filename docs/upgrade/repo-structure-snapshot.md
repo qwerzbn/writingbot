@@ -12,16 +12,16 @@
 .logs
 .pytest_cache
 .pytest_cache/v
-FastWrite
-FastWrite/.cursor
-FastWrite/.github
-FastWrite/demo
-FastWrite/docs
-FastWrite/projs
-FastWrite/release
-FastWrite/scripts
-FastWrite/src
-FastWrite/web
+协同写作模块
+协同写作模块/.cursor
+协同写作模块/.github
+协同写作模块/demo
+协同写作模块/docs
+协同写作模块/projs
+协同写作模块/release
+协同写作模块/scripts
+协同写作模块/src
+协同写作模块/web
 artifacts
 artifacts/architecture-guard-pr-rehearsal
 artifacts/architecture-guard-pr-rehearsal-latest
@@ -69,7 +69,7 @@ web/test-results
 
 ## Runtime Chain (high-level)
 
-- 1) start_dev.sh -> FastAPI(5001) + Next.js(3000) + FastWrite API(3003) + FastWrite UI(3002)
+- 1) start_dev.sh -> FastAPI(5001) + Next.js(3000) + 协同写作模块 API(3003) + 协同写作模块 UI(3002)
 - 2) web/src/app/api/[...path]/route.ts -> proxy /api/* to 127.0.0.1:5001
 - 3) src/api/main.py -> include routers(chat/knowledge/notebook/research/co_writer/retrieval/...)
 - 4) src/api/routers/chat.py -> orchestrator -> retrieval/llm/session persistence

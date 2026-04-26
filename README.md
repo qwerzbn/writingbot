@@ -1,259 +1,159 @@
-# WritingBot 📚
+# WritingBot
 
-> Multi-Agent 学术论文写作助手 —— 基于 RAG 的智能文献问答、协同写作与 LaTeX 编辑平台
+WritingBot 是一个面向学术写作场景的本地协同写作与知识库系统。当前版本以 FastAPI 后端、Next.js 前端、RAG 检索链路和统一 Agent Runtime 为核心，支持文献知识库、智能问答、研究笔记、协同写作、运行诊断与评估报告。
 
-## ✨ 功能特性
+![项目总览截图](docs/assets/dashboard-overview.png)
 
-- **📖 知识库管理** — 导入 PDF 文献，自动解析、分块、向量化存储，支持多知识库
-- **💬 智能问答** — 基于 RAG（检索增强生成）的文献问答，支持实时流式输出与来源引用
-- **🖼️ 图表理解** — 自动抽取论文 Figure/Table 资产，支持图表解释、页码回跳与图文联合证据
-- **📝 笔记本** — 结构化笔记管理，关联知识库内容
-- **🔬 深度研究** — 多轮自主 Agent 深度调研模式
-- **✍️ 协同写作** — AI 辅助的论文撰写功能
-- **📄 FastWrite** — 集成 LaTeX 编辑器，支持 Section/Paragraph/Sentence 视图与 AI 润色
-- **⚙️ 灵活配置** — 支持 Ollama / OpenAI / DeepSeek 等多种 LLM 和 Embedding 模型
+## 当前进度
 
-## 🏗️ 系统架构
+- 主后端已切换到 FastAPI，统一从 `src/api/main.py` 注册知识库、聊天、笔记本、协同写作、检索、编排、评估、设置和技能接口。
+- Agent 运行时正在收敛到 `src/agent_runtime/`，当前以 typed state、运行记录、事件流和内容工作流作为主链路。
+- 聊天与协同写作能力由 `ContentAgent` 和共享能力层承接，旧的 `ChatAgent` / `CoWriterAgent` import path 保留为兼容适配器。
+- 研究技能注册已经从历史技能包向 Anthropic-style skill folder 结构迁移；当前 `config/skills.yaml` 为空列表，后续技能应按新的注册约束补回。
+- 前端主站保留总览、知识库、智能问答、笔记本、协同写作和设置页面；旧研究页已从主导航移除。
+- 证据链能力仍是核心约束：检索结果、图表资产、引用绑定、推理标记、评估指标和运行日志用于支撑可追溯输出。
 
+## 功能模块
+
+| 模块 | 说明 |
+|---|---|
+| 知识库 | 创建知识库、上传 PDF、解析文本与图表资产、构建向量索引。 |
+| 智能问答 | 基于知识库检索结果生成回答，支持流式输出、来源引用、图表证据补充。 |
+| 笔记本 | 管理研究资料、笔记、工作区输出、来源导入和相关内容发现。 |
+| 协同写作 | 提供 LaTeX 论文编辑、文本改写、扩写、缩写、润色和证据辅助写作入口。 |
+| Agent Runtime | 统一运行记录、事件流、状态模型、内容生成和评估指标。 |
+| 评估与诊断 | 输出运行指标、评估报告、质量门禁和架构演练材料。 |
+
+## 技术栈
+
+| 层级 | 当前选择 |
+|---|---|
+| 后端 | Python 3.11+、FastAPI、Uvicorn、Pydantic |
+| LLM 接入 | OpenAI SDK 兼容接口，可接 Ollama、OpenAI-compatible 服务、DeepSeek 等 |
+| RAG | PyMuPDF、Sentence-Transformers / Ollama / OpenAI Embedding、ChromaDB、混合检索 |
+| 前端 | Next.js 16、React 19、TypeScript、Tailwind CSS 4、Radix UI、lucide-react |
+| 协同写作模块 | Bun、Vite、React、独立编辑器服务，通过主站桥接入口集成 |
+| 测试与质量 | pytest、Playwright、项目脚本化质量门禁 |
+
+更完整的技术说明见 [docs/technical-selection.md](docs/technical-selection.md)。
+
+## 项目结构
+
+```text
+writingbot/
+├── src/
+│   ├── api/                  # FastAPI 应用与业务路由
+│   ├── agent_runtime/        # 统一 Agent Runtime、typed state、事件与运行存储
+│   ├── agent_workflows/      # 内容类工作流
+│   ├── agents/               # 对外保留的 Agent import path 与兼容适配
+│   ├── compat/               # 旧接口适配器
+│   ├── knowledge/            # 知识库与向量库管理
+│   ├── rag/                  # RAG pipeline 与组件
+│   ├── retrieval/            # 混合检索与索引访问
+│   ├── services/             # 配置、LLM、Notebook、Prompt 服务
+│   ├── shared_capabilities/  # 检索、提示词、渲染、证据、校验等共享能力
+│   └── skills/               # 技能注册与运行
+├── web/                      # Next.js 主前端
+├── config/                   # YAML 配置
+├── data/                     # 本地运行数据
+├── docs/                     # 项目文档
+├── scripts/                  # 启动、演练、质量门禁脚本
+└── tests/                    # 后端测试
 ```
-WritingBot/
-├── src/                    # Python 后端源码
-│   ├── api/                # FastAPI 路由（知识库、对话、笔记、研究等）
-│   ├── agents/             # Multi-Agent 系统（Chat / Research / Co-Writer）
-│   ├── rag/                # RAG 引擎 & Pipeline
-│   ├── knowledge/          # 知识库管理 & ChromaDB 向量存储
-│   ├── parsing/            # PDF 解析（PyMuPDF）
-│   ├── processing/         # 语义分块
-│   ├── services/           # LLM 客户端 & 配置管理
-│   └── session/            # 会话管理
-├── web/                    # Next.js 前端（React + TailwindCSS）
-├── FastWrite/              # LaTeX 编辑器子项目（Bun + React + Vite）
-├── config/                 # YAML 配置文件
-├── data/                   # 运行时数据（知识库、会话）
-├── main.py                 # CLI 交互入口
-├── server.py               # 旧版 Flask 服务（已弃用）
-└── start_dev.sh            # 一键启动脚本
-```
 
-## 🧭 架构文档导航
+更详细的架构图见 [docs/project-architecture.md](docs/project-architecture.md)。
 
-- `docs/upgrade/repo-structure-overview.md`：仓库级双层视图（目录层 + 运行时主链路）
-- `docs/upgrade/project-structure-brief.md`：一页式项目结构速览（目录职责 + 主链路 + 入口）
-- `docs/upgrade/architecture-onboarding.md`：新人速览版双层架构图（目录结构 + `api/chat` 运行时链路）
-- `docs/upgrade/module-dependency-graph.md`：跨模块依赖可视化与循环依赖状态
-- `docs/upgrade/architecture-ownership-sla.md`：关键模块 owner 与治理 SLA
-- `docs/upgrade/structure-drift-dashboard.md`：结构漂移看板（由脚本/工作流生成）
-- `docs/upgrade/monthly-gate-failure-postmortem-2026-03.md`：月度门禁失败演练复盘样例
-- `docs/upgrade/repo-structure-snapshot.md`：最新结构快照（由脚本生成）
-- `docs/upgrade/architecture.md`：`api/chat` 子模块深度架构（文件级调用流、依赖关系、关键时序、异常分支）
-- `scripts/verify_architecture_chat_refs.sh`：`architecture.md` 与 `api/chat` 关键代码锚点一致性校验脚本
-- `scripts/print_repo_structure.sh`：输出仓库目录层快照 + 运行时主链路摘要 + 关键锚点检查（支持 `--markdown`、`--depth`、`--exclude-open-notebook`）
-
-## 🚀 快速开始
+## 快速开始
 
 ### 环境要求
 
-- **Python 3.11**（推荐通过 Conda 管理）
-- **Node.js ≥ 18** + npm
-- **Bun**（用于 FastWrite 子项目）
-- **Ollama**（可选，用于本地 LLM 推理）
+- Python 3.11+
+- Node.js 18+ 与 npm
+- Bun：仅在启用协同写作模块时需要
+- Ollama 或 OpenAI-compatible LLM 服务：用于本地/远程模型推理
 
-### 1. 安装 Python 依赖
+### 安装依赖
 
 ```bash
-# 方式一：使用 Conda（推荐）
-conda env create -f environment.yml
-conda activate writingbot
-
-# 方式二：使用 pip
 pip install -r requirements.txt
+cd web && npm install
 ```
 
-### 2. 安装前端依赖
+如需启用协同写作模块，请额外安装 Bun 并安装该模块依赖。
 
-```bash
-# WritingBot 前端
-cd web && npm install && cd ..
-
-# FastWrite 编辑器
-cd FastWrite && bun install && cd ..
-```
-
-### 3. 配置环境变量
+### 配置环境变量
 
 ```bash
 cp .env.example .env
-# 编辑 .env，配置 LLM 提供商和 API Key
 ```
 
-支持的 LLM 配置示例：
+常用 LLM 配置：
 
-| 提供商 | LLM_PROVIDER | LLM_BASE_URL | LLM_MODEL |
-|--------|-------------|--------------|-----------|
-| Ollama（本地） | `ollama` | `http://localhost:11434/v1` | `qwen3:0.6b` |
+| 提供商 | `LLM_PROVIDER` | `LLM_BASE_URL` | `LLM_MODEL` |
+|---|---|---|---|
+| Ollama | `ollama` | `http://localhost:11434/v1` | `qwen3:0.6b` |
 | OpenAI | `openai` | `https://api.openai.com/v1` | `gpt-4o-mini` |
 | DeepSeek | `openai` | `https://api.deepseek.com/v1` | `deepseek-chat` |
 
-提示：如果要启用“论文图表理解”，请优先使用支持视觉输入的 OpenAI-compatible 多模态模型。
-
-### 4. 一键启动
+### 启动开发环境
 
 ```bash
 bash start_dev.sh
 ```
 
-启动后可访问：
+默认服务：
 
 | 服务 | 地址 |
-|------|------|
-| WritingBot 前端 | http://localhost:3000 |
-| WritingBot API | http://localhost:5001 |
-| API 文档（Swagger） | http://localhost:5001/docs |
-| FastWrite 编辑器 | http://localhost:3002 |
-| FastWrite API | http://localhost:3003 |
+|---|---|
+| 主前端 | http://localhost:3000 |
+| 后端 API | http://localhost:5001 |
+| API 文档 | http://localhost:5001/docs |
+| 协同写作模块 UI | http://localhost:3002 |
+| 协同写作模块 API | http://localhost:3003 |
 
-## 📖 使用指南
-
-### 知识库管理
-
-1. 进入「知识库」页面，点击 **创建知识库**
-2. 上传 PDF 文献，系统自动完成：文本解析 → Figure/Table 抽取 → 语义分块 → 向量化存储
-3. 支持选择不同的 Embedding 模型（本地 Sentence-Transformers / Ollama / OpenAI）
-
-图表资产接口：
-
-- `GET /api/kbs/{kb_id}/assets` — 列出当前知识库中的 Figure/Table 资产
-- `POST /api/kbs/{kb_id}/assets/{asset_id}/interpret` — 调用多模态模型解释单个图表
-
-### 智能问答
-
-1. 进入「聊天」页面，选择目标知识库
-2. 输入问题，AI 基于文献内容提供回答，附带来源引用
-3. 支持多轮对话，自动保存历史
-4. 当问题命中“图3/表2/趋势/对比/消融”等模式时，会补充图表证据卡并支持跳回 PDF 原页
-
-### Skills 规范（Anthropic 风格）
-
-项目技能已按官方 Skills 结构组织，放在 `skills/` 目录：
-
-```text
-skills/
-  paper-summary/
-    SKILL.md
-    agents/openai.yaml
-  experiment-compare/
-    SKILL.md
-    agents/openai.yaml
-  innovation-summary/
-    SKILL.md
-    agents/openai.yaml
-  research-gaps/
-    SKILL.md
-    agents/openai.yaml
-```
-
-- `SKILL.md`：使用 frontmatter 定义 `name/description`（必填）与运行 metadata（如 `id/domain/requires_kb`）。
-- `agents/openai.yaml`：定义 UI 展示信息（`display_name`、`short_description`、`default_prompt`）。
-- 后端技能注册优先读取 `skills/*/SKILL.md`，`config/skills.yaml` 作为兼容兜底。
-- 在交互中可通过技能 id 使用（如 `/paper-summary`），也可在支持 Skills 的 Agent 环境中显式引用 `$paper-summary`。
-
-### LaTeX 编辑（FastWrite）
-
-1. 导入 LaTeX 项目
-2. 选择 `.tex` 文件，切换 Section / Paragraph / Sentence 视图
-3. 使用 AI 诊断、润色、快速修复功能
-4. 查看词级别 Diff，选择接受或拒绝修改
-
-## 🛠️ 技术栈
-
-| 层级 | 技术 |
-|------|------|
-| 后端框架 | FastAPI + Uvicorn |
-| 向量数据库 | ChromaDB |
-| Embedding 模型 | Sentence-Transformers / Ollama / OpenAI |
-| PDF 解析 | PyMuPDF |
-| LLM 集成 | OpenAI SDK（兼容 Ollama、DeepSeek 等） |
-| 前端框架 | Next.js 16 + React 19 |
-| 前端样式 | TailwindCSS 4 |
-| LaTeX 编辑器 | Bun + Vite + React |
-
-## 📁 CLI 模式
-
-除 Web 界面外，也支持命令行使用：
+也可以单独启动主前端：
 
 ```bash
-python main.py
+cd web
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-可用命令：
-- `/ingest <path>` — 导入 PDF 文件
-- `/stats` — 查看知识库统计
-- `/clear` — 清除对话历史
-- `/quit` — 退出
+## API 入口
 
-## ✅ 质量门禁
+| 路由组 | 说明 |
+|---|---|
+| `/api/kbs` | 知识库、文件、图表资产、索引修复 |
+| `/api/chat` | 聊天、流式问答、会话管理、运行指标 |
+| `/api/notebooks` | 笔记本、来源、笔记、工作区、事件、洞察 |
+| `/api/co-writer` | 协同写作证据检索与文本编辑 |
+| `/api/orchestrator` | 运行创建、查询和事件流 |
+| `/api/retrieval` | 混合检索调试入口 |
+| `/api/evaluation` | 评估任务与报告 |
+| `/api/settings` | LLM 配置读取、更新和连通性测试 |
+| `/api/skills` | 技能注册信息 |
 
-本项目提供企业级基础门禁：
+## 文档导航
 
-- CI 工作流：`.github/workflows/quality-gate.yml`
-- 月度演练工作流：`.github/workflows/architecture-guard-monthly.yml`
-- PR checklist 模板：`.github/pull_request_template.md`
-- 本地一键门禁脚本：`scripts/quality_gate.sh`
-- 架构门禁（pre-merge）：`scripts/verify_architecture_chat_refs.sh`（已接入 `quality-gate.yml` 的 `architecture-guard` job）
-- 依赖守卫（pre-merge）：`scripts/generate_module_dependency_graph.py`（按 `config/dependency-cycles-baseline.txt` 对“新增循环依赖”阻断）
-- CI 等价本地演练：`scripts/simulate_arch_guard_ci.sh`（验证通过路径 `::notice` 与失败路径 `::error` + 非零退出码）
-- 依赖守卫本地演练：`scripts/simulate_dependency_guard_ci.sh`（验证新增循环依赖触发 `::error` + 非零退出码）
-- 全链路守卫演练：`scripts/simulate_full_guard_ci.sh`（一次性验证架构锚点 + 依赖循环两类守卫）
-- 漂移看板生成：`scripts/generate_structure_drift_dashboard.sh`（输出 drift dashboard）
-- 本地 PR 演练包装脚本：`scripts/rehearse_arch_guard_pr.sh`（输出可归档的 snapshot/log/summary）
-- 根级 `pytest.ini`：将测试发现固定在主仓 `tests/`，避免把参考子项目一并扫入答辩前回归
-- PR 演练说明：`docs/upgrade/architecture-guard-pr-drill.md`
-- 最近演练报告：`docs/upgrade/architecture-guard-drill-report.md`
-- 最近月度复盘：`docs/upgrade/monthly-gate-failure-postmortem-2026-03.md`
+- [docs/README.md](docs/README.md)：项目文档索引
+- [docs/technical-selection.md](docs/technical-selection.md)：技术选型
+- [docs/project-architecture.md](docs/project-architecture.md)：项目架构
+- [docs/agent-design.md](docs/agent-design.md)：Agent 设计
+- [docs/project-screenshots.md](docs/project-screenshots.md)：项目截图
+- [docs/upgrade/](docs/upgrade/)：历史升级、演练和架构守卫材料
 
-本地执行：
+## 测试与质量门禁
+
+```bash
+pytest
+cd web && npm run lint
+```
+
+项目也保留脚本化门禁：
 
 ```bash
 bash scripts/quality_gate.sh
 ```
 
-## 🎤 答辩演示
-
-演示相关文档与脚本：
-
-- `docs/upgrade/demo-script.md`：8 分钟逐段台本（操作+话术）
-- `docs/upgrade/demo-rehearsal-checklist.md`：彩排与验收清单
-- `docs/upgrade/demo-risk-playbook.md`：现场应急预案
-- `scripts/demo_readiness_check.sh`：一键检查演示环境就绪度
-
-演示前检查：
-
-```bash
-bash scripts/demo_readiness_check.sh
-```
-
-## 📄 License
+## 许可证
 
 MIT
-
-## Demo Environment Variables
-
-For stable local demo and cross-machine portability, use:
-
-- `WRITINGBOT_API_URL` (default `http://127.0.0.1:5001`)
-- `FASTWRITE_URL` (default `http://127.0.0.1:3002`)
-- `NEXT_PUBLIC_FASTWRITE_URL` (default follows `FASTWRITE_URL`)
-
-Startup helpers:
-
-- macOS/Linux: `bash start_dev.sh`
-- Windows: `.\start_dev.ps1`
-- Preflight:
-  - macOS/Linux: `bash scripts/preflight_check.sh`
-  - Windows: `.\scripts\preflight_check.ps1`
-
-## Research Workflow Note
-
-- `/api/research` is now powered by `src/paper_workflow`.
-- `chat_research` and `writing` still run through the legacy orchestrator path in this pass.
-- Full regression validation for research endpoints expects `pytest`, `fastapi`, and knowledge-base dependencies to be installed in the local environment.

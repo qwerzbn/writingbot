@@ -27,7 +27,7 @@ writingbot/
 │  ├─ src/app/                 # chat/knowledge/notebook/research/settings 页面
 │  ├─ src/components/          # 组件层
 │  └─ src/lib/                 # API 调用与流式处理工具
-├─ FastWrite/                  # LaTeX 子项目（独立前后端）
+├─ 协同写作模块/                  # LaTeX 子项目（独立前后端）
 │  ├─ src/                     # Bun API
 │  └─ web/                     # Vite/React UI
 ├─ open-notebook/              # 独立上游子项目目录（默认不在主启动链路）
@@ -53,7 +53,7 @@ writingbot/
 | `src/services` | LLM 客户端、配置、提示词服务。 |
 | `src/session` | 会话读写与 JSONL 落盘。 |
 | `web` | 主业务 UI 与 `/api/*` 代理层。 |
-| `FastWrite` | 论文编辑子系统，通过 bridge 与主后端交互。 |
+| `协同写作模块` | 论文编辑子系统，通过 bridge 与主后端交互。 |
 | `data` | 系统运行数据与日志产物。 |
 | `scripts` | 测试门禁/发布门禁/架构漂移校验。 |
 
@@ -71,8 +71,8 @@ flowchart LR
   LLM[src/services/llm/*]
   SESS[src/session/manager.py]
   KB[data/knowledge_bases/*]
-  FW[FastWrite UI/API]
-  BRIDGE[src/api/routers/fastwrite_bridge.py]
+  FW[协同写作模块 UI/API]
+  BRIDGE[协同写作桥接路由]
 
   USER --> WEB --> PROXY --> API --> ROUTERS
   ROUTERS --> ORCH
@@ -87,8 +87,8 @@ flowchart LR
 1. `start_dev.sh` 启动 4 个服务：
    - WritingBot FastAPI（5001）
    - WritingBot Next.js（3000）
-   - FastWrite API（3003）
-   - FastWrite UI（3002）
+   - 协同写作模块 API（3003）
+   - 协同写作模块 UI（3002）
 2. `src/api/main.py` 统一注册业务路由。
 3. `web/src/app/api/[...path]/route.ts` 将浏览器 `/api/*` 转发到后端 `127.0.0.1:5001`。
 4. `main.py` 提供 CLI 模式（与 Web 并行存在）。
