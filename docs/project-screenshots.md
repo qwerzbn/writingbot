@@ -2,31 +2,62 @@
 
 ## 总览页
 
-当前主站总览页展示知识库数量、文档数量和核心功能入口。
+主站首页展示当前系统的总览信息和核心功能入口。
 
 ![WritingBot 总览页](assets/dashboard-overview.png)
 
-## 截图更新方式
+## 知识库列表
 
-启动主前端：
+知识库管理页展示现有知识库、文档数量和嵌入模型信息。
+
+![知识库列表](assets/knowledge-list.png)
+
+## 知识库详情
+
+知识库详情页展示文档列表、文档分块信息和导入入口。
+
+![知识库详情](assets/knowledge-detail.png)
+
+## 智能问答
+
+聊天页展示基于知识库的回答、思考进度和引用证据。
+
+![智能问答页面](assets/chat-workspace.png)
+
+## Notebook 列表
+
+Notebook 入口页展示最近的研究工作区和创建入口。
+
+![Notebook 列表](assets/notebook-list.png)
+
+## Notebook 工作区
+
+Notebook 工作区展示来源筛选、问答区和笔记区的联动布局。
+
+![Notebook 工作区](assets/notebook-workspace.png)
+
+## 协同写作
+
+协同写作页展示编辑器、目录结构和编译预览区。
+
+![协同写作页面](assets/co-writer-workspace.png)
+
+## 系统设置
+
+设置页展示 LLM 提供商、模型、接口地址和连通性测试入口。
+
+![系统设置](assets/settings-page.png)
+
+## 更新方式
+
+确保本地服务已经启动：
 
 ```bash
-cd web
-npm run dev -- --hostname 127.0.0.1 --port 3000
+bash start_dev.sh
 ```
 
-生成总览页截图：
+重新生成整组截图：
 
 ```bash
-cd web
-npx playwright screenshot --viewport-size=1440,960 http://127.0.0.1:3000 ../docs/assets/dashboard-overview.png
+cd web && node ../scripts/capture_project_screenshots.mjs
 ```
-
-## 建议补充截图
-
-后续在后端和本地数据准备完成后，可继续补充：
-
-- 知识库列表与 PDF 导入页面。
-- 智能问答页面的流式回答和来源引用。
-- 笔记本工作区的来源、笔记和输出列。
-- 协同写作页面的编辑器视图和 AI 辅助写作流程。
