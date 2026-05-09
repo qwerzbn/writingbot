@@ -9,7 +9,7 @@
 | [technical-selection.md](technical-selection.md) | 后端、前端、RAG、LLM、协同写作模块、质量工具的技术选型说明。 |
 | [project-architecture.md](project-architecture.md) | 当前项目架构、目录边界、运行链路和数据流。 |
 | [agent-design.md](agent-design.md) | Agent Runtime、内容 Agent、兼容适配器、共享能力与证据校验设计。 |
-| [project-screenshots.md](project-screenshots.md) | 当前主站截图和截图更新方式。 |
+| [project-screenshots.md](project-screenshots.md) | 当前主站演示截图册、功能页样例和截图更新方式。 |
 | [upgrade/](upgrade/) | 历史升级、演练、架构守卫和复盘资料。 |
 
 ## 当前文档口径
