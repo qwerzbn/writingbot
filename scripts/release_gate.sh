@@ -17,6 +17,16 @@ npm --prefix web run lint
 echo "[release-gate] building web"
 npm --prefix web run build
 
+if [[ -f FastWrite/package.json ]]; then
+  echo "[release-gate] testing embedded FastWrite"
+  (cd FastWrite && bun run test)
+
+  echo "[release-gate] typechecking embedded FastWrite"
+  (cd FastWrite && bun run typecheck)
+else
+  echo "[release-gate] embedded FastWrite package not found; degraded mode accepted"
+fi
+
 echo "[release-gate] checking latest evaluation report"
 python - <<'PY'
 import json

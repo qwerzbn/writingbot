@@ -29,7 +29,7 @@ function sourceLabel(detail: NotebookNoteDetail | WorkspaceNoteSummary): string 
       source.page !== undefined && source.page !== null ? ` · p.${source.page}` : ''
     }`;
   }
-  if (source.type === 'research') return '研究结果';
+  if (source.type === 'research') return '历史研究记录';
   if (source.type === 'co_writer') return '协同写作';
   return '手动笔记';
 }

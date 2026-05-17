@@ -20,7 +20,8 @@ flowchart TB
 
   subgraph APP["Application Layer"]
     ORCH["src/orchestrator/*"]
-    AGENTS["src/agents/*"]
+    RUNTIME["src/agent_runtime/*"]
+    WORKFLOW["src/agent_workflows/content/*"]
     SKILLS["src/skills/*"]
     RET["src/retrieval/*"]
     RAG["src/rag/*"]
@@ -37,10 +38,11 @@ flowchart TB
   FW --> BRIDGE
   MAIN --> ROUTERS
   ROUTERS --> ORCH
+  ORCH --> RUNTIME
+  RUNTIME --> WORKFLOW
   ROUTERS --> RAG
   ROUTERS --> RET
   ROUTERS --> SKILLS
-  ORCH --> AGENTS
   ORCH --> RET
   ORCH --> LLM
   ORCH --> SKILLS
@@ -59,8 +61,10 @@ sequenceDiagram
   participant P as web/src/app/api/[...path]/route.ts
   participant A as src/api/main.py + routers/chat.py
   participant O as src/orchestrator/service.py
+  participant RT as src/agent_runtime/runtime.py
   participant R as src/retrieval/hybrid.py
   participant V as src/knowledge/vector_store.py
+  participant W as src/agent_workflows/content/content_agent.py
   participant S as src/skills/*
   participant L as src/services/llm/client.py
   participant M as src/session/manager.py
@@ -72,11 +76,13 @@ sequenceDiagram
   Note over A: Rate Limit: 20 req / 10s<br/>Circuit: 5 failures -> open 20s
   A->>O: create_run(mode=chat_research)
   A->>O: stream_run(run_id)
-  O->>O: _step_plan()
-  O->>R: _step_retrieve() -> retrieve_by_sub_questions()
+  O->>RT: stream_run(run_id)
+  RT->>RT: _stream_content_run()
+  RT->>R: _retrieve_content_bundle() -> retrieve()
   R->>V: vector_store.search(query)
-  O->>S: resolve_skill_chain() + run_research_skill_chain()
-  O->>L: chat_stream(messages)
+  RT->>S: resolve_skill_chain() + run_research_skill_chain()
+  RT->>W: ContentAgent.execute()
+  W->>L: chat_stream(messages)
   Note over A,O: stream init retry max=2, backoff=0.35s
   O-->>A: chunk/sources/done events
   A->>M: save(session)
@@ -87,25 +93,27 @@ sequenceDiagram
 
 ## 3) File-Level Call Flow (`/api/chat/stream`)
 
-1. `web/src/app/chat/page.tsx`  
+1. `web/src/app/chat/page.tsx`
    `handleSend()` -> build request payload -> call `streamChat(...)`.
-2. `web/src/lib/chat.ts`  
+2. `web/src/lib/chat.ts`
    `streamChat()` -> `fetch('/api/chat/stream')` -> parse SSE blocks.
-3. `web/src/app/api/[...path]/route.ts`  
+3. `web/src/app/api/[...path]/route.ts`
    wildcard proxy -> backend `/api/*`.
-4. `src/api/main.py`  
+4. `src/api/main.py`
    mounts `chat.router` with prefix `/api`.
-5. `src/api/routers/chat.py`  
+5. `src/api/routers/chat.py`
    `chat_stream()` -> `_resolve_session()` -> `_stream_orchestrator_with_retry()`.
-6. `src/orchestrator/service.py`  
-   `create_run()` -> `stream_run()` -> `_step_plan()` -> `_step_retrieve()` -> `_step_synthesize()` -> `_step_critique()` -> `_step_finalize()`.
-7. `src/retrieval/hybrid.py` + `src/knowledge/vector_store.py`  
+6. `src/orchestrator/service.py`
+   compatibility facade delegates `create_run()` / `stream_run()` to `src/agent_runtime/runtime.py`.
+7. `src/agent_runtime/runtime.py`
+   `_stream_content_run()` prepares typed content state, calls `_retrieve_content_bundle()`, resolves skills, invokes the content workflow, records metrics, and emits normalized events.
+8. `src/retrieval/hybrid.py` + `src/knowledge/vector_store.py`
    hybrid recall (vector/BM25/graph) + rerank/judge/context; vector recall hits ChromaDB via `VectorStore.search()`.
-8. `src/skills/registry.py` + `src/skills/runtime.py`  
+9. `src/skills/registry.py` + `src/skills/runtime.py`
    resolve selected research skills and derive synthesis directives.
-9. `src/services/llm/client.py`  
-   streaming completion (`chat_stream`) to configured OpenAI-compatible endpoint.
-10. `src/session/manager.py`  
+10. `src/agent_workflows/content/content_agent.py` + `src/services/llm/client.py`
+   content prompt construction and streaming completion to the configured OpenAI-compatible endpoint.
+11. `src/session/manager.py`
     persist messages to `data/sessions/*.jsonl`.
 
 ## 4) Orchestrator Event Contract
@@ -123,10 +131,10 @@ sequenceDiagram
 - `src/api/main.py:96` -> `app.include_router(chat.router, prefix="/api", tags=["chat"])`
 - `src/api/routers/chat.py:964` -> `async def chat_stream(...)`
 - `src/api/routers/chat.py:580` -> `def _stream_orchestrator_with_retry(...)`
-- `src/orchestrator/service.py:106` -> `def stream_run(...)`
-- `src/orchestrator/service.py:364` -> `def _step_retrieve(...)`
-- `src/orchestrator/service.py:419` -> `def _step_synthesize(...)`
-- `src/retrieval/hybrid.py:244` -> `def retrieve_by_sub_questions(...)`
+- `src/orchestrator/service.py:36` -> `def stream_run(...)`
+- `src/agent_runtime/runtime.py:188` -> `def _stream_content_run(...)`
+- `src/agent_runtime/runtime.py:325` -> `def _retrieve_content_bundle(...)`
+- `src/retrieval/hybrid.py:189` -> `def retrieve(...)`
 - `src/knowledge/vector_store.py:204` -> `def search(...)`
 - `src/skills/registry.py:336` -> `def resolve_skill_chain(...)`
 - `src/skills/runtime.py:12` -> `def run_research_skill_chain(...)`
@@ -159,6 +167,8 @@ flowchart LR
   API_MAIN["src/api/main.py"]
   CHAT_ROUTER["src/api/routers/chat.py"]
   ORCH["src/orchestrator/service.py"]
+  RUNTIME["src/agent_runtime/runtime.py"]
+  CONTENT["src/agent_workflows/content/content_agent.py"]
   RET["src/retrieval/hybrid.py"]
   VSTORE["src/knowledge/vector_store.py"]
   SKILLS_REG["src/skills/registry.py"]
@@ -169,11 +179,12 @@ flowchart LR
 
   CHAT_PAGE --> CHAT_LIB --> API_PROXY --> API_MAIN --> CHAT_ROUTER
   CHAT_ROUTER --> ORCH
-  ORCH --> EVENTS
-  ORCH --> RET --> VSTORE
-  ORCH --> SKILLS_REG
-  ORCH --> SKILLS_RUN
-  ORCH --> LLM
+  ORCH --> RUNTIME
+  RUNTIME --> EVENTS
+  RUNTIME --> RET --> VSTORE
+  RUNTIME --> SKILLS_REG
+  RUNTIME --> SKILLS_RUN
+  RUNTIME --> CONTENT --> LLM
   CHAT_ROUTER --> SESS
 ```
 
@@ -232,9 +243,10 @@ sequenceDiagram
 | Idempotency replay lookup | `_find_idempotency_state` | `src/api/routers/chat.py` |
 | Rate limit / circuit | `_enforce_rate_limit` / `_enforce_circuit` | `src/api/routers/chat.py` |
 | Stream worker entry | `_stream_orchestrator_with_retry` | `src/api/routers/chat.py:580` |
-| Run lifecycle | `create_run` / `stream_run` | `src/orchestrator/service.py:62`, `:106` |
-| Retrieve stage | `_step_retrieve` | `src/orchestrator/service.py:364` |
-| Hybrid retrieval | `retrieve_by_sub_questions` | `src/retrieval/hybrid.py:244` |
+| Run lifecycle facade | `create_run` / `stream_run` | `src/orchestrator/service.py` |
+| Runtime content stream | `_stream_content_run` | `src/agent_runtime/runtime.py` |
+| Retrieve bundle | `_retrieve_content_bundle` | `src/agent_runtime/runtime.py` |
+| Hybrid retrieval | `retrieve` | `src/retrieval/hybrid.py` |
 | Vector search | `search` | `src/knowledge/vector_store.py:204` |
 | Skills resolution | `resolve_skill_chain` / `run_research_skill_chain` | `src/skills/registry.py:336`, `src/skills/runtime.py:12` |
 | LLM stream | `chat_stream` | `src/services/llm/client.py:61` |

@@ -51,6 +51,7 @@ sequenceDiagram
   participant P as web/src/app/api/[...path]/route.ts
   participant A as src/api/routers/chat.py
   participant O as src/orchestrator/service.py
+  participant RT as src/agent_runtime/runtime.py
   participant R as src/retrieval/hybrid.py
   participant L as src/services/llm/client.py
   participant M as src/session/manager.py
@@ -60,8 +61,9 @@ sequenceDiagram
   P->>A: proxy to 127.0.0.1:5001
   A->>A: idempotency/rate-limit/circuit
   A->>O: create_run + stream_run
-  O->>R: retrieve_by_sub_questions
-  O->>L: chat_stream(messages)
+  O->>RT: stream_run
+  RT->>R: retrieve
+  RT->>L: chat_stream(messages)
   O-->>A: step/chunk/sources/done
   A->>M: save(session)
   A-->>C: SSE chunk/sources/done
@@ -72,8 +74,9 @@ sequenceDiagram
 
 - `src/api/main.py`：注册所有路由，`chat.router` 挂载入口。
 - `src/api/routers/chat.py`：`/api/chat` 与 `/api/chat/stream`，含限流、熔断、幂等、SSE。
-- `src/orchestrator/service.py`：`stream_run` 五阶段编排（plan/retrieve/synthesize/critique/finalize）。
-- `src/retrieval/hybrid.py`：混合检索主入口 `retrieve_by_sub_questions`。
+- `src/orchestrator/service.py`：兼容 facade，委托统一 Agent Runtime。
+- `src/agent_runtime/runtime.py`：`stream_run` 内容链路编排（plan/retrieve/synthesize/critique）。
+- `src/retrieval/hybrid.py`：混合检索主入口 `retrieve`。
 - `src/services/llm/client.py`：统一 LLM 同步/流式调用。
 - `src/session/manager.py`：会话 JSONL 持久化。
 

@@ -100,15 +100,15 @@ echo
 if [[ "$MODE" == "markdown" ]]; then
   echo "- 1) start_dev.sh -> FastAPI(5001) + Next.js(3000) + FastWrite API(3003) + FastWrite UI(3002)"
   echo "- 2) web/src/app/api/[...path]/route.ts -> proxy /api/* to 127.0.0.1:5001"
-  echo "- 3) src/api/main.py -> include routers(chat/knowledge/notebook/research/co_writer/retrieval/...)"
-  echo "- 4) src/api/routers/chat.py -> orchestrator -> retrieval/llm/session persistence"
+  echo "- 3) src/api/main.py -> include routers(chat/knowledge/notebook/co_writer/retrieval/...)"
+  echo "- 4) src/api/routers/chat.py -> orchestrator facade -> agent runtime -> retrieval/llm/session persistence"
   echo "- 5) docs/upgrade/repo-structure-overview.md -> repository-level map"
   echo "- 6) docs/upgrade/architecture.md -> deep-dive for api/chat"
 else
   echo "1) start_dev.sh -> FastAPI(5001) + Next.js(3000) + FastWrite API(3003) + FastWrite UI(3002)"
   echo "2) web/src/app/api/[...path]/route.ts -> proxy /api/* to 127.0.0.1:5001"
-  echo "3) src/api/main.py -> include routers(chat/knowledge/notebook/research/co_writer/retrieval/...)"
-  echo "4) src/api/routers/chat.py -> orchestrator -> retrieval/llm/session persistence"
+  echo "3) src/api/main.py -> include routers(chat/knowledge/notebook/co_writer/retrieval/...)"
+  echo "4) src/api/routers/chat.py -> orchestrator facade -> agent runtime -> retrieval/llm/session persistence"
   echo "5) docs/upgrade/repo-structure-overview.md -> repository-level map"
   echo "6) docs/upgrade/architecture.md -> deep-dive for api/chat"
 fi
@@ -119,7 +119,8 @@ declare -a ANCHORS=(
   "src/api/main.py|app.include_router(chat.router"
   "src/api/routers/chat.py|async def chat_stream("
   "src/orchestrator/service.py|def stream_run("
-  "src/retrieval/hybrid.py|def retrieve_by_sub_questions("
+  "src/agent_runtime/runtime.py|def _retrieve_content_bundle("
+  "src/retrieval/hybrid.py|def retrieve("
   "src/services/llm/client.py|def chat_stream("
   "src/session/manager.py|def save("
 )

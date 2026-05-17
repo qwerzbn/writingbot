@@ -11,7 +11,7 @@ class _FakeOrchestrator:
         self._run = {
             "run_id": "run-123",
             "trace_id": "trace-123",
-            "mode": "research",
+            "mode": "writing",
             "payload": {},
             "status": "pending",
             "result": {},
@@ -123,7 +123,10 @@ def test_orchestrator_run_and_stream_endpoints(monkeypatch):
     app.include_router(orchestrator_router.router, prefix="/api")
     client = TestClient(app)
 
-    run_resp = client.post("/api/orchestrator/run", json={"mode": "research", "payload": {"topic": "hi"}})
+    run_resp = client.post(
+        "/api/orchestrator/run",
+        json={"mode": "writing", "payload": {"text": "hi", "action": "rewrite"}},
+    )
     assert run_resp.status_code == 200
     run_data = run_resp.json()["data"]
     assert run_data["run_id"] == "run-123"

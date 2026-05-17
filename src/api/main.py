@@ -25,7 +25,6 @@ from src.api.routers import (
     chat,
     knowledge,
     notebook,
-    research,
     co_writer,
     settings,
     orchestrator,
@@ -112,7 +111,6 @@ app.add_middleware(
 app.include_router(knowledge.router, prefix="/api", tags=["knowledge"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 app.include_router(notebook.router, prefix="/api", tags=["notebook"])
-app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(co_writer.router, prefix="/api", tags=["co-writer"])
 app.include_router(settings.router, prefix="/api", tags=["settings"])
 app.include_router(orchestrator.router, prefix="/api", tags=["orchestrator"])
@@ -125,6 +123,42 @@ app.include_router(skills.router, prefix="/api", tags=["skills"])
 @app.get("/")
 async def root():
     return {"message": "Welcome to WritingBot API (FastAPI)"}
+
+
+def _dependency_diagnostics() -> dict[str, dict[str, object]]:
+    try:
+        from src.services.llm import get_llm_config
+
+        llm_config = get_llm_config()
+        llm_status = {
+            "status": "enabled" if llm_config.is_enabled else "degraded",
+            "enabled": bool(llm_config.is_enabled),
+            "provider": llm_config.provider,
+            "model": llm_config.model,
+        }
+    except Exception as exc:  # noqa: BLE001
+        llm_status = {"status": "error", "enabled": False, "error": str(exc)}
+
+    reranker_provider = os.getenv("RERANKER_PROVIDER", "none").strip().lower()
+    reranker_disabled = reranker_provider in {"", "none", "disabled", "off"}
+    reranker_status = {
+        "status": "disabled" if reranker_disabled else "configured",
+        "provider": reranker_provider or "none",
+        "model": os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3"),
+    }
+
+    fastwrite_embed = fastwrite_bridge.fastwrite_embed_status()
+    fastwrite_status = {
+        "status": "available" if fastwrite_embed.get("embedded") else "missing",
+        "available": bool(fastwrite_embed.get("embedded")),
+        "path": str(fastwrite_embed.get("path") or ""),
+    }
+
+    return {
+        "llm": llm_status,
+        "reranker": reranker_status,
+        "fastwrite": fastwrite_status,
+    }
 
 
 @app.get("/api/health")
@@ -140,6 +174,7 @@ async def health():
                 "rejected_count": len(skills_report.get("rejected", [])),
                 "used_legacy_fallback": skills_report.get("used_legacy_fallback", False),
             },
+            "dependencies": _dependency_diagnostics(),
         },
     }
 

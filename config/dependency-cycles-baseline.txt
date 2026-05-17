@@ -1,4 +1,2 @@
 # Dependency cycle baseline (package-level)
 # One SCC per line
-
-rag <-> retrieval <-> services

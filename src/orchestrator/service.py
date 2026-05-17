@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Generator
 
 from src.agent_runtime.runtime import AgentRuntime, get_agent_runtime
+from src.knowledge.assets import interpret_asset_with_llm
 from src.orchestrator.models import OrchestratorMode
 from src.shared_capabilities.knowledge.evidence import augment_chart_evidence, normalize_paper_sources
 
@@ -39,27 +40,6 @@ class OrchestratorService:
     def stream_run(self, run_id: str) -> Generator[dict[str, Any], None, None]:
         yield from self._runtime.stream_run(run_id)
 
-    def run_research_workflow(
-        self,
-        topic: str,
-        kb_id: str | None = None,
-        run_id: str | None = None,
-        trace_id: str | None = None,
-    ) -> dict[str, Any]:
-        return self._runtime.run_research_workflow(
-            topic=topic,
-            kb_id=kb_id,
-            run_id=run_id,
-            trace_id=trace_id,
-        )
-
-    def stream_research_workflow(
-        self,
-        topic: str,
-        kb_id: str | None = None,
-    ) -> Generator[dict[str, Any], None, None]:
-        yield from self._runtime.stream_research_workflow(topic=topic, kb_id=kb_id)
-
     def _augment_chart_evidence(
         self,
         kb_id: str,
@@ -72,7 +52,8 @@ class OrchestratorService:
             query=query,
             context=context,
             sources=sources,
-            data_dir=DATA_DIR / "knowledge_bases",
+            data_dir=DATA_DIR,
+            interpreter=interpret_asset_with_llm,
         )
 
     @staticmethod

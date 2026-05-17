@@ -267,7 +267,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
     const sourceLabel = () => {
         if (!note.source || note.source.type === 'manual') return null;
         if (note.source.type === 'co_writer') return '✍️ 来自协同写作';
-        if (note.source.type === 'research') return '🔬 来自深度研究';
+        if (note.source.type === 'research') return '🗂️ 来自历史研究记录';
         if (note.source.type === 'knowledge_base')
             return `📚 ${note.source.file_name || '知识库'}${note.source.page ? ` p.${note.source.page}` : ''}`;
         return null;
@@ -461,14 +461,14 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="笔记标题"
-                    className="w-full text-xl font-bold bg-transparent outline-none text-slate-800 dark:text-white placeholder:text-slate-400"
+                    className="w-full text-xl font-bold bg-transparent outline-none text-black  placeholder:text-black"
                 />
 
                 {/* Tags */}
                 <TagInput tags={tags} onChange={handleTagsChange} />
 
                 {/* Meta row */}
-                <div className="flex items-center gap-4 text-xs text-slate-400">
+                <div className="flex items-center gap-4 text-xs text-black">
                     {sourceLabel() && (
                         <span className="flex items-center gap-1">
                             {sourceLabel()}
@@ -492,8 +492,8 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                     </div>
                 )}
                 {(note.source && ((note.source?.citation_count ?? 0) > 0 || (note.source?.evidence_links?.length ?? 0) > 0 || Boolean(note.source?.type))) && (
-                    <div className="text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-2 text-slate-600 dark:text-slate-300 space-y-1">
-                        <div className="font-medium text-slate-700 dark:text-slate-200">证据视图</div>
+                    <div className="text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-2 text-black dark:text-black space-y-1">
+                        <div className="font-medium text-black dark:text-black">证据视图</div>
                         <div>
                             引用次数：{note.source?.citation_count ?? 0}
                             {note.source?.last_used_at ? ` · 最近使用：${new Date(note.source.last_used_at).toLocaleString('zh-CN')}` : ''}
@@ -505,7 +505,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 </div>
                             ))
                         ) : (
-                            <div className="text-slate-400 dark:text-slate-500">当前笔记没有可展示的来源片段。</div>
+                            <div className="text-black dark:text-black">当前笔记没有可展示的来源片段。</div>
                         )}
                     </div>
                 )}
@@ -521,7 +521,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                             onClick={action}
                             title={label}
                             disabled={mode === 'preview' || Boolean(aiAction)}
-                            className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 disabled:opacity-30 transition-colors"
+                            className="p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-black dark:text-black disabled:opacity-30 transition-colors"
                         >
                             <Icon size={15} />
                         </button>
@@ -530,7 +530,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                         onClick={insertPaperTemplate}
                         title="插入论文阅读模板"
                         disabled={mode === 'preview' || Boolean(aiAction)}
-                        className="ml-1 p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 disabled:opacity-30 transition-colors"
+                        className="ml-1 p-1.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-black dark:text-black disabled:opacity-30 transition-colors"
                     >
                         <BookOpen size={15} />
                     </button>
@@ -548,8 +548,8 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                             onClick={() => setMode(key)}
                             className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-all ${
                                 mode === key
-                                    ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm'
-                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                    ? 'bg-white dark:bg-slate-600 text-black  shadow-sm'
+                                    : 'text-black dark:text-black hover:text-black dark:hover:text-black'
                             }`}
                         >
                             <Icon size={13} />
@@ -570,7 +570,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                             onChange={(e) => handleContentChange(e.target.value)}
                             disabled={Boolean(aiAction)}
                             placeholder="在这里书写 Markdown 笔记...&#10;&#10;支持 LaTeX: $E=mc^2$&#10;支持代码块、表格等"
-                            className="flex-1 w-full p-6 pb-20 bg-transparent outline-none resize-none text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 font-mono leading-relaxed disabled:opacity-80 disabled:cursor-not-allowed"
+                            className="flex-1 w-full p-6 pb-20 bg-transparent outline-none resize-none text-sm text-black dark:text-black placeholder:text-black font-mono leading-relaxed disabled:opacity-80 disabled:cursor-not-allowed"
                         />
                     </div>
                 )}
@@ -583,7 +583,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 <MarkdownRenderer content={content} />
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                            <div className="flex flex-col items-center justify-center h-full text-black">
                                 <BookOpen size={32} className="mb-2 opacity-30" />
                                 <p className="text-sm">暂无内容</p>
                             </div>
@@ -598,7 +598,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
             <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
                 <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        <span className="text-[11px] font-medium text-black dark:text-black">
                             相关笔记
                         </span>
                         <button
@@ -606,14 +606,14 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                             className={`px-1.5 py-0.5 rounded text-[10px] border ${
                                 highRelevanceOnly
                                     ? 'text-indigo-600 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/20'
-                                    : 'text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                                    : 'text-black dark:text-black border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                             }`}
                         >
                             {highRelevanceOnly ? '高相关' : '全部'}
                         </button>
                     </div>
                     {loadingRelated && (
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <span className="text-[10px] text-black flex items-center gap-1">
                             <Loader2 size={10} className="animate-spin" />
                             计算中
                         </span>
@@ -625,22 +625,22 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                             <button
                                 key={item.id}
                                 onClick={() => onSelectRelated?.(item.id, item.notebook_id)}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
                                 title={`${item.notebook_name ? `${item.notebook_name} · ` : ''}${item.title}`}
                             >
                                 <BookOpen size={11} />
                                 <span className="max-w-[180px] truncate">{item.title}</span>
                                 {item.notebook_name && item.notebook_id !== note.notebook_id && (
-                                    <span className="text-[10px] text-slate-400">[{item.notebook_name}]</span>
+                                    <span className="text-[10px] text-black">[{item.notebook_name}]</span>
                                 )}
                                 {typeof item.score === 'number' && (
-                                    <span className="text-[10px] text-slate-400">({item.score.toFixed(1)})</span>
+                                    <span className="text-[10px] text-black">({item.score.toFixed(1)})</span>
                                 )}
                             </button>
                         ))}
                     </div>
                 ) : (
-                    <p className="text-[11px] text-slate-400">暂无可推荐的相关笔记</p>
+                    <p className="text-[11px] text-black">暂无可推荐的相关笔记</p>
                 )}
             </div>
 
@@ -671,13 +671,13 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 onClick={() => handleAiAction('polish')}
                                 disabled={!hasContent}
                                 title={hasContent ? '润色全文' : '请先输入笔记内容'}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Sparkles size={13} /> 润色全文
                             </button>
                             <button
                                 onClick={() => handleAiAction('continue')}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50"
                             >
                                 <Edit3 size={13} /> AI 续写
                             </button>
@@ -685,7 +685,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 onClick={() => handleAiAction('summarize')}
                                 disabled={!hasContent}
                                 title={hasContent ? '生成摘要' : '请先输入笔记内容'}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FileText size={13} /> 生成摘要
                             </button>
@@ -693,7 +693,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 onClick={() => handleAiAction('summarize', '', { writeToContent: false })}
                                 disabled={!hasContent}
                                 title={hasContent ? '更新摘要卡片' : '请先输入笔记内容'}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FileText size={13} /> 更新摘要卡片
                             </button>
@@ -701,7 +701,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                 onClick={() => handleAiAction('suggest_tags')}
                                 disabled={!hasContent}
                                 title={hasContent ? '推荐标签' : '请先输入笔记内容'}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Tags size={13} /> 推荐标签
                             </button>
@@ -710,7 +710,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                     'custom',
                                     '请将当前内容整理为论文阅读卡片，按“研究问题 / 方法 / 关键发现 / 局限性 / 可复现线索”输出，每部分用 Markdown 小标题。'
                                 )}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
                             >
                                 <FileText size={13} /> 提炼要点
                             </button>
@@ -719,7 +719,7 @@ export default function NoteEditor({ note, onSave, saving, saveConflict, onSelec
                                     'custom',
                                     '请基于当前内容提出 5 个高质量批判性思考问题，并给出每个问题对应的简短分析角度。使用 Markdown 列表输出。'
                                 )}
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white dark:bg-slate-800 text-black dark:text-black hover:text-indigo-600 dark:hover:text-indigo-400 shadow-sm border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all"
                             >
                                 <Sparkles size={13} /> 批判问题
                             </button>

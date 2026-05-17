@@ -194,7 +194,7 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const messages = useMemo(() => activeConversation.messages || [], [activeConversation]);
-  const slashQuery = useMemo(() => parseSlashQuery(input), [input]);
+  const slashQuery = useMemo(() => (skills.length > 0 ? parseSlashQuery(input) : null), [input, skills.length]);
   const visibleSkills = useMemo(() => {
     if (slashQuery === null) return [];
     if (!slashQuery) return skills;

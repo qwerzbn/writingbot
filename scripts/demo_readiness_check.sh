@@ -68,7 +68,6 @@ paths = set(spec.get("paths", {}).keys())
 required = {
     "/api/orchestrator/run",
     "/api/orchestrator/stream/{run_id}",
-    "/api/research/stream",
     "/api/kbs/{kb_id}/assets",
     "/api/kbs/{kb_id}/assets/{asset_id}/interpret",
     "/api/notebooks/{notebook_id}/imports/kb",
@@ -165,11 +164,11 @@ try:
         sys.exit(1)
 
     req = urllib.request.Request(
-        f"{api}/api/notebooks/{notebook_id}/events?cursor=0",
+        f"{api}/api/notebooks/{notebook_id}/events?cursor=0&single_pass=1",
         method="GET",
     )
     with urllib.request.urlopen(req, timeout=6.0) as resp:
-        chunk = resp.read(2048).decode("utf-8", errors="ignore")
+        chunk = resp.read(4096).decode("utf-8", errors="ignore")
         if "data:" not in chunk and ": ping" not in chunk:
             print("events stream did not emit SSE payload")
             sys.exit(1)
@@ -243,7 +242,7 @@ PY
 echo
 echo "Recommended manual checks:"
 echo "1) Chat page: run one query and confirm citations appear."
-echo "2) Research page: confirm both plan and report stream."
+echo "2) Orchestrator diagnostics: confirm chat_research steps and metrics stream."
 echo "3) Notebook page: confirm import progress + graph + insights."
 echo "4) Co-writer page: verify available mode or degraded explanation."
 echo "5) Degraded path rehearsal: FastWrite down / model timeout / offline fallback."

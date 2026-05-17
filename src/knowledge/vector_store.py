@@ -30,7 +30,7 @@ load_dotenv()
 # ==============================================================================
 
 
-def _hashing_embedding_function(dim: int = 384) -> Callable:
+def _hashing_embedding_function(dim: int = 1024) -> Callable:
     """
     Lightweight deterministic fallback embedding.
 
@@ -59,6 +59,31 @@ def _hashing_embedding_function(dim: int = 384) -> Callable:
     return embed_fn
 
 
+def _env_flag(name: str) -> bool:
+    return str(os.getenv(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _annotate_embedding_function(
+    embed_fn: Callable,
+    *,
+    backend: str,
+    model: str,
+    dimension: int | None,
+    is_fallback: bool,
+) -> Callable:
+    embed_fn.embedding_backend = backend
+    embed_fn.embedding_model = model
+    embed_fn.embedding_dimension = dimension
+    embed_fn.is_fallback = is_fallback
+    return embed_fn
+
+
+def _rows_to_list(rows: Any) -> List[List[float]]:
+    if hasattr(rows, "tolist"):
+        return rows.tolist()
+    return rows
+
+
 def get_embedding_function(provider: str, model: str, base_url: str = None, api_key: str = None) -> Callable:
     """
     Create an embedding function based on the provider.
@@ -79,18 +104,43 @@ def get_embedding_function(provider: str, model: str, base_url: str = None, api_
             from sentence_transformers import SentenceTransformer
 
             st_model = SentenceTransformer(model)
+            dimension = None
+            if hasattr(st_model, "get_sentence_embedding_dimension"):
+                dimension = st_model.get_sentence_embedding_dimension()
+            if not dimension:
+                probe = _rows_to_list(st_model.encode(["dimension probe"], show_progress_bar=False))
+                dimension = len(probe[0]) if probe else None
 
             def embed_fn(texts: List[str]) -> List[List[float]]:
                 embeddings = st_model.encode(texts, show_progress_bar=len(texts) > 10)
-                return embeddings.tolist()
+                return _rows_to_list(embeddings)
 
-            return embed_fn
+            return _annotate_embedding_function(
+                embed_fn,
+                backend="sentence-transformers",
+                model=model,
+                dimension=int(dimension) if dimension else None,
+                is_fallback=False,
+            )
         except Exception as exc:
+            if not _env_flag("ALLOW_HASHING_EMBEDDING_FALLBACK"):
+                raise RuntimeError(
+                    "Unable to load sentence-transformers embedding model "
+                    f"{model!r}. Install a compatible torch/transformers/"
+                    "sentence-transformers stack, or set "
+                    "ALLOW_HASHING_EMBEDDING_FALLBACK=true only for local demos."
+                ) from exc
             print(
                 "[vector_store] sentence-transformers unavailable, "
                 f"falling back to hashing embeddings: {exc}"
             )
-            return _hashing_embedding_function()
+            return _annotate_embedding_function(
+                _hashing_embedding_function(),
+                backend="hashing",
+                model=model,
+                dimension=1024,
+                is_fallback=True,
+            )
     
     elif provider == "ollama":
         import requests
@@ -111,7 +161,13 @@ def get_embedding_function(provider: str, model: str, base_url: str = None, api_
                     raise ValueError(f"Ollama API Error: {resp.text}")
                 embeddings.append(resp.json()["embedding"])
             return embeddings
-        return embed_fn
+        return _annotate_embedding_function(
+            embed_fn,
+            backend="ollama",
+            model=model,
+            dimension=None,
+            is_fallback=False,
+        )
     
     elif provider == "openai":
         from openai import OpenAI
@@ -129,7 +185,13 @@ def get_embedding_function(provider: str, model: str, base_url: str = None, api_
                 response = client.embeddings.create(model=model, input=batch)
                 all_embeddings.extend([item.embedding for item in response.data])
             return all_embeddings
-        return embed_fn
+        return _annotate_embedding_function(
+            embed_fn,
+            backend="openai",
+            model=model,
+            dimension=None,
+            is_fallback=False,
+        )
     
     else:
         raise ValueError(f"Unknown embedding provider: {provider}")
@@ -197,7 +259,7 @@ class VectorStore:
         
         # Embedding configuration (from env or args)
         self.embedding_provider = embedding_provider or os.getenv("EMBEDDING_PROVIDER", "sentence-transformers")
-        self.model_name = embedding_model or os.getenv("EMBEDDING_MODEL", "all-mpnet-base-v2")
+        self.model_name = embedding_model or os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
         self.embedding_base_url = embedding_base_url or os.getenv("EMBEDDING_BASE_URL")
         self.embedding_api_key = embedding_api_key or os.getenv("EMBEDDING_API_KEY")
         
@@ -208,6 +270,16 @@ class VectorStore:
             model=self.model_name,
             base_url=self.embedding_base_url,
             api_key=self.embedding_api_key
+        )
+        self._query_embedding_cache: Dict[str, List[float]] = {}
+        self.embedding_backend = getattr(self._embed, "embedding_backend", self.embedding_provider)
+        self.embedding_dimension = getattr(self._embed, "embedding_dimension", None)
+        self.embedding_is_fallback = bool(getattr(self._embed, "is_fallback", False))
+        print(
+            "Embedding backend ready: "
+            f"backend={self.embedding_backend}, model={self.model_name}, "
+            f"dimension={self.embedding_dimension or 'unknown'}, "
+            f"fallback={self.embedding_is_fallback}"
         )
         
         # Initialize ChromaDB with persistent storage
@@ -223,6 +295,21 @@ class VectorStore:
         )
         
         print(f"Vector store initialized: {self.collection_name} ({self._collection.count()} documents)")
+
+    def _embed_query(self, query: str) -> List[float]:
+        cache = getattr(self, "_query_embedding_cache", None)
+        if cache is None:
+            cache = {}
+            self._query_embedding_cache = cache
+        cached = cache.get(query)
+        if cached is not None:
+            return cached
+        embedding = self._embed([query])[0]
+        if len(cache) >= 128:
+            oldest_key = next(iter(cache))
+            cache.pop(oldest_key, None)
+        cache[query] = embedding
+        return embedding
     
     def add_chunks(self, chunks: List[Dict[str, Any]]) -> int:
         """
@@ -288,7 +375,7 @@ class VectorStore:
             List of results with content, metadata, and score
         """
         # Generate query embedding
-        query_embedding = self._embed([query])[0]
+        query_embedding = self._embed_query(query)
         
         # Build query params
         query_params = {
@@ -323,7 +410,10 @@ class VectorStore:
             "document_count": self._collection.count(),
             "persist_dir": str(self.persist_dir),
             "embedding_provider": self.embedding_provider,
-            "embedding_model": self.model_name
+            "embedding_model": self.model_name,
+            "embedding_backend": self.embedding_backend,
+            "embedding_dimension": self.embedding_dimension,
+            "embedding_is_fallback": self.embedding_is_fallback,
         }
     
     def clear(self) -> bool:

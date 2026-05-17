@@ -25,6 +25,35 @@ class KnowledgeIndexStore:
 
     def __init__(self, base_dir: str | Path = "./data/knowledge_bases"):
         self.base_dir = Path(base_dir)
+        self._cache: dict[tuple[str, str], tuple[tuple[int, int], Any]] = {}
+
+    @staticmethod
+    def _file_signature(path: Path) -> tuple[int, int] | None:
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            return None
+        return stat.st_mtime_ns, stat.st_size
+
+    def _get_cached(self, kind: str, kb_id: str, path: Path) -> Any | None:
+        signature = self._file_signature(path)
+        if signature is None:
+            self._cache.pop((kind, kb_id), None)
+            return None
+        cached = self._cache.get((kind, kb_id))
+        if cached and cached[0] == signature:
+            return cached[1]
+        return None
+
+    def _set_cached(self, kind: str, kb_id: str, path: Path, value: Any) -> Any:
+        signature = self._file_signature(path)
+        if signature is not None:
+            self._cache[(kind, kb_id)] = (signature, value)
+        return value
+
+    def _invalidate_cache(self, kb_id: str) -> None:
+        for key in [key for key in self._cache if key[1] == kb_id]:
+            self._cache.pop(key, None)
 
     def _index_dir(self, kb_id: str, ensure: bool = False) -> Path:
         path = self.base_dir / kb_id / "indexes"
@@ -44,7 +73,11 @@ class KnowledgeIndexStore:
     def load_docs(self, kb_id: str) -> list[IndexedDoc]:
         docs_file = self._docs_file(kb_id)
         if not docs_file.exists():
+            self._cache.pop(("docs", kb_id), None)
             return []
+        cached = self._get_cached("docs", kb_id, docs_file)
+        if cached is not None:
+            return cached
         docs: list[IndexedDoc] = []
         with open(docs_file, encoding="utf-8") as f:
             for line in f:
@@ -60,7 +93,7 @@ class KnowledgeIndexStore:
                         tokens=item.get("tokens", []),
                     )
                 )
-        return docs
+        return self._set_cached("docs", kb_id, docs_file, docs)
 
     def upsert_chunks(self, kb_id: str, chunks: list[dict[str, Any]]) -> int:
         existing_docs = {doc.doc_id: doc for doc in self.load_docs(kb_id)}
@@ -99,6 +132,7 @@ class KnowledgeIndexStore:
 
         self._rebuild_bm25_stats(kb_id, docs)
         self._rebuild_concept_graph(kb_id, docs)
+        self._invalidate_cache(kb_id)
         return changed
 
     def delete_by_file_id(self, kb_id: str, file_id: str) -> int:
@@ -124,6 +158,7 @@ class KnowledgeIndexStore:
                 )
         self._rebuild_bm25_stats(kb_id, kept)
         self._rebuild_concept_graph(kb_id, kept)
+        self._invalidate_cache(kb_id)
         return removed
 
     def rebuild_from_chunks(self, kb_id: str, chunks: list[dict[str, Any]]) -> int:
@@ -159,6 +194,7 @@ class KnowledgeIndexStore:
         doc_rows = list(docs.values())
         self._rebuild_bm25_stats(kb_id, doc_rows)
         self._rebuild_concept_graph(kb_id, doc_rows)
+        self._invalidate_cache(kb_id)
         return len(doc_rows)
 
     def _rebuild_bm25_stats(self, kb_id: str, docs: list[IndexedDoc]) -> None:
@@ -183,9 +219,13 @@ class KnowledgeIndexStore:
     def load_bm25_stats(self, kb_id: str) -> dict[str, Any]:
         stats_file = self._bm25_stats_file(kb_id)
         if not stats_file.exists():
+            self._cache.pop(("bm25", kb_id), None)
             return {"doc_count": 0, "doc_lens": {}, "avgdl": 0.0, "df": {}}
+        cached = self._get_cached("bm25", kb_id, stats_file)
+        if cached is not None:
+            return cached
         with open(stats_file, encoding="utf-8") as f:
-            return json.load(f)
+            return self._set_cached("bm25", kb_id, stats_file, json.load(f))
 
     def _rebuild_concept_graph(self, kb_id: str, docs: list[IndexedDoc]) -> None:
         edges: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -209,6 +249,10 @@ class KnowledgeIndexStore:
     def load_graph(self, kb_id: str) -> dict[str, Any]:
         graph_file = self._graph_file(kb_id)
         if not graph_file.exists():
+            self._cache.pop(("graph", kb_id), None)
             return {"edges": {}, "concept_docs": {}}
+        cached = self._get_cached("graph", kb_id, graph_file)
+        if cached is not None:
+            return cached
         with open(graph_file, encoding="utf-8") as f:
-            return json.load(f)
+            return self._set_cached("graph", kb_id, graph_file, json.load(f))

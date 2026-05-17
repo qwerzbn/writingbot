@@ -17,6 +17,10 @@ from src.shared_capabilities.knowledge import augment_chart_evidence, get_vector
 
 
 router = APIRouter()
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DATA_DIR = PROJECT_ROOT / "data"
+
+
 class EditRequest(BaseModel):
     text: str
     action: Literal["rewrite", "expand", "shorten", "polish"] = "rewrite"
@@ -47,7 +51,7 @@ async def get_writing_evidence(req: EvidenceRequest):
         query=req.query,
         context=data.get("context_window", {}).get("context", ""),
         sources=data.get("sources", []) or [],
-        data_dir=Path(__file__).resolve().parents[4] / "data" / "knowledge_bases",
+        data_dir=DATA_DIR,
     )
     return {"success": True, "data": augmented.get("sources", [])}
 

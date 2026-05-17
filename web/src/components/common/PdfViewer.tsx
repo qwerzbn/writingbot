@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Maximize2, Loader2 } from 'lucide-react';
 
@@ -23,7 +23,13 @@ export default function PdfViewer({ fileUrl, initialPage = 1, highlightBoxes = [
     const [isLoading, setIsLoading] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [pageBaseSize, setPageBaseSize] = useState<{ width: number; height: number } | null>(null);
-    const [pageViewport, setPageViewport] = useState<{ width: number; height: number } | null>(null);
+    const pageViewport = useMemo(() => {
+        if (!pageBaseSize) return null;
+        return {
+            width: pageBaseSize.width * scale,
+            height: pageBaseSize.height * scale,
+        };
+    }, [pageBaseSize, scale]);
 
     // Sync pageNumber when initialPage prop changes (e.g., user clicked a citation)
     useEffect(() => {
@@ -40,16 +46,7 @@ export default function PdfViewer({ fileUrl, initialPage = 1, highlightBoxes = [
         setPageNumber(initialPage || 1);
         setScale(1.0);
         setPageBaseSize(null);
-        setPageViewport(null);
     }, [fileUrl, initialPage]);
-
-    useEffect(() => {
-        if (!pageBaseSize) return;
-        setPageViewport({
-            width: pageBaseSize.width * scale,
-            height: pageBaseSize.height * scale,
-        });
-    }, [pageBaseSize, scale]);
 
     if (!fileUrl) return null;
 

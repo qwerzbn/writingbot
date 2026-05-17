@@ -116,3 +116,24 @@ def test_fastwrite_health_endpoint_reports_unavailable(monkeypatch):
     data = resp.json()["data"]
     assert data["url"] == "http://127.0.0.1:9"
     assert data["available"] is False
+
+
+def test_fastwrite_health_reports_missing_embed_without_network_probe(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_urlopen(*args, **kwargs):
+        calls.append((args, kwargs))
+        raise AssertionError("health should not probe service when embedded package is missing")
+
+    monkeypatch.setenv("FASTWRITE_EMBED_DIR", str(tmp_path / "missing-fastwrite"))
+    monkeypatch.setattr(fastwrite_bridge.urllib_request, "urlopen", fake_urlopen)
+
+    client = build_client()
+    resp = client.get("/api/fastwrite/health")
+
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["available"] is False
+    assert data["status"] == "missing"
+    assert "package.json" in data["error"]
+    assert calls == []

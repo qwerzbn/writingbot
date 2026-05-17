@@ -9,7 +9,7 @@ from typing import Any, Literal
 from src.agent_runtime.store import RunRecord
 
 
-OrchestratorMode = Literal["research", "writing", "chat_research"]
+OrchestratorMode = Literal["writing", "chat_research"]
 OrchestratorStep = Literal["plan", "retrieve", "synthesize", "critique", "finalize"]
 StepStatus = Literal["working", "done", "retry", "skipped", "error"]
 

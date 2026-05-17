@@ -99,7 +99,7 @@
 ## 演示中要点名的接口（架构导向）
 
 1. 编排：`/api/orchestrator/run`、`/api/orchestrator/stream/{run_id}`。
-2. 研究流：`/api/research/stream`。
+2. 聊天研究流：`/api/chat/stream`，内部创建 `chat_research` run。
 3. 笔记增强：`/api/notebooks/{id}/imports/kb`、`/api/notebooks/{id}/graph`、`/api/notebooks/{id}/insights`、`/api/notebooks/{id}/notes/{note_id}/extract`。
 4. 图表资产：`/api/kbs/{kb_id}/assets`、`/api/kbs/{kb_id}/assets/{asset_id}/interpret`。
-5. 主站功能页：聊天、研究、笔记本、协同写作。
+5. 主站功能页：聊天、知识库、笔记本、协同写作。

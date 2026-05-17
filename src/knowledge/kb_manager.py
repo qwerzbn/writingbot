@@ -117,7 +117,7 @@ class KnowledgeBaseManager:
     def create_kb(
         self,
         name: str,
-        embedding_model: str = "sentence-transformers/all-mpnet-base-v2",
+        embedding_model: str = "BAAI/bge-m3",
         embedding_provider: str = "sentence-transformers",
         description: str = ""
     ) -> dict:

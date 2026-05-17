@@ -14,17 +14,18 @@
 writingbot/
 ├─ src/                        # 主 Python 后端
 │  ├─ api/                     # FastAPI 入口与路由注册
-│  │  └─ routers/              # chat/knowledge/notebook/research/... 路由
-│  ├─ orchestrator/            # 多阶段编排（plan/retrieve/synthesize/critique/finalize）
+│  │  └─ routers/              # chat/knowledge/notebook/co_writer/... 路由
+│  ├─ orchestrator/            # 兼容 facade，委托统一 Agent Runtime
+│  ├─ agent_runtime/           # typed state、运行记录、事件流和内容链路
 │  ├─ retrieval/               # 混合检索（vector + BM25 + graph）
 │  ├─ rag/                     # RAG pipeline 与组件
 │  ├─ knowledge/               # KB 管理与向量库接口
 │  ├─ session/                 # 会话 JSONL 持久化
 │  ├─ services/                # LLM/config/prompt 服务层
-│  ├─ agents/                  # research/co_writer/chat agent
+│  ├─ agents/                  # chat/co_writer legacy adapter import paths
 │  └─ skills/                  # skills registry/runtime
 ├─ web/                        # 主前端（Next.js）
-│  ├─ src/app/                 # chat/knowledge/notebook/research/settings 页面
+│  ├─ src/app/                 # chat/knowledge/notebook/co-writer/settings 页面
 │  ├─ src/components/          # 组件层
 │  └─ src/lib/                 # API 调用与流式处理工具
 ├─ 协同写作模块/                  # LaTeX 子项目（独立前后端）

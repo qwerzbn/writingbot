@@ -61,7 +61,7 @@ def get_vector_store(kb_id: str):
 
     vector_path = kb_manager.get_vector_store_path(kb_id)
     embedding_provider = kb.get("embedding_provider", "sentence-transformers")
-    embedding_model = kb.get("embedding_model", "sentence-transformers/all-mpnet-base-v2")
+    embedding_model = kb.get("embedding_model", "BAAI/bge-m3")
 
     return VectorStore(
         persist_dir=str(vector_path),
@@ -83,7 +83,7 @@ async def test_embedding(request: Request):
     """Test embedding provider connectivity before creating a KB."""
     data = await request.json()
     provider = data.get("embedding_provider", "sentence-transformers")
-    model = data.get("embedding_model", "sentence-transformers/all-mpnet-base-v2")
+    model = data.get("embedding_model", "BAAI/bge-m3")
     api_key = data.get("api_key")  # Optional override
     base_url = data.get("base_url")  # Optional override
 
@@ -97,8 +97,21 @@ async def test_embedding(request: Request):
         )
         # Try embedding a short test string
         result = embed_fn(["test connection"])
+        if getattr(embed_fn, "is_fallback", False):
+            return {
+                "success": False,
+                "error": "Embedding fallback to hashing embeddings is active; real embedding model is unavailable",
+                "backend": getattr(embed_fn, "embedding_backend", "unknown"),
+                "model": getattr(embed_fn, "embedding_model", model),
+                "dimension": getattr(embed_fn, "embedding_dimension", len(result[0]) if result else None),
+            }
         if result and len(result) > 0 and len(result[0]) > 0:
-            return {"success": True, "dimension": len(result[0])}
+            return {
+                "success": True,
+                "dimension": getattr(embed_fn, "embedding_dimension", len(result[0])),
+                "backend": getattr(embed_fn, "embedding_backend", provider),
+                "model": getattr(embed_fn, "embedding_model", model),
+            }
         else:
             return {"success": False, "error": "Embedding returned empty result"}
     except Exception as e:
@@ -133,7 +146,7 @@ async def create_kb(request: Request):
         elif embedding_provider == "openai":
             embedding_model = "text-embedding-3-small"
         else:
-            embedding_model = "sentence-transformers/all-mpnet-base-v2"
+            embedding_model = "BAAI/bge-m3"
 
     kb = get_kb_manager().create_kb(name, embedding_model, embedding_provider, description)
     return {"success": True, "data": kb}

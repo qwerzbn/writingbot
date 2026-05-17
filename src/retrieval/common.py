@@ -12,9 +12,60 @@ from typing import Any
 
 
 def tokenize(text: str) -> list[str]:
+    """Bilingual tokenizer: jieba for Chinese, regex for English/numbers.
+
+    Previous implementation split Chinese into individual characters which
+    caused massive recall failures when queries were in Chinese but document
+    content was in English (zero overlap).  The new version uses *jieba* for
+    Chinese word-level segmentation and keeps the original ``[A-Za-z0-9_]{2,}``
+    regex for English/number tokens.
+    """
     if not text:
         return []
-    return re.findall(r"[A-Za-z0-9_]{2,}|[\u4e00-\u9fff]", text.lower())
+    text = text.lower()
+    tokens: list[str] = []
+    # Split on boundaries between CJK and non-CJK runs.
+    segments = _CJK_SEGMENT_RE.split(text)
+    for segment in segments:
+        if not segment or not segment.strip():
+            continue
+        if _CJK_CHAR_RE.search(segment):
+            # Chinese: use jieba word segmentation
+            for word in _jieba_cut(segment):
+                word = word.strip()
+                if not word:
+                    continue
+                # Keep multi-char words; drop noise single-chars
+                if len(word) >= 2:
+                    tokens.append(word)
+                elif word not in _CJK_SINGLE_NOISE:
+                    tokens.append(word)
+        else:
+            # English / numbers: 2+ char tokens
+            tokens.extend(re.findall(r"[A-Za-z0-9_]{2,}", segment))
+    return tokens
+
+
+# Regex to split text into CJK and non-CJK segments (capture group keeps CJK parts).
+_CJK_SEGMENT_RE = re.compile(r"([\u4e00-\u9fff\u3400-\u4dbf]+)")
+_CJK_CHAR_RE = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf]")
+
+# Common single-char noise that should be dropped even if jieba emits them.
+_CJK_SINGLE_NOISE = frozenset(
+    "的了在是和有不也就都会能要对把被让给上下里到说去又做"
+    "我你他她它们这那些吗呢吧啊哦嗯"
+    "一二三四五六七八九十"
+)
+
+
+def _jieba_cut(text: str) -> list[str]:
+    """Wrapper around jieba.cut with graceful fallback."""
+    try:
+        import jieba
+        return list(jieba.cut(text, cut_all=False))
+    except ImportError:
+        # Fallback: return individual CJK characters (legacy behaviour)
+        return list(text)
 
 
 _HYPHEN_BREAK_RE = re.compile(r"(?<=\w)[\-‐‑‒–—]\s*\n\s*(?=\w)")

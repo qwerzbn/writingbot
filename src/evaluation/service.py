@@ -212,24 +212,16 @@ class EvaluationService:
 
     @staticmethod
     def _infer_mode(task_type: str) -> str:
-        if task_type in {"survey", "research"}:
-            return "research"
-        if task_type in {"single_hop", "multi_hop"}:
-            # Chat mode has been removed; fallback to research mode for QA-style items.
-            return "research"
+        if task_type in {"survey", "research", "single_hop", "multi_hop"}:
+            return "writing"
         return "writing"
 
     @staticmethod
     def _build_payload(item: dict[str, Any], mode: str) -> dict[str, Any]:
-        if mode == "research":
-            return {
-                "topic": item.get("query", ""),
-                "kb_id": item.get("kb_id"),
-            }
         return {
             "text": item.get("input_text", item.get("query", "")),
             "action": item.get("action", "polish"),
-            "instruction": item.get("instruction", ""),
+            "instruction": item.get("instruction", item.get("query", "")),
             "kb_id": item.get("kb_id"),
         }
 

@@ -1,4 +1,5 @@
 from src.shared_capabilities.traceability.validation import (
+    TraceabilityIssue,
     collect_report_evidence_ids,
     find_hidden_gaps,
     find_invalid_evidence_ids,
@@ -6,6 +7,7 @@ from src.shared_capabilities.traceability.validation import (
 )
 
 __all__ = [
+    "TraceabilityIssue",
     "collect_report_evidence_ids",
     "find_invalid_evidence_ids",
     "find_statement_issues",

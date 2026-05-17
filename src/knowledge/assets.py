@@ -16,7 +16,6 @@ from src.retrieval.common import (
     normalize_display_text,
     tokenize,
 )
-from src.services.llm import get_llm_client
 
 
 AssetKind = Literal["figure", "table"]
@@ -380,9 +379,17 @@ def interpret_asset_with_llm(asset: dict[str, Any]) -> ChartInterpretation:
     try:
         with open(image_path, "rb") as handle:
             encoded = base64.b64encode(handle.read()).decode("ascii")
-        client = get_llm_client().client
+        api_key = os.getenv("LLM_API_KEY") or os.getenv("API_KEY")
+        model = os.getenv("LLM_MODEL") or os.getenv("MODEL_ID")
+        base_url = os.getenv("LLM_BASE_URL") or os.getenv("BASE_URL")
+        if not api_key or api_key == "your_api_key_here" or not model:
+            return default_chart_interpretation(asset)
+
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key, base_url=base_url)
         response = client.chat.completions.create(
-            model=getattr(get_llm_client().config, "model", None) or "",
+            model=model,
             messages=[
                 {"role": "system", "content": "你是一个严谨的学术图表分析助手，只返回 JSON。"},
                 {

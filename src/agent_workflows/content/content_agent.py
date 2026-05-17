@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator
+from typing import Any, Generator
 
-from src.agent_runtime.state import ContentState, RuntimeState
 from src.shared_capabilities.llm import call_chat_completion, stream_chat_completion
 from src.shared_capabilities.prompts import get_prompt_loader
 
@@ -19,7 +18,7 @@ class ContentAgent:
     def __init__(self, *, language: str = "zh"):
         self.language = language
 
-    def execute(self, state: RuntimeState, *, stream: bool) -> ContentExecution:
+    def execute(self, state: Any, *, stream: bool) -> ContentExecution:
         if state.content is None:
             raise ValueError("content state is required")
 
@@ -31,7 +30,7 @@ class ContentAgent:
             content=call_chat_completion(messages, **self._params(state.content)),
         )
 
-    def _build_messages(self, content: ContentState) -> list[dict[str, str]]:
+    def _build_messages(self, content: Any) -> list[dict[str, str]]:
         if content.mode == "chat":
             prompts = get_prompt_loader().load("chat", language=self.language) or {}
             system_prompt = prompts.get("system", "You are a careful research assistant.")
@@ -72,7 +71,7 @@ class ContentAgent:
         ]
 
     @staticmethod
-    def _params(content: ContentState) -> dict[str, float | int]:
+    def _params(content: Any) -> dict[str, float | int]:
         if content.mode == "chat":
             return {"temperature": 0.45, "max_tokens": 4000}
         return {"temperature": 0.5, "max_tokens": 2000}

@@ -1,4 +1,4 @@
-export type OrchestratorMode = 'research' | 'writing' | 'chat_research';
+export type OrchestratorMode = 'writing' | 'chat_research';
 
 export interface OrchestratorRunMetrics {
   stage_timings_ms?: Partial<Record<'plan' | 'retrieve' | 'synthesize' | 'critique' | 'finalize', number>>;

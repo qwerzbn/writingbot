@@ -5,7 +5,7 @@ from src.orchestrator.run_store import RunStore
 
 def test_run_store_create_and_result():
     store = RunStore(ttl_hours=2)
-    run = store.create_run(mode="research", payload={"topic": "hello"})
+    run = store.create_run(mode="writing", payload={"text": "hello"})
     assert run.run_id
     assert run.trace_id
     assert run.status == "pending"
@@ -24,7 +24,7 @@ def test_run_store_create_and_result():
 
 def test_run_store_ttl_cleanup():
     store = RunStore(ttl_hours=2)
-    run = store.create_run(mode="research", payload={"topic": "x"})
+    run = store.create_run(mode="writing", payload={"text": "x"})
     assert store.get_run(run.run_id) is not None
 
     # Force expiration without waiting.

@@ -1,13 +1,13 @@
 # Module Dependency Graph
 
-Generated at: 2026-03-16T18:15:44.114715
+Generated at: 2026-05-17T20:45:23.643105
 
 ## Summary
 
-- packages: `13`
-- dependency_edges: `25`
-- detected_cycle_scc: `1`
-- baseline_cycle_scc: `1`
+- packages: `17`
+- dependency_edges: `36`
+- detected_cycle_scc: `0`
+- baseline_cycle_scc: `0`
 - new_cycle_scc: `0`
 - resolved_cycle_scc: `0`
 
@@ -16,8 +16,11 @@ Generated at: 2026-03-16T18:15:44.114715
 ```mermaid
 flowchart LR
   __INIT__["__init__"]
+  AGENT_RUNTIME["agent_runtime"]
+  AGENT_WORKFLOWS["agent_workflows"]
   AGENTS["agents"]
   API["api"]
+  COMPAT["compat"]
   EVALUATION["evaluation"]
   KNOWLEDGE["knowledge"]
   ORCHESTRATOR["orchestrator"]
@@ -27,30 +30,42 @@ flowchart LR
   RETRIEVAL["retrieval"]
   SERVICES["services"]
   SESSION["session"]
+  SHARED_CAPABILITIES["shared_capabilities"]
   SKILLS["skills"]
-  API -->|8| KNOWLEDGE
-  API -->|8| SERVICES
   API -->|6| ORCHESTRATOR
-  AGENTS -->|3| SERVICES
+  API -->|6| SERVICES
+  AGENT_RUNTIME -->|4| SHARED_CAPABILITIES
+  ORCHESTRATOR -->|4| AGENT_RUNTIME
+  API -->|3| KNOWLEDGE
   API -->|3| RETRIEVAL
-  AGENTS -->|2| RAG
+  SHARED_CAPABILITIES -->|3| KNOWLEDGE
+  SHARED_CAPABILITIES -->|3| RETRIEVAL
+  AGENT_RUNTIME -->|2| RETRIEVAL
+  AGENT_WORKFLOWS -->|2| SHARED_CAPABILITIES
+  AGENTS -->|2| COMPAT
+  API -->|2| SHARED_CAPABILITIES
   API -->|2| SKILLS
-  ORCHESTRATOR -->|2| AGENTS
-  ORCHESTRATOR -->|2| KNOWLEDGE
-  ORCHESTRATOR -->|2| RETRIEVAL
-  ORCHESTRATOR -->|2| SERVICES
+  COMPAT -->|2| AGENT_RUNTIME
+  SERVICES -->|2| KNOWLEDGE
+  SERVICES -->|2| RETRIEVAL
+  AGENT_RUNTIME -->|1| AGENT_WORKFLOWS
+  AGENT_RUNTIME -->|1| SERVICES
+  AGENT_RUNTIME -->|1| SKILLS
   API -->|1| EVALUATION
   API -->|1| PARSING
   API -->|1| PROCESSING
-  API -->|1| RAG
   API -->|1| SESSION
   EVALUATION -->|1| ORCHESTRATOR
   EVALUATION -->|1| SERVICES
-  ORCHESTRATOR -->|1| SKILLS
+  KNOWLEDGE -->|1| RETRIEVAL
+  ORCHESTRATOR -->|1| KNOWLEDGE
+  ORCHESTRATOR -->|1| SHARED_CAPABILITIES
+  PARSING -->|1| KNOWLEDGE
+  RAG -->|1| RETRIEVAL
   RAG -->|1| SERVICES
-  RETRIEVAL -->|1| RAG
-  SERVICES -->|1| KNOWLEDGE
-  SERVICES -->|1| RETRIEVAL
+  SERVICES -->|1| PARSING
+  SERVICES -->|1| PROCESSING
+  SERVICES -->|1| SHARED_CAPABILITIES
   SESSION -->|1| SERVICES
   SKILLS -->|1| SERVICES
 ```
@@ -59,27 +74,27 @@ flowchart LR
 
 | Edge | Count |
 |---|---:|
-| `api -> knowledge` | 8 |
-| `api -> services` | 8 |
 | `api -> orchestrator` | 6 |
-| `agents -> services` | 3 |
+| `api -> services` | 6 |
+| `agent_runtime -> shared_capabilities` | 4 |
+| `orchestrator -> agent_runtime` | 4 |
+| `api -> knowledge` | 3 |
 | `api -> retrieval` | 3 |
-| `agents -> rag` | 2 |
+| `shared_capabilities -> knowledge` | 3 |
+| `shared_capabilities -> retrieval` | 3 |
+| `agent_runtime -> retrieval` | 2 |
+| `agent_workflows -> shared_capabilities` | 2 |
+| `agents -> compat` | 2 |
+| `api -> shared_capabilities` | 2 |
 | `api -> skills` | 2 |
-| `orchestrator -> agents` | 2 |
-| `orchestrator -> knowledge` | 2 |
-| `orchestrator -> retrieval` | 2 |
-| `orchestrator -> services` | 2 |
+| `compat -> agent_runtime` | 2 |
+| `services -> knowledge` | 2 |
+| `services -> retrieval` | 2 |
+| `agent_runtime -> agent_workflows` | 1 |
+| `agent_runtime -> services` | 1 |
+| `agent_runtime -> skills` | 1 |
 | `api -> evaluation` | 1 |
-| `api -> parsing` | 1 |
-| `api -> processing` | 1 |
-| `api -> rag` | 1 |
-| `api -> session` | 1 |
-| `evaluation -> orchestrator` | 1 |
-| `evaluation -> services` | 1 |
-| `orchestrator -> skills` | 1 |
-| `rag -> services` | 1 |
 
 ## Cycle Report
 
-- [KNOWN] `rag <-> retrieval <-> services`
+- No cycle detected.

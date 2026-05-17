@@ -8,6 +8,7 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 from urllib import error as urllib_error
 from urllib import request as urllib_request
@@ -18,6 +19,23 @@ from pydantic import BaseModel, Field
 
 router = APIRouter()
 DEFAULT_FASTWRITE_URL = "http://127.0.0.1:3002"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+
+def _resolve_fastwrite_embed_dir() -> Path:
+    return Path(os.getenv("FASTWRITE_EMBED_DIR") or PROJECT_ROOT / "FastWrite")
+
+
+def fastwrite_embed_status() -> dict[str, Any]:
+    root = _resolve_fastwrite_embed_dir()
+    package_json = root / "package.json"
+    embedded = package_json.exists()
+    return {
+        "embedded": embedded,
+        "status": "embedded" if embedded else "missing",
+        "path": str(root),
+        "package_json": str(package_json),
+    }
 
 
 def _resolve_fastwrite_url() -> str:
@@ -162,6 +180,19 @@ async def create_handoff(req: HandoffRequest):
 @router.get("/fastwrite/health")
 async def fastwrite_health():
     base_url = _resolve_fastwrite_url()
+    embed = fastwrite_embed_status()
+    if not embed["embedded"]:
+        return {
+            "success": True,
+            "data": {
+                "available": False,
+                "status": "missing",
+                "url": base_url,
+                "path": embed["path"],
+                "error": f"FastWrite embedded package not found: {embed['package_json']}",
+            },
+        }
+
     target = f"{base_url}/"
     req = urllib_request.Request(target, method="GET")
     try:
@@ -171,26 +202,32 @@ async def fastwrite_health():
                 "success": True,
                 "data": {
                     "available": True,
+                    "status": "available",
                     "status_code": status_code,
                     "url": base_url,
+                    "path": embed["path"],
                 },
             }
     except urllib_error.HTTPError as exc:
         return {
             "success": True,
-            "data": {
-                "available": True,
-                "status_code": int(exc.code),
-                "url": base_url,
-                "warning": f"协同写作模块返回 HTTP {exc.code}",
-            },
-        }
+                "data": {
+                    "available": True,
+                    "status": "available",
+                    "status_code": int(exc.code),
+                    "url": base_url,
+                    "path": embed["path"],
+                    "warning": f"协同写作模块返回 HTTP {exc.code}",
+                },
+            }
     except Exception as exc:
         return {
             "success": True,
             "data": {
                 "available": False,
+                "status": "unreachable",
                 "url": base_url,
+                "path": embed["path"],
                 "error": str(exc),
             },
         }

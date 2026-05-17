@@ -7,7 +7,6 @@ import {
     BookOpen,
     MessageCircle,
     Notebook,
-    Search,
     PenTool,
     Settings,
     Moon,
@@ -20,7 +19,6 @@ const navItems = [
     { href: '/knowledge', icon: BookOpen, label: '知识库' },
     { href: '/chat', icon: MessageCircle, label: '聊天' },
     { href: '/notebook', icon: Notebook, label: '笔记本' },
-    { href: '/research', icon: Search, label: '研究' },
     { href: '/co-writer', icon: PenTool, label: '写作' },
 ];
 

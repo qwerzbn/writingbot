@@ -4,10 +4,10 @@
 from __future__ import annotations
 
 import math
+import time
 from collections import defaultdict
 from typing import Any
 
-from src.rag.components.reranker import Reranker
 from src.retrieval.common import (
     build_sentence_excerpt,
     build_text_evidence_excerpt,
@@ -19,6 +19,7 @@ from src.retrieval.common import (
     tokenize,
 )
 from src.retrieval.index_store import IndexedDoc, KnowledgeIndexStore
+from src.retrieval.reranker import Reranker
 
 
 class VectorRetriever:
@@ -148,17 +149,20 @@ class GraphRetriever:
 class EvidenceJudge:
     """Lightweight evidence quality judge."""
 
-    def judge(self, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def judge(self, candidates: list[dict[str, Any]], query: str = "") -> list[dict[str, Any]]:
+        query_terms = set(tokenize(query))
         judged: list[dict[str, Any]] = []
         for item in candidates:
             content = item.get("content", "")
             metadata = item.get("metadata", {}) or {}
-            fusion_score = float(item.get("fusion_score", 0.0))
             has_source = bool(metadata.get("source"))
             has_page = metadata.get("page") is not None
             length_ok = len(content) >= 80
 
-            relevance = min(1.0, max(0.0, fusion_score))
+            # Utilize rerank_score for relevance if available, fallback to fusion_score
+            base_score = float(item.get("rerank_score", item.get("fusion_score", 0.0)))
+            query_overlap = self._query_overlap_score(query_terms, content, metadata)
+            relevance = min(1.0, max(0.0, (base_score * 0.8) + (query_overlap * 0.25)))
             risk = 0.2
             if not has_source:
                 risk += 0.25
@@ -172,6 +176,7 @@ class EvidenceJudge:
             row = {
                 **item,
                 "relevance": round(relevance, 4),
+                "query_overlap": round(query_overlap, 4),
                 "factual_risk": round(min(1.0, risk), 4),
                 "judge_keep": relevance >= 0.35 and risk <= 0.7,
             }
@@ -179,6 +184,19 @@ class EvidenceJudge:
 
         judged.sort(key=lambda x: (x["judge_keep"], x["relevance"]), reverse=True)
         return judged
+
+    @staticmethod
+    def _query_overlap_score(query_terms: set[str], content: str, metadata: dict[str, Any]) -> float:
+        if not query_terms:
+            return 0.0
+        metadata_text = " ".join(
+            str(metadata.get(key) or "")
+            for key in ("title", "source", "section", "caption", "ref_label")
+        )
+        candidate_terms = set(tokenize(f"{content}\n{metadata_text}"))
+        if not candidate_terms:
+            return 0.0
+        return len(query_terms.intersection(candidate_terms)) / max(1, len(query_terms))
 
 
 class HybridRetrievalService:
@@ -206,7 +224,12 @@ class HybridRetrievalService:
         top_k: int = 8,
         weights: tuple[float, float, float] = (0.5, 0.3, 0.2),
     ) -> dict[str, Any]:
+        timings: dict[str, int] = {}
+
+        started = time.perf_counter()
         vector_rows = self.vector.retrieve(vector_store, query, top_k=max(top_k * 2, 10))
+        timings["vector_ms"] = max(0, int((time.perf_counter() - started) * 1000))
+
         # Bootstrap local indexes lazily for existing KBs created before hybrid retrieval.
         if not self.index_store.load_docs(kb_id) and vector_rows:
             bootstrap_chunks = [
@@ -217,15 +240,31 @@ class HybridRetrievalService:
                 for row in vector_rows
             ]
             self.index_store.upsert_chunks(kb_id, bootstrap_chunks)
-        bm25_rows = self.bm25.retrieve(kb_id, query, top_k=max(top_k * 2, 10))
-        graph_rows = self.graph.retrieve(kb_id, query, top_k=max(top_k * 2, 10))
 
+        started = time.perf_counter()
+        bm25_rows = self.bm25.retrieve(kb_id, query, top_k=max(top_k * 2, 10))
+        timings["bm25_ms"] = max(0, int((time.perf_counter() - started) * 1000))
+
+        started = time.perf_counter()
+        graph_rows = self.graph.retrieve(kb_id, query, top_k=max(top_k * 2, 10))
+        timings["graph_ms"] = max(0, int((time.perf_counter() - started) * 1000))
+
+        started = time.perf_counter()
         fused = self._fuse_rrf(vector_rows, bm25_rows, graph_rows, weights=weights, top_k=max(top_k * 3, 24))
+        timings["fusion_ms"] = max(0, int((time.perf_counter() - started) * 1000))
+
+        started = time.perf_counter()
         reranked = self._rerank(query, fused, top_k=max(top_k * 2, 10))
-        judged = self.judge.judge(reranked)
+        timings["rerank_ms"] = max(0, int((time.perf_counter() - started) * 1000))
+
+        started = time.perf_counter()
+        judged = self.judge.judge(reranked, query=query)
+        timings["judge_ms"] = max(0, int((time.perf_counter() - started) * 1000))
         kept = [r for r in judged if r.get("judge_keep")][:top_k]
 
+        started = time.perf_counter()
         context, sources = self.build_context(kept, token_budget=6000, query=query)
+        timings["context_ms"] = max(0, int((time.perf_counter() - started) * 1000))
 
         return {
             "query": query,
@@ -248,6 +287,7 @@ class HybridRetrievalService:
                 "bm25": weights[1],
                 "graph": weights[2],
             },
+            "timings_ms": timings,
         }
 
     def retrieve_by_sub_questions(

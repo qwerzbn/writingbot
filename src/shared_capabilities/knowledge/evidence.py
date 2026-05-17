@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Callable
 
 from src.knowledge.assets import (
     asset_matches_reference,
@@ -133,6 +133,7 @@ def augment_chart_evidence(
     context: str,
     sources: list[dict[str, Any]],
     data_dir: Any = None,
+    interpreter: Callable[[dict[str, Any]], Any] | None = None,
 ) -> dict[str, Any]:
     kb_manager = get_kb_manager(data_dir)
     assets = kb_manager.list_assets(kb_id)
@@ -163,7 +164,7 @@ def augment_chart_evidence(
     asset_id = str(primary_asset.get("id") or "")
     interpretation = primary_asset.get("interpretation") if isinstance(primary_asset.get("interpretation"), dict) else None
     if not interpretation:
-        interpretation = interpret_asset_with_llm(primary_asset).to_dict()
+        interpretation = (interpreter or interpret_asset_with_llm)(primary_asset).to_dict()
         visual_summary = build_visual_summary(primary_asset, interpretation)
         primary_asset = kb_manager.update_asset(
             kb_id,

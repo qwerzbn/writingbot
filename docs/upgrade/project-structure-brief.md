@@ -53,6 +53,7 @@ sequenceDiagram
   participant P as web/api proxy
   participant A as src/api/routers/chat.py
   participant O as src/orchestrator/service.py
+  participant RT as src/agent_runtime/runtime.py
   participant R as src/retrieval/hybrid.py
   participant L as src/services/llm/client.py
   participant M as src/session/manager.py
@@ -61,8 +62,9 @@ sequenceDiagram
   C->>P: POST /api/chat/stream
   P->>A: proxy to 127.0.0.1:5001
   A->>O: create_run + stream_run
-  O->>R: retrieve_by_sub_questions
-  O->>L: chat_stream(messages)
+  O->>RT: stream_run
+  RT->>R: retrieve
+  RT->>L: chat_stream(messages)
   O-->>A: chunk/sources/done
   A->>M: save(session)
   A-->>C: SSE
@@ -77,7 +79,8 @@ web/src/app/chat/page.tsx
   -> web/src/app/api/[...path]/route.ts (proxy)
   -> src/api/main.py (router mount)
   -> src/api/routers/chat.py (chat_stream)
-  -> src/orchestrator/service.py (stream_run)
+  -> src/orchestrator/service.py (facade stream_run)
+  -> src/agent_runtime/runtime.py (_stream_content_run)
   -> src/retrieval/hybrid.py + src/services/llm/client.py
   -> src/session/manager.py (save)
   -> SSE back to frontend

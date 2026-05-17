@@ -3,17 +3,15 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from src.agent_runtime.state import FinalReport, ReportStatement
 
-
-def render_statement(statement: ReportStatement) -> str:
+def render_statement(statement: Any) -> str:
     citation = ""
     if statement.evidence_ids:
         citation = " [" + ", ".join(statement.evidence_ids) + "]"
     return f"- {statement.support_status}: {statement.text}{citation}"
 
 
-def render_final_report_markdown(final_report: FinalReport) -> str:
+def render_final_report_markdown(final_report: Any) -> str:
     parts = [f"# {final_report.title}"]
     for section in final_report.sections:
         parts.append(f"## {section.heading}")

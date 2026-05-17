@@ -159,30 +159,30 @@ class NotebookConflictError(ValueError):
         self.latest = latest
 
 
+# Bump this when the tokenizer or embedding model changes so that
+# _ensure_source_retrieval_cache will automatically rebuild stale caches.
+_RETRIEVAL_CACHE_VERSION = 2
+
+
 class NotebookManager:
     STOPWORDS = {
-        "the",
-        "and",
-        "for",
-        "that",
-        "this",
-        "with",
-        "from",
-        "into",
-        "your",
-        "have",
-        "will",
-        "about",
-        "研究",
-        "来源",
-        "笔记",
-        "内容",
-        "一个",
-        "一种",
-        "在",
-        "的",
-        "了",
-        "和",
+        # English functional words
+        "the", "and", "for", "that", "this", "with", "from",
+        "into", "your", "have", "will", "about", "what", "how",
+        "can", "are", "was", "were", "been", "being", "which",
+        "not", "but", "also", "more", "than", "when", "where",
+        "does", "did", "its", "has",
+        # Chinese functional / noise words
+        "的", "了", "在", "是", "和", "有", "不", "也", "就", "都",
+        "会", "能", "要", "对", "把", "被", "让", "给", "上", "下",
+        "里", "到", "说", "去", "又", "做", "可以",
+        "我", "你", "他", "她", "它", "们", "这", "那", "些",
+        "什么", "怎么", "如何", "为什么", "请", "吗", "呢",
+        "吧", "啊", "哦", "嗯",
+        "一个", "一种", "一下",
+        # Common meta / command words (filtered from queries, not content)
+        "研究", "来源", "笔记", "内容", "报告", "总结", "介绍",
+        "帮我", "给我", "请给", "为我", "关于", "详细",
     }
 
     def __init__(self, data_dir: Path | str | None = None):
@@ -219,7 +219,9 @@ class NotebookManager:
             from src.knowledge.vector_store import get_embedding_function
 
             provider = os.getenv("EMBEDDING_PROVIDER", "sentence-transformers")
-            model = os.getenv("EMBEDDING_MODEL", "all-mpnet-base-v2")
+            # Default to multilingual model for better CJK query support.
+            # BAAI/bge-m3 is the current state-of-the-art enterprise standard for multilingual embeddings.
+            model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
             base_url = os.getenv("EMBEDDING_BASE_URL")
             api_key = os.getenv("EMBEDDING_API_KEY") or os.getenv("LLM_API_KEY")
             self._embedding_fn = get_embedding_function(
@@ -571,19 +573,25 @@ class NotebookManager:
         source_id = str(source.get("id") or "")
         chunks = self._load_source_chunks(notebook_id, source_id)
         cache = self._load_source_embedding_index(notebook_id, source_id)
-        if (
+        needs_rebuild = (
             not isinstance(cache, dict)
             or int(cache.get("chunk_count") or 0) != len(chunks)
             or "title_aliases" not in cache
             or "title_tokens" not in cache
             or "representative_chunk_ids" not in cache
-        ):
+            # Rebuild if cache version is older than current (tokenizer/embedding changed)
+            or int(cache.get("version") or 0) < _RETRIEVAL_CACHE_VERSION
+        )
+        if needs_rebuild:
+            # Re-tokenize chunks with the updated tokenizer before rebuilding
+            self._ensure_chunk_tokens(chunks)
             cache = self._build_retrieval_cache(
                 source_id,
                 chunks,
                 source_title=self._normalize_source_title(source),
                 source_metadata=source.get("metadata", {}) or {},
             )
+            cache["version"] = _RETRIEVAL_CACHE_VERSION
             _safe_json_save(self._source_embedding_path(notebook_id, source_id), cache)
         return cache
 
@@ -704,14 +712,16 @@ class NotebookManager:
         body_path = self._source_body_path(notebook_id, source_id)
         body_path.write_text(text, encoding="utf-8")
         _safe_json_save(self._source_chunks_path(notebook_id, source_id), chunk_rows)
-        _safe_json_save(
-            self._source_embedding_path(notebook_id, source_id),
-            self._build_retrieval_cache(
+        cache = self._build_retrieval_cache(
                 source_id,
                 chunk_rows,
                 source_title=title,
                 source_metadata=metadata,
-            ),
+            )
+        cache["version"] = _RETRIEVAL_CACHE_VERSION
+        _safe_json_save(
+            self._source_embedding_path(notebook_id, source_id),
+            cache,
         )
 
         source = {
@@ -764,6 +774,32 @@ class NotebookManager:
                 counter[token] += 1
         return [token for token, _ in counter.most_common(limit)]
 
+    @staticmethod
+    def _ensure_chunk_tokens(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Ensure chunks have up-to-date tokens from the current tokenizer.
+
+        Old chunks may have single-char Chinese tokens from the previous
+        broken tokenizer.  Detect this and force re-tokenization.
+        """
+        import re
+
+        _has_cjk = re.compile(r"[\u4e00-\u9fff]")
+        for chunk in chunks:
+            existing = chunk.get("tokens") or []
+            content = str(chunk.get("content") or "")
+            needs_retokenize = False
+            if not existing:
+                needs_retokenize = True
+            elif _has_cjk.search(content):
+                # If content has Chinese but all CJK tokens are single-char,
+                # the tokens are from the old broken tokenizer and must be rebuilt.
+                cjk_tokens = [t for t in existing if _has_cjk.search(t)]
+                if cjk_tokens and all(len(t) <= 1 for t in cjk_tokens):
+                    needs_retokenize = True
+            if needs_retokenize:
+                chunk["tokens"] = tokenize(content)
+        return chunks
+
     def _score_chunk(self, query_tokens: list[str], chunk: dict[str, Any], source_title: str) -> float:
         tokens = chunk.get("tokens", []) or []
         if not query_tokens:
@@ -775,10 +811,16 @@ class NotebookManager:
         title_overlap = set(query_tokens) & title_tokens
         if not content_overlap and not title_overlap:
             return 0.0
-        overlap_score = sum(token_counts[token] for token in content_overlap)
-        title_bonus = float(len(title_overlap)) * 0.6
-        density = len(content_overlap or title_overlap) / max(1, len(set(query_tokens)))
-        return float(overlap_score) + float(title_bonus) * 0.6 + density
+        # Weighted overlap: multi-char tokens are more semantically meaningful.
+        overlap_score = 0.0
+        for token in content_overlap:
+            weight = max(1.0, len(token) * 0.5)
+            overlap_score += token_counts[token] * weight
+        title_bonus = sum(max(1.0, len(token) * 0.5) for token in title_overlap) * 0.6
+        # density: fraction of query tokens matched, favouring multi-char matches
+        multi_char_overlap = {t for t in content_overlap if len(t) >= 2}
+        density = len(multi_char_overlap or content_overlap or title_overlap) / max(1, len(set(query_tokens)))
+        return float(overlap_score) + float(title_bonus) * 0.6 + density * 2.0
 
     def _normalize_query(self, query: str) -> str:
         return normalize_display_text(query or "", preserve_paragraphs=False)
@@ -790,7 +832,11 @@ class NotebookManager:
             variants.append(normalized)
 
         stripped = re.sub(
-            r"(给我一份|请给我|帮我|报告|总结|研究|概览|介绍|分析|说明|核心主题|主要贡献|overview|summary|report|research)",
+            r"(给我一份|请给我|帮我|为我|请|"
+            r"报告|总结|研究|概览|介绍|分析|说明|讲解|描述|"
+            r"核心主题|主要贡献|详细讲解|简要说明|"
+            r"是什么|怎么样|有哪些|"
+            r"overview|summary|report|research|explain|describe)",
             " ",
             normalized,
             flags=re.IGNORECASE,
@@ -936,7 +982,7 @@ class NotebookManager:
         if not reranker_provider and not reranker_model:
             return sorted(candidates, key=lambda item: (item.score, len(item.content)), reverse=True)[:limit]
         try:
-            from src.rag.components.reranker import Reranker
+            from src.retrieval.reranker import Reranker
 
             docs = [
                 {
@@ -1010,7 +1056,7 @@ class NotebookManager:
         lexical_candidates: dict[str, RetrievedChunk] = {}
         for source_id, source in source_index.items():
             source_title = self._normalize_source_title(source)
-            for chunk in self._load_source_chunks(notebook_id, source_id):
+            for chunk in self._ensure_chunk_tokens(self._load_source_chunks(notebook_id, source_id)):
                 score = max(
                     (
                         self._score_chunk(
@@ -1236,13 +1282,13 @@ class NotebookManager:
             if not overlap:
                 if representative_only:
                     return "weakly_grounded"
-                if strong_recall and max((row.score for row in retrieved), default=0.0) >= 0.45:
+                if strong_recall and max((row.score for row in retrieved), default=0.0) >= 0.6:
                     return "grounded"
                 return "weakly_grounded"
         top_score = max((row.score for row in retrieved), default=0.0)
         if representative_only:
             return "weakly_grounded"
-        return "grounded" if top_score >= 1.0 else "weakly_grounded"
+        return "grounded" if top_score >= 0.6 else "weakly_grounded"
 
     def _generate_chat_answer(
         self,

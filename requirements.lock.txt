@@ -2,7 +2,10 @@
 # Install with: pip install -r requirements.lock.txt
 
 pymupdf==1.26.4
+jieba==0.42.1
+torch==2.4.1
 sentence-transformers==3.4.1
+transformers==4.48.3
 chromadb==0.6.4
 openai==1.107.2
 python-dotenv==1.1.1

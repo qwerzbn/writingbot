@@ -16,11 +16,16 @@ web/.turbo/
 !.env.example
 
 .logs/
+.playwright-mcp/
+.worktrees/
 data/metrics/
 data/evaluation/reports/
 data/logs/
 data/sessions/
+data/kb/
 data/knowledge_bases/
+data/notebooklm/
+data/notebooks/
 
 web/test-results/
 web/playwright-report/

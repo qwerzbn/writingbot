@@ -5,7 +5,6 @@ import {
   BookOpen,
   MessageCircle,
   Notebook,
-  Search,
   PenTool,
   FileText,
   ArrowRight,
@@ -33,13 +32,6 @@ const features = [
     label: '笔记本',
     desc: '保存和整理研究记录',
     color: 'from-amber-500 to-orange-400',
-  },
-  {
-    href: '/research',
-    icon: Search,
-    label: '深度研究',
-    desc: '自动生成结构化研究报告',
-    color: 'from-emerald-500 to-teal-400',
   },
   {
     href: '/co-writer',
