@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+:root {
+  --fw-editor-bg: #050505;
+  --fw-editor-panel: #0d0d0d;
+  --fw-editor-border: rgba(255, 255, 255, 0.08);
+  --fw-editor-line-error: rgba(248, 113, 113, 0.09);
+  --fw-editor-line-warning: rgba(251, 191, 36, 0.08);
+  --fw-editor-line-highlight: rgba(103, 232, 249, 0.08);
+  --fw-editor-glyph-error: #fb7185;
+  --fw-editor-glyph-warning: #fbbf24;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #0a0a0a;
+  color: #f5f5f5;
+}
+
+.fw-light-control {
+  color-scheme: light;
+  background: #ffffff;
+  color: #0f172a;
+  -webkit-text-fill-color: #0f172a;
+}
+
+.fw-light-control::placeholder {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+}
+
+.fw-light-control:disabled {
+  background: #f8fafc;
+  color: #64748b;
+  -webkit-text-fill-color: #64748b;
+  opacity: 1;
+}
+
+.fw-light-button {
+  color-scheme: light;
+  color: #334155;
+  -webkit-text-fill-color: #334155;
+}
+
+.fw-light-button:disabled {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+  opacity: 1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Editor textarea */
+.editor-textarea {
+  font-family: 'SF Mono', 'Fira Code', 'Monaco', 'Menlo', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(-50%, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.3s ease-out forwards;
+}
+
+.monaco-editor,
+.monaco-editor .margin,
+.monaco-editor .monaco-editor-background {
+  background: var(--fw-editor-bg) !important;
+}
+
+.monaco-editor .margin {
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.monaco-editor .current-line,
+.monaco-editor .margin-view-overlays .current-line-margin {
+  border: 0 !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.monaco-editor .line-numbers {
+  color: rgba(255, 255, 255, 0.32) !important;
+}
+
+.monaco-editor .cursors-layer .cursor {
+  background: #f8fafc !important;
+  border-color: #f8fafc !important;
+}
+
+.monaco-editor .scroll-decoration {
+  box-shadow: none !important;
+}
+
+.monaco-editor .scrollbar > .slider {
+  border-radius: 999px;
+}
+
+.fw-diagnostic-line-error {
+  background: linear-gradient(90deg, var(--fw-editor-line-error), transparent 75%);
+}
+
+.fw-diagnostic-line-fatal {
+  box-shadow: inset 2px 0 0 rgba(251, 113, 133, 0.75);
+}
+
+.fw-diagnostic-line-warning {
+  background: linear-gradient(90deg, var(--fw-editor-line-warning), transparent 75%);
+}
+
+.fw-highlight-line {
+  background: linear-gradient(90deg, var(--fw-editor-line-highlight), transparent 78%);
+  animation: fw-line-glow 1.8s ease-out;
+}
+
+.fw-diagnostic-glyph-error,
+.fw-diagnostic-glyph-warning {
+  position: relative;
+}
+
+.fw-diagnostic-glyph-error::before,
+.fw-diagnostic-glyph-warning::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 8px;
+  width: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+}
+
+.fw-diagnostic-glyph-error::before {
+  background: var(--fw-editor-glyph-error);
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.6);
+}
+
+.fw-diagnostic-glyph-warning::before {
+  background: var(--fw-editor-glyph-warning);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+}
+
+@keyframes fw-line-glow {
+  0% {
+    background: rgba(103, 232, 249, 0.18);
+  }
+  100% {
+    background: transparent;
+  }
+}

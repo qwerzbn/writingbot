@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Type check on every push/PR
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Type check
+        run: bunx tsc --noEmit
+
+  # Build and release on version tags
+  release:
+    name: Release
+    needs: typecheck
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build for Linux
+        run: bun build src/cli.ts --compile --outfile fastwrite-linux-x64
+
+      - name: Build for macOS
+        run: bun build src/cli.ts --compile --outfile fastwrite-macos-x64 --target bun-darwin-x64
+
+      - name: Build for macOS ARM
+        run: bun build src/cli.ts --compile --outfile fastwrite-macos-arm64 --target bun-darwin-arm64
+
+      - name: Build for Windows
+        run: bun build src/cli.ts --compile --outfile fastwrite-windows-x64.exe --target bun-windows-x64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            fastwrite-linux-x64
+            fastwrite-macos-x64
+            fastwrite-macos-arm64
+            fastwrite-windows-x64.exe
+          generate_release_notes: true
